@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, MoreVertical, Pause, Play, X } from "lucide-react";
+import { ArrowRight, MoreVertical, Pause, Play } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -364,16 +364,6 @@ export function ExerciseExecutor({
           </div>
         </dl>
       </Dialog>
-
-      {/* Quick floating exit (icon) */}
-      <button
-        type="button"
-        aria-label="Sair sem salvar"
-        onClick={() => setConfirmExit(true)}
-        className="sr-only"
-      >
-        <X size={20} />
-      </button>
     </div>
   );
 }

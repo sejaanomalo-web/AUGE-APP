@@ -55,6 +55,7 @@ export function MobileDrawer({ items }: { items: SidebarItem[] }) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 px-4 py-3 rounded-md text-body font-medium transition-colors duration-200",
                       active
