@@ -5,6 +5,13 @@ const isPublicRoute = createRouteMatcher([
   "/login(.*)",
   "/cadastro(.*)",
   "/api/webhooks(.*)",
+  // PWA + cron endpoints must be reachable without Clerk auth
+  "/manifest.json",
+  "/sw.js",
+  "/sw-push.js",
+  "/workbox-(.*)",
+  "/swe-worker-(.*)",
+  "/api/cron(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
