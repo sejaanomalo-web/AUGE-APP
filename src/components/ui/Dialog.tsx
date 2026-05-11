@@ -48,12 +48,15 @@ export function Dialog({
       <button
         type="button"
         aria-label="Fechar"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
         onClick={() => onOpenChange(false)}
       />
       <div
         className={cn(
-          "relative w-full max-w-[480px] max-h-[calc(100vh-2rem)] overflow-y-auto bg-bg-surface rounded-xl shadow-lg animate-slide-up",
+          // Sheet itself is a content-layer surface (sits above glass nav),
+          // so we use a solid elevated dark with strong shadow + hairline
+          // border. The backdrop provides the glass effect.
+          "relative w-full max-w-[480px] max-h-[calc(100vh-2rem)] overflow-y-auto bg-bg-elevated border border-border-subtle rounded-xl shadow-xl animate-slide-up",
           className,
         )}
       >

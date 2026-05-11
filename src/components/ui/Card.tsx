@@ -8,13 +8,18 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   asButton?: boolean;
 }
 
+// Cards are CONTENT-layer surfaces — solid darks, hairline borders, deep
+// shadows for elevation. We deliberately keep glass off content (per Apple
+// HIG: glass is for navigation/floating layers, not lists/cards/media).
 const variantClasses: Record<CardVariant, string> = {
-  default: "bg-bg-surface p-4",
-  elevated: "bg-bg-card p-5 shadow-md",
+  default:
+    "bg-bg-surface border border-border-subtle p-4 shadow-sm",
+  elevated:
+    "bg-bg-elevated border border-border-subtle p-5 shadow-md",
   interactive:
-    "bg-bg-surface p-4 cursor-pointer transition-all duration-200 hover:bg-bg-card hover:shadow-md",
+    "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition-all duration-200 hover:bg-bg-elevated hover:border-border hover:shadow-md hover:-translate-y-px active:translate-y-0",
   highlight:
-    "bg-gradient-to-br from-bg-elevated to-bg-card border border-accent/40 p-5 shadow-md",
+    "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent",
 };
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -22,11 +27,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          "rounded-md",
-          variantClasses[variant],
-          className,
-        )}
+        className={cn("rounded-lg", variantClasses[variant], className)}
         {...props}
       />
     );

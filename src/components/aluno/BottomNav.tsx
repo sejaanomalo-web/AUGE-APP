@@ -18,7 +18,9 @@ export function BottomNav({ className }: { className?: string }) {
   return (
     <nav
       className={cn(
-        "fixed bottom-0 inset-x-0 z-30 bg-bg-surface border-t border-border-subtle px-1 lg:hidden",
+        // Glass tab bar — floats over content with translucency + blur.
+        // The dark fill in glass-nav keeps icons legible against any background.
+        "fixed bottom-0 inset-x-0 z-30 glass-nav border-t border-border-subtle px-1 lg:hidden",
         "pb-[env(safe-area-inset-bottom)]",
         className,
       )}

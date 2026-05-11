@@ -130,7 +130,7 @@ export function FreeWorkoutExecutor({
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col">
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 bg-bg-base/95 backdrop-blur border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 glass-nav border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content">
         <IconButton
           aria-label={paused ? "Retomar" : "Pausar"}
           onClick={togglePause}
@@ -150,7 +150,7 @@ export function FreeWorkoutExecutor({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 w-52 bg-bg-card rounded-md shadow-lg p-2 z-20 animate-fade-in"
+              className="absolute right-0 top-full mt-1 w-52 glass-surface-strong rounded-md p-2 z-20 animate-fade-in"
             >
               <button
                 type="button"

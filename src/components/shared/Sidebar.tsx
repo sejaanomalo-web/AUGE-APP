@@ -28,7 +28,8 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-30 h-screen w-60 bg-bg-base border-r border-border-subtle py-6 px-3 flex-col gap-1 hidden lg:flex",
+        // Desktop sidebar — navigation layer with subtle glass treatment.
+        "fixed left-0 top-0 z-30 h-screen w-60 glass-nav border-r border-border-subtle py-6 px-3 flex-col gap-1 hidden lg:flex",
         className,
       )}
     >

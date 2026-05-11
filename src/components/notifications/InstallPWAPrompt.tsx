@@ -34,7 +34,7 @@ export function InstallPWAPrompt() {
     <div
       role="dialog"
       aria-label="Instalar ꓥuge"
-      className="fixed bottom-20 left-4 right-4 lg:bottom-4 lg:right-4 lg:left-auto lg:max-w-sm z-40 bg-bg-card border border-accent/50 rounded-md p-4 shadow-lg animate-slide-up"
+      className="fixed bottom-20 left-4 right-4 lg:bottom-4 lg:right-4 lg:left-auto lg:max-w-sm z-40 glass-surface-strong border-accent/50 rounded-lg p-4 animate-slide-up"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">

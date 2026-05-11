@@ -120,7 +120,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[360px] max-w-[calc(100vw-24px)] bg-bg-card rounded-md shadow-lg border border-border-subtle z-50 overflow-hidden animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-[360px] max-w-[calc(100vw-24px)] glass-surface-strong rounded-lg z-50 overflow-hidden animate-fade-in">
           <div className="flex items-center justify-between p-4 border-b border-border-subtle">
             <h3 className="text-body-lg font-bold text-text-primary">
               Notificações

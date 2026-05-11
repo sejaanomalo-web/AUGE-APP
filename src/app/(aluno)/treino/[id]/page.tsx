@@ -70,7 +70,7 @@ export default async function TreinoDetailPage({
         ))}
       </ol>
 
-      <div className="fixed bottom-16 inset-x-0 lg:relative lg:bottom-auto lg:mt-8 bg-bg-base/95 backdrop-blur lg:bg-transparent lg:backdrop-blur-none p-4 lg:p-0 border-t border-border-subtle lg:border-0 z-20">
+      <div className="fixed bottom-16 inset-x-0 lg:relative lg:bottom-auto lg:mt-8 glass-nav lg:bg-transparent lg:backdrop-filter-none p-4 lg:p-0 border-t border-border-subtle lg:border-0 z-20">
         <StartWorkoutCTA sessionId={session.id} />
       </div>
     </div>

@@ -14,7 +14,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         ref={ref}
         type={type}
         className={cn(
-          "w-full min-w-0 box-border bg-bg-elevated text-text-primary placeholder:text-text-muted border border-border-subtle rounded-md transition-colors duration-200 focus:outline-none focus:border-text-primary focus:ring-[3px] focus:ring-accent-glow disabled:opacity-40 disabled:cursor-not-allowed",
+          // Depth on input: dark surface + inset top shadow (gives it a
+          // "carved out" feel) + glass-style focus ring with accent glow.
+          "w-full min-w-0 box-border bg-bg-elevated text-text-primary placeholder:text-text-muted border border-border-subtle rounded-md shadow-[inset_0_1px_0_0_rgba(0,0,0,0.4)] transition-all duration-200 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow focus:bg-bg-card disabled:opacity-40 disabled:cursor-not-allowed",
           inputSize === "default" &&
             "min-h-[48px] px-3.5 py-3 text-body-lg",
           inputSize === "boost" &&
@@ -38,7 +40,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       <textarea
         ref={ref}
         className={cn(
-          "w-full min-h-[96px] bg-bg-elevated text-text-primary placeholder:text-text-muted border border-border-subtle rounded-md px-3.5 py-3 text-body-lg transition-colors duration-200 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow disabled:opacity-40 disabled:cursor-not-allowed resize-y",
+          "w-full min-h-[96px] bg-bg-elevated text-text-primary placeholder:text-text-muted border border-border-subtle rounded-md shadow-[inset_0_1px_0_0_rgba(0,0,0,0.4)] px-3.5 py-3 text-body-lg transition-all duration-200 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow focus:bg-bg-card disabled:opacity-40 disabled:cursor-not-allowed resize-y",
           className,
         )}
         {...props}

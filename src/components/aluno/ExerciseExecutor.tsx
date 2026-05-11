@@ -232,7 +232,7 @@ export function ExerciseExecutor({
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col">
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 bg-bg-base/95 backdrop-blur border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 glass-nav border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content">
         <IconButton
           aria-label={paused ? "Retomar" : "Pausar"}
           onClick={() => setPaused((p) => !p)}
@@ -252,7 +252,7 @@ export function ExerciseExecutor({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 w-52 bg-bg-card rounded-md shadow-lg p-2 z-20 animate-fade-in"
+              className="absolute right-0 top-full mt-1 w-52 glass-surface-strong rounded-md p-2 z-20 animate-fade-in"
             >
               <button
                 type="button"
@@ -370,7 +370,7 @@ export function ExerciseExecutor({
         </div>
       </div>
 
-      <div className="fixed bottom-0 inset-x-0 z-20 bg-bg-base/95 backdrop-blur border-t border-border-subtle px-4 lg:px-6 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+      <div className="fixed bottom-0 inset-x-0 z-20 glass-nav border-t border-border-subtle px-4 lg:px-6 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Button
             variant="secondary"

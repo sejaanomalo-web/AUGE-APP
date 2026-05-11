@@ -48,8 +48,9 @@ export function AppHeader({
     <header
       className={cn(
         // pt-[env(safe-area-inset-top)] empurra o conteúdo do header pra baixo
-        // da status bar / dynamic island quando o app roda como PWA no iOS
-        "sticky top-0 z-20 flex items-center justify-between gap-3 h-14 lg:h-16 px-4 lg:px-8 bg-bg-base/95 backdrop-blur border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content",
+        // da status bar / dynamic island quando o app roda como PWA no iOS.
+        // Glass-nav: navigation layer — translucent over the content layer.
+        "sticky top-0 z-20 flex items-center justify-between gap-3 h-14 lg:h-16 px-4 lg:px-8 glass-nav border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content",
         className,
       )}
     >
@@ -87,7 +88,7 @@ export function AppHeader({
         {open && (
           <div
             role="menu"
-            className="absolute right-4 top-[calc(100%+4px)] w-56 bg-bg-card rounded-md shadow-lg p-2 animate-fade-in"
+            className="absolute right-4 top-[calc(100%+4px)] w-56 glass-surface-strong rounded-md p-2 animate-fade-in"
           >
             <div className="px-3 py-2 mb-1">
               <p className="text-body font-semibold text-text-primary truncate">

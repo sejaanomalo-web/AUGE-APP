@@ -7,28 +7,37 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          base: "#121212",
-          surface: "#181818",
-          elevated: "#1f1f1f",
-          card: "#252525",
-          hover: "#2a2a2a",
+          // Pure black base for premium feel; cards elevated through near-black greys.
+          base: "#000000",
+          surface: "#0d0d0d",
+          elevated: "#161616",
+          card: "#1c1c1c",
+          hover: "#222222",
         },
         accent: {
           DEFAULT: "#C9953A",
-          hover: "#B8842E",
+          hover: "#D4A14F",
           muted: "#8A6824",
-          glow: "rgba(201, 149, 58, 0.15)",
+          glow: "rgba(201, 149, 58, 0.18)",
         },
         text: {
           primary: "#ffffff",
-          secondary: "#b3b3b3",
-          muted: "#7c7c7c",
-          "on-accent": "#121212",
+          secondary: "#a8a8a8",
+          muted: "#6e6e6e",
+          "on-accent": "#0a0a0a",
         },
         border: {
-          DEFAULT: "#4d4d4d",
-          subtle: "#2a2a2a",
+          DEFAULT: "rgba(255,255,255,0.10)",
+          subtle: "rgba(255,255,255,0.06)",
+          strong: "rgba(255,255,255,0.18)",
           focus: "#C9953A",
+        },
+        glass: {
+          // Navigation-layer translucent surfaces.
+          DEFAULT: "rgba(255,255,255,0.04)",
+          strong: "rgba(255,255,255,0.06)",
+          highlight: "rgba(255,255,255,0.10)",
+          border: "rgba(255,255,255,0.10)",
         },
         error: "#f3727f",
         warning: "#ffa42b",
@@ -54,24 +63,35 @@ const config: Config = {
       },
       borderRadius: {
         sm: "4px",
-        md: "8px",
-        lg: "12px",
-        xl: "16px",
+        md: "10px",
+        lg: "14px",
+        xl: "20px",
+        "2xl": "28px",
         pill: "9999px",
       },
       boxShadow: {
-        sm: "0 2px 4px rgba(0,0,0,0.2)",
-        md: "0 8px 8px rgba(0,0,0,0.3)",
-        lg: "0 8px 24px rgba(0,0,0,0.5)",
-        accent: "0 0 24px rgba(201, 149, 58, 0.2)",
-        inset: "rgb(18,18,18) 0px 1px 0px, rgb(124,124,124) 0px 0px 0px 1px inset",
+        // Soft depth shadows (deeper at distance, color-bleed accent for highlights).
+        sm: "0 2px 6px rgba(0,0,0,0.4)",
+        md: "0 10px 30px -10px rgba(0,0,0,0.55)",
+        lg: "0 24px 50px -16px rgba(0,0,0,0.7)",
+        xl: "0 40px 80px -24px rgba(0,0,0,0.85)",
+        accent:
+          "0 10px 32px -8px rgba(201,149,58,0.45), 0 0 0 1px rgba(201,149,58,0.4) inset",
+        // Inner top highlight — specular for glass / glass-prominent surfaces
+        "glass-edge":
+          "inset 0 1px 0 0 rgba(255,255,255,0.16), inset 0 -1px 0 0 rgba(0,0,0,0.4)",
+        "glass-edge-strong":
+          "inset 0 1px 0 0 rgba(255,255,255,0.24), inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 -1px 0 0 rgba(0,0,0,0.4)",
       },
       letterSpacing: {
-        btn: "0.1em",
-        "btn-tight": "0.05em",
+        btn: "0.06em",
+        "btn-tight": "0.03em",
       },
       spacing: {
         "safe-bottom": "env(safe-area-inset-bottom)",
+      },
+      backdropBlur: {
+        xs: "4px",
       },
       animation: {
         shimmer: "shimmer 1.5s infinite linear",
