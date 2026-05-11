@@ -14,10 +14,10 @@ const config: Config = {
           hover: "#2a2a2a",
         },
         accent: {
-          DEFAULT: "#1ed760",
-          hover: "#1db954",
-          muted: "#168d3f",
-          glow: "rgba(30, 215, 96, 0.15)",
+          DEFAULT: "#C9953A",
+          hover: "#B8842E",
+          muted: "#8A6824",
+          glow: "rgba(201, 149, 58, 0.15)",
         },
         text: {
           primary: "#ffffff",
@@ -28,7 +28,7 @@ const config: Config = {
         border: {
           DEFAULT: "#4d4d4d",
           subtle: "#2a2a2a",
-          focus: "#1ed760",
+          focus: "#C9953A",
         },
         error: "#f3727f",
         warning: "#ffa42b",
@@ -63,7 +63,7 @@ const config: Config = {
         sm: "0 2px 4px rgba(0,0,0,0.2)",
         md: "0 8px 8px rgba(0,0,0,0.3)",
         lg: "0 8px 24px rgba(0,0,0,0.5)",
-        accent: "0 0 24px rgba(30, 215, 96, 0.2)",
+        accent: "0 0 24px rgba(201, 149, 58, 0.2)",
         inset: "rgb(18,18,18) 0px 1px 0px, rgb(124,124,124) 0px 0px 0px 1px inset",
       },
       letterSpacing: {

@@ -31,10 +31,10 @@ export default function WeightSparklineImpl({ data }: { data: WeightPoint[] }) {
           <Line
             type="monotone"
             dataKey="weightKg"
-            stroke="#1ed760"
+            stroke="#C9953A"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 3, fill: "#1ed760", stroke: "#121212" }}
+            activeDot={{ r: 3, fill: "#C9953A", stroke: "#121212" }}
             isAnimationActive={false}
           />
         </LineChart>
