@@ -9,17 +9,17 @@ import { Field, Input, Textarea } from "@/components/ui/Input";
 import { IconButton } from "@/components/ui/IconButton";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
+import { DayPicker } from "@/components/ui/DayPicker";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import {
+  ExerciseSelector,
+  type ExerciseOption,
+} from "./ExerciseSelector";
 import { createPlan } from "@/lib/actions/workout-plans";
 import {
   createSession,
   addExerciseToSession,
 } from "@/lib/actions/workout-sessions";
-
-interface ExerciseOption {
-  id: string;
-  name: string;
-  muscleGroup: string;
-}
 
 interface StudentOption {
   id: string;
@@ -55,6 +55,26 @@ const DAY_MAP: Record<string, number> = {
   sabado: 6,
 };
 
+const DAY_SHORT: Record<string, string> = {
+  domingo: "Domingo",
+  segunda: "Segunda",
+  terca: "Terça",
+  quarta: "Quarta",
+  quinta: "Quinta",
+  sexta: "Sexta",
+  sabado: "Sábado",
+};
+
+const WEEK_ORDER = [
+  "segunda",
+  "terca",
+  "quarta",
+  "quinta",
+  "sexta",
+  "sabado",
+  "domingo",
+];
+
 function makeId() {
   return Math.random().toString(36).slice(2, 9);
 }
@@ -63,7 +83,7 @@ function makeSession(letter: string, defaultExerciseId: string): SessionDraft {
   return {
     id: makeId(),
     letter,
-    name: `Treino ${letter}`,
+    name: "",
     dayOfWeek: "segunda",
     exercises: [
       {
@@ -183,8 +203,10 @@ export function WorkoutBuilder({
 
       for (let i = 0; i < sessions.length; i++) {
         const s = sessions[i];
+        const sessionName =
+          s.name.trim() || `Treino ${s.letter}`;
         const session = await createSession(plan.id, {
-          name: s.name.trim() || `Treino ${s.letter}`,
+          name: sessionName,
           dayOfWeek: DAY_MAP[s.dayOfWeek],
           order: i,
         });
@@ -297,145 +319,230 @@ export function WorkoutBuilder({
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-h3 text-text-primary">2. Sessões de treino</h2>
-          <Button variant="secondary" size="sm" onClick={addSession}>
-            <Plus size={14} aria-hidden /> Adicionar treino
-          </Button>
         </div>
-        <div className="flex flex-col gap-3">
-          {sessions.map((s, sIdx) => (
-            <Card key={s.id} variant="default">
-              <div className="flex items-center gap-2 mb-3">
-                <Badge>Treino {s.letter}</Badge>
-                <Input
-                  className="flex-1"
-                  value={s.name}
-                  onChange={(e) =>
-                    updateSession(sIdx, { name: e.target.value })
-                  }
-                  placeholder="Nome do treino"
-                />
-                <Select
-                  className="w-auto"
-                  value={s.dayOfWeek}
-                  onChange={(e) =>
-                    updateSession(sIdx, { dayOfWeek: e.target.value })
-                  }
-                >
-                  <option value="segunda">Segunda</option>
-                  <option value="terca">Terça</option>
-                  <option value="quarta">Quarta</option>
-                  <option value="quinta">Quinta</option>
-                  <option value="sexta">Sexta</option>
-                  <option value="sabado">Sábado</option>
-                  <option value="domingo">Domingo</option>
-                </Select>
-                <IconButton
-                  aria-label={s.expanded ? "Recolher" : "Expandir"}
-                  onClick={() =>
-                    updateSession(sIdx, { expanded: !s.expanded })
-                  }
-                >
-                  {s.expanded ? (
-                    <ChevronUp size={18} />
-                  ) : (
-                    <ChevronDown size={18} />
-                  )}
-                </IconButton>
-                {sessions.length > 1 && (
-                  <IconButton
-                    aria-label="Remover treino"
-                    onClick={() => removeSession(sIdx)}
-                  >
-                    <Trash2 size={18} className="text-error" />
-                  </IconButton>
-                )}
-              </div>
 
-              {s.expanded && (
-                <div className="flex flex-col gap-2">
-                  {s.exercises.map((ex, exIdx) => (
-                    <div
-                      key={ex.id}
-                      className="grid grid-cols-1 sm:grid-cols-[2fr_repeat(4,1fr)_auto] gap-2 items-start p-3 bg-bg-elevated rounded-md"
+        <Tabs defaultValue="plan">
+          <TabsList>
+            <TabsTrigger value="plan">Treinos do plano</TabsTrigger>
+            <TabsTrigger value="schedule">Cronograma semanal</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="plan">
+            <div className="flex flex-col gap-3">
+              {sessions.map((s, sIdx) => (
+                <Card key={s.id} variant="default">
+                  {/* Header em uma linha só — Badge + Input nome + DayPicker + ações */}
+                  <div className="flex items-center gap-2 mb-4 flex-nowrap">
+                    <Badge className="shrink-0">Treino {s.letter}</Badge>
+                    <Input
+                      className="flex-1 min-w-0"
+                      value={s.name}
+                      onChange={(e) =>
+                        updateSession(sIdx, { name: e.target.value })
+                      }
+                      placeholder={`ex: Peito e bíceps com foco em recuperação`}
+                    />
+                    <DayPicker
+                      value={s.dayOfWeek}
+                      onChange={(v) =>
+                        updateSession(sIdx, { dayOfWeek: v })
+                      }
+                      className="shrink-0"
+                    />
+                    <IconButton
+                      aria-label={s.expanded ? "Recolher" : "Expandir"}
+                      onClick={() =>
+                        updateSession(sIdx, { expanded: !s.expanded })
+                      }
+                      className="shrink-0"
                     >
-                      <Select
-                        value={ex.exerciseId}
-                        onChange={(e) =>
-                          updateExercise(sIdx, exIdx, {
-                            exerciseId: e.target.value,
-                          })
-                        }
-                      >
-                        {exercises.map((opt) => (
-                          <option key={opt.id} value={opt.id}>
-                            {opt.name}
-                          </option>
-                        ))}
-                      </Select>
-                      <Input
-                        type="number"
-                        aria-label="Séries"
-                        min={1}
-                        value={ex.sets}
-                        onChange={(e) =>
-                          updateExercise(sIdx, exIdx, {
-                            sets: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                      <Input
-                        aria-label="Reps"
-                        value={ex.reps}
-                        onChange={(e) =>
-                          updateExercise(sIdx, exIdx, {
-                            reps: e.target.value,
-                          })
-                        }
-                      />
-                      <Input
-                        type="number"
-                        aria-label="Descanso (s)"
-                        min={0}
-                        value={ex.rest}
-                        onChange={(e) =>
-                          updateExercise(sIdx, exIdx, {
-                            rest: parseInt(e.target.value) || 0,
-                          })
-                        }
-                      />
-                      <Input
-                        type="number"
-                        aria-label="Peso sugerido (kg)"
-                        min={0}
-                        step={0.5}
-                        value={ex.weight}
-                        onChange={(e) =>
-                          updateExercise(sIdx, exIdx, {
-                            weight: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                      />
+                      {s.expanded ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </IconButton>
+                    {sessions.length > 1 && (
                       <IconButton
-                        aria-label="Remover exercício"
-                        onClick={() => removeExercise(sIdx, exIdx)}
+                        aria-label="Remover treino"
+                        onClick={() => removeSession(sIdx)}
+                        className="shrink-0"
                       >
-                        <Trash2 size={16} className="text-error" />
+                        <Trash2 size={18} className="text-error" />
                       </IconButton>
+                    )}
+                  </div>
+
+                  {s.expanded && (
+                    <div className="flex flex-col gap-2">
+                      {/* Header das colunas */}
+                      <div className="hidden sm:grid grid-cols-[minmax(0,2.5fr)_70px_90px_90px_90px_44px] gap-2 items-center px-3 text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold">
+                        <span>Exercício</span>
+                        <span className="text-center">Séries</span>
+                        <span className="text-center">Reps</span>
+                        <span className="text-center">Descanso (s)</span>
+                        <span className="text-center">Peso (kg)</span>
+                        <span />
+                      </div>
+
+                      {s.exercises.map((ex, exIdx) => (
+                        <div
+                          key={ex.id}
+                          className="grid grid-cols-1 sm:grid-cols-[minmax(0,2.5fr)_70px_90px_90px_90px_44px] gap-2 items-start sm:items-center p-3 bg-bg-elevated rounded-md"
+                        >
+                          <div className="min-w-0">
+                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              Exercício
+                            </span>
+                            <ExerciseSelector
+                              value={ex.exerciseId}
+                              options={exercises}
+                              onChange={(id) =>
+                                updateExercise(sIdx, exIdx, { exerciseId: id })
+                              }
+                            />
+                          </div>
+                          <label className="min-w-0 block sm:contents">
+                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              Séries
+                            </span>
+                            <Input
+                              type="number"
+                              aria-label="Séries"
+                              min={1}
+                              value={ex.sets}
+                              onChange={(e) =>
+                                updateExercise(sIdx, exIdx, {
+                                  sets: parseInt(e.target.value) || 0,
+                                })
+                              }
+                              className="text-center"
+                            />
+                          </label>
+                          <label className="min-w-0 block sm:contents">
+                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              Reps
+                            </span>
+                            <Input
+                              aria-label="Reps"
+                              value={ex.reps}
+                              onChange={(e) =>
+                                updateExercise(sIdx, exIdx, {
+                                  reps: e.target.value,
+                                })
+                              }
+                              className="text-center"
+                              placeholder="8-10"
+                            />
+                          </label>
+                          <label className="min-w-0 block sm:contents">
+                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              Descanso (s)
+                            </span>
+                            <Input
+                              type="number"
+                              aria-label="Descanso (s)"
+                              min={0}
+                              value={ex.rest}
+                              onChange={(e) =>
+                                updateExercise(sIdx, exIdx, {
+                                  rest: parseInt(e.target.value) || 0,
+                                })
+                              }
+                              className="text-center"
+                            />
+                          </label>
+                          <label className="min-w-0 block sm:contents">
+                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              Peso (kg)
+                            </span>
+                            <Input
+                              type="number"
+                              aria-label="Peso sugerido (kg)"
+                              min={0}
+                              step={0.5}
+                              value={ex.weight}
+                              onChange={(e) =>
+                                updateExercise(sIdx, exIdx, {
+                                  weight: parseFloat(e.target.value) || 0,
+                                })
+                              }
+                              className="text-center"
+                            />
+                          </label>
+                          <div className="flex sm:block justify-end">
+                            <IconButton
+                              aria-label="Remover exercício"
+                              onClick={() => removeExercise(sIdx, exIdx)}
+                            >
+                              <Trash2 size={16} className="text-error" />
+                            </IconButton>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        variant="tertiary"
+                        size="sm"
+                        onClick={() => addExercise(sIdx)}
+                        className="self-start"
+                      >
+                        <Plus size={14} aria-hidden /> Adicionar exercício
+                      </Button>
                     </div>
-                  ))}
-                  <Button
-                    variant="tertiary"
-                    size="sm"
-                    onClick={() => addExercise(sIdx)}
-                    className="self-start"
-                  >
-                    <Plus size={14} aria-hidden /> Adicionar exercício
-                  </Button>
-                </div>
-              )}
+                  )}
+                </Card>
+              ))}
+
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={addSession}
+                className="self-start"
+              >
+                <Plus size={16} aria-hidden /> Adicionar treino
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="schedule">
+            <Card variant="default">
+              <p className="text-caption text-text-muted mb-4">
+                Visualização do que o aluno fará em cada dia da semana,
+                baseado nos treinos definidos acima. Edite o dia em "Treinos
+                do plano".
+              </p>
+              <ul className="flex flex-col gap-2">
+                {WEEK_ORDER.map((d) => {
+                  const matches = sessions.filter((s) => s.dayOfWeek === d);
+                  return (
+                    <li
+                      key={d}
+                      className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-bg-elevated"
+                    >
+                      <span className="text-body font-semibold text-text-primary w-24 shrink-0">
+                        {DAY_SHORT[d]}
+                      </span>
+                      <div className="flex-1 min-w-0 flex flex-wrap gap-1.5 justify-end">
+                        {matches.length === 0 ? (
+                          <span className="text-caption text-text-muted italic">
+                            Descanso
+                          </span>
+                        ) : (
+                          matches.map((m) => (
+                            <Badge key={m.id} variant="default">
+                              Treino {m.letter}
+                              {m.name ? ` — ${m.name}` : ""}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </Card>
-          ))}
-        </div>
+          </TabsContent>
+        </Tabs>
       </section>
 
       {error && (
