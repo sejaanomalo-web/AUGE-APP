@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProfileEditor } from "@/components/shared/ProfileEditor";
+import { LinkTrainerDialog } from "@/components/aluno/LinkTrainerDialog";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyTrainer } from "@/lib/actions/users";
 
@@ -64,9 +65,10 @@ export default async function PerfilAlunoPage() {
                 Sem personal vinculado
               </p>
               <p className="text-caption text-text-muted">
-                Peça um código de convite para se vincular a um personal.
+                Cole um código de convite para vincular um personal.
               </p>
             </div>
+            <LinkTrainerDialog />
           </Card>
         )}
       </section>

@@ -4,6 +4,16 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+async function assertPlanOwner(userId: string, planId: string) {
+  const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } });
+  if (!plan) throw new Error("Plano não encontrado");
+  const ok =
+    plan.trainerId === userId ||
+    (plan.trainerId === null && plan.studentId === userId);
+  if (!ok) throw new Error("Sem permissão");
+  return plan;
+}
+
 export async function createSession(
   planId: string,
   data: {
@@ -16,16 +26,14 @@ export async function createSession(
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
-  const plan = await prisma.workoutPlan.findFirst({
-    where: { id: planId, trainerId: userId },
-  });
-  if (!plan) throw new Error("Plano não encontrado");
+  await assertPlanOwner(userId, planId);
 
   const session = await prisma.workoutSession.create({
     data: { ...data, planId },
   });
 
   revalidatePath(`/treinos/${planId}`);
+  revalidatePath(`/planos/${planId}`);
   return session;
 }
 

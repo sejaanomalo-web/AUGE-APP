@@ -40,9 +40,8 @@ export async function createCustomExercise(data: {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (user?.role !== "PERSONAL") throw new Error("Apenas personais");
-
+  // Allow any authenticated user to create their own custom exercises.
+  // Visibility is scoped by createdById (see getExercises).
   const ex = await prisma.exercise.create({
     data: { ...data, isCustom: true, createdById: userId },
   });
@@ -78,9 +77,6 @@ export async function updateExercise(
 export async function uploadExerciseImage(formData: FormData): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
-
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (user?.role !== "PERSONAL") throw new Error("Apenas personais");
 
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("Arquivo obrigatório");

@@ -4,8 +4,20 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+/**
+ * Check if the given user can edit a plan: must be either the trainer
+ * who created it OR the student themselves when there's no trainer (solo plan).
+ */
+async function canEditPlan(userId: string, planId: string): Promise<boolean> {
+  const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } });
+  if (!plan) return false;
+  if (plan.trainerId === userId) return true;
+  if (plan.trainerId === null && plan.studentId === userId) return true;
+  return false;
+}
+
 export async function createPlan(data: {
-  studentId: string;
+  studentId?: string; // optional — defaults to self for solo aluno
   name: string;
   description?: string;
   startDate: Date;
@@ -14,16 +26,39 @@ export async function createPlan(data: {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
-  const link = await prisma.trainerStudent.findFirst({
-    where: { trainerId: userId, studentId: data.studentId, status: "ACTIVE" },
-  });
-  if (!link) throw new Error("Aluno não vinculado");
+  const me = await prisma.user.findUnique({ where: { id: userId } });
+  if (!me) throw new Error("Usuário não encontrado");
+
+  // Personal creates for a linked student; Aluno creates for self.
+  let trainerId: string | null = null;
+  let studentId: string;
+  if (me.role === "PERSONAL") {
+    if (!data.studentId) throw new Error("Selecione um aluno");
+    const link = await prisma.trainerStudent.findFirst({
+      where: { trainerId: userId, studentId: data.studentId, status: "ACTIVE" },
+    });
+    if (!link) throw new Error("Aluno não vinculado");
+    trainerId = userId;
+    studentId = data.studentId;
+  } else {
+    // Aluno
+    studentId = userId;
+  }
 
   const plan = await prisma.workoutPlan.create({
-    data: { ...data, trainerId: userId, isActive: true },
+    data: {
+      trainerId,
+      studentId,
+      name: data.name,
+      description: data.description,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      isActive: true,
+    },
   });
 
   revalidatePath("/treinos");
+  revalidatePath("/planos");
   return plan;
 }
 
@@ -40,20 +75,25 @@ export async function updatePlan(
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
-  await prisma.workoutPlan.updateMany({
-    where: { id, trainerId: userId },
-    data,
-  });
+  if (!(await canEditPlan(userId, id)))
+    throw new Error("Sem permissão para editar este plano");
+
+  await prisma.workoutPlan.update({ where: { id }, data });
 
   revalidatePath("/treinos");
+  revalidatePath("/planos");
 }
 
 export async function deletePlan(id: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
-  await prisma.workoutPlan.deleteMany({ where: { id, trainerId: userId } });
+  if (!(await canEditPlan(userId, id)))
+    throw new Error("Sem permissão para excluir este plano");
+
+  await prisma.workoutPlan.delete({ where: { id } });
   revalidatePath("/treinos");
+  revalidatePath("/planos");
 }
 
 export async function getActivePlanForStudent(studentId: string) {
@@ -77,8 +117,16 @@ export async function getMyPlans() {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
+  const me = await prisma.user.findUnique({ where: { id: userId } });
+  if (!me) return [];
+
+  const where =
+    me.role === "PERSONAL"
+      ? { trainerId: userId }
+      : { studentId: userId };
+
   return prisma.workoutPlan.findMany({
-    where: { trainerId: userId },
+    where,
     include: { sessions: { include: { exercises: true } } },
     orderBy: { createdAt: "desc" },
   });

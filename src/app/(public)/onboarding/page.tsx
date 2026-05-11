@@ -68,8 +68,9 @@ export default function OnboardingPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!role) return;
-    if (role === "ALUNO" && validation.state !== "valid") {
-      setError("Cole um código de convite válido para vincular ao seu personal.");
+    // Aluno: code is optional. If provided, must be valid.
+    if (role === "ALUNO" && code.length > 0 && validation.state !== "valid") {
+      setError("O código informado não é válido. Apague-o para continuar sem personal, ou corrija.");
       return;
     }
     setSubmitting(true);
@@ -77,7 +78,11 @@ export default function OnboardingPage() {
     try {
       await setUserRole(role, {
         cref: role === "PERSONAL" ? cref.trim() || undefined : undefined,
-        inviteCode: role === "ALUNO" ? code.toUpperCase() : undefined,
+        // Only consume invite if code was provided and validated.
+        inviteCode:
+          role === "ALUNO" && code.length === 6 && validation.state === "valid"
+            ? code.toUpperCase()
+            : undefined,
       });
       router.push(role === "PERSONAL" ? "/dashboard" : "/hoje");
     } catch (err) {
@@ -153,11 +158,12 @@ export default function OnboardingPage() {
               <>
                 <div>
                   <h1 className="text-h1 text-text-primary">
-                    Você foi convidado por um personal?
+                    Você tem um personal?
                   </h1>
                   <p className="mt-2 text-body-lg text-text-secondary">
-                    Cole o código de 6 caracteres que ele te passou para vincular
-                    sua conta.
+                    Se sim, cole o código de 6 caracteres. Se não, pode pular —
+                    você cria seus próprios treinos e adiciona um personal
+                    depois.
                   </p>
                 </div>
 
@@ -214,7 +220,7 @@ export default function OnboardingPage() {
                   {validation.state === "invalid" && validation.reason}
                   {validation.state === "checking" && "Validando código..."}
                   {validation.state === "idle" &&
-                    "Sem código? Peça um para o seu personal — sem código, não consegue prosseguir como aluno."}
+                    "Sem código? Sem problema — pula essa parte e vincule um personal depois pelo seu perfil."}
                 </div>
               </>
             ) : (
@@ -251,9 +257,18 @@ export default function OnboardingPage() {
               variant="primary"
               size="cta"
               fullWidth
-              disabled={submitting || (role === "ALUNO" && validation.state !== "valid")}
+              disabled={
+                submitting ||
+                (role === "ALUNO" &&
+                  code.length > 0 &&
+                  validation.state !== "valid")
+              }
             >
-              {submitting ? "Finalizando..." : "Continuar"}
+              {submitting
+                ? "Finalizando..."
+                : role === "ALUNO" && code.length === 0
+                  ? "Continuar sem personal"
+                  : "Continuar"}
             </Button>
           </form>
         )}
