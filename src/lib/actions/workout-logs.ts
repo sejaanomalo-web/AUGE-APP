@@ -4,17 +4,31 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function startWorkout(sessionId: string) {
+import type { WorkoutMode } from "@prisma/client";
+
+export async function startWorkout(
+  sessionId: string,
+  mode: WorkoutMode = "GUIDED",
+) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
   const existing = await prisma.workoutLog.findFirst({
     where: { sessionId, studentId: userId, status: "IN_PROGRESS" },
   });
-  if (existing) return existing;
+  if (existing) {
+    // If existing log has different mode, update it (user changed their mind)
+    if (existing.mode !== mode) {
+      return prisma.workoutLog.update({
+        where: { id: existing.id },
+        data: { mode },
+      });
+    }
+    return existing;
+  }
 
   return prisma.workoutLog.create({
-    data: { sessionId, studentId: userId, status: "IN_PROGRESS" },
+    data: { sessionId, studentId: userId, status: "IN_PROGRESS", mode },
   });
 }
 
@@ -71,13 +85,50 @@ export async function skipExercise(
   });
 }
 
-export async function finishWorkout(workoutLogId: string) {
+export async function finishWorkout(
+  workoutLogId: string,
+  data?: {
+    studentNotes?: string;
+    /** For FREE mode: list of exerciseIds the student claims to have done */
+    completedExerciseIds?: string[];
+  },
+) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
+  const existing = await prisma.workoutLog.findFirst({
+    where: { id: workoutLogId, studentId: userId },
+    include: { session: { include: { exercises: true } } },
+  });
+  if (!existing) throw new Error("Log não encontrado");
+
+  // If FREE mode, persist completedExerciseIds as exerciseLogs with setNumber=1
+  // (treating them as "done at least once" markers)
+  if (existing.mode === "FREE" && data?.completedExerciseIds) {
+    for (const exerciseId of data.completedExerciseIds) {
+      const already = await prisma.exerciseLog.findFirst({
+        where: { workoutLogId, exerciseId, setNumber: 1 },
+      });
+      if (!already) {
+        await prisma.exerciseLog.create({
+          data: {
+            workoutLogId,
+            exerciseId,
+            setNumber: 1,
+            completed: true,
+          },
+        });
+      }
+    }
+  }
+
   const log = await prisma.workoutLog.update({
     where: { id: workoutLogId },
-    data: { status: "COMPLETED", finishedAt: new Date() },
+    data: {
+      status: "COMPLETED",
+      finishedAt: new Date(),
+      studentNotes: data?.studentNotes,
+    },
   });
 
   revalidatePath("/hoje");

@@ -4,7 +4,7 @@ import { ChevronLeft, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
-import { LinkButton } from "@/components/ui/LinkButton";
+import { StartWorkoutCTA } from "@/components/aluno/StartWorkoutCTA";
 import { requireRole } from "@/lib/auth-helpers";
 import { getSessionById } from "@/lib/actions/workout-sessions";
 import { formatKg, formatDuration } from "@/lib/utils";
@@ -71,14 +71,7 @@ export default async function TreinoDetailPage({
       </ol>
 
       <div className="fixed bottom-16 inset-x-0 lg:relative lg:bottom-auto lg:mt-8 bg-bg-base/95 backdrop-blur lg:bg-transparent lg:backdrop-blur-none p-4 lg:p-0 border-t border-border-subtle lg:border-0 z-20">
-        <LinkButton
-          href={`/treino/${session.id}/executar`}
-          variant="primary"
-          size="cta"
-          fullWidth
-        >
-          Iniciar treino
-        </LinkButton>
+        <StartWorkoutCTA sessionId={session.id} />
       </div>
     </div>
   );
