@@ -12,9 +12,6 @@
     "prisma:studio": "prisma studio",
     "postinstall": "prisma generate"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@clerk/localizations": "^4.6.2",
     "@clerk/nextjs": "^7.3.3",
