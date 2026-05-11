@@ -2,7 +2,12 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+
+const EXERCISE_BUCKET = "exercise-media";
+const ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export async function getExercises(filter?: {
   search?: string;
@@ -30,6 +35,7 @@ export async function createCustomExercise(data: {
   muscleGroup: string;
   instructions?: string;
   videoUrl?: string;
+  imageUrl?: string;
 }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
@@ -52,6 +58,7 @@ export async function updateExercise(
     muscleGroup: string;
     instructions: string;
     videoUrl: string;
+    imageUrl: string;
   }>,
 ) {
   const { userId } = await auth();
@@ -62,6 +69,42 @@ export async function updateExercise(
     data,
   });
   revalidatePath("/exercicios");
+}
+
+/**
+ * Upload an exercise image to the public `exercise-media` bucket and return
+ * its public URL. Personal-only.
+ */
+export async function uploadExerciseImage(formData: FormData): Promise<string> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Não autenticado");
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (user?.role !== "PERSONAL") throw new Error("Apenas personais");
+
+  const file = formData.get("file") as File | null;
+  if (!file) throw new Error("Arquivo obrigatório");
+  if (!ALLOWED_IMAGE_MIMES.includes(file.type))
+    throw new Error("Formato não permitido (use JPG, PNG ou WebP)");
+  if (file.size > MAX_IMAGE_SIZE) throw new Error("Imagem maior que 5MB");
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const key = `${userId}/${Date.now()}-${safeName}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.storage
+    .from(EXERCISE_BUCKET)
+    .upload(key, buffer, { contentType: file.type, upsert: false });
+
+  if (error) throw new Error(`Upload falhou: ${error.message}`);
+
+  const { data: pub } = supabase.storage.from(EXERCISE_BUCKET).getPublicUrl(key);
+  return pub.publicUrl;
+}
+
+export async function getExerciseById(id: string) {
+  return prisma.exercise.findUnique({ where: { id } });
 }
 
 export async function deleteExercise(id: string) {

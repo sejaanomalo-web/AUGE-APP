@@ -19,6 +19,9 @@ export default async function ExerciciosPage() {
           name: e.name,
           muscleGroup: e.muscleGroup,
           isCustom: e.isCustom,
+          imageUrl: e.imageUrl,
+          videoUrl: e.videoUrl,
+          instructions: e.instructions,
         }))}
       />
     </div>

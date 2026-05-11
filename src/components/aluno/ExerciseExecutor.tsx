@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, MoreVertical, Pause, Play } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, MoreVertical, Pause, Play } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -26,6 +26,16 @@ export interface ExecutorExercise {
   reps: string;
   restSeconds: number;
   weightKgSuggested: number;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+  instructions?: string | null;
+}
+
+function extractYoutubeId(url: string): string | null {
+  const re =
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+  const m = url.match(re);
+  return m ? m[1] : null;
 }
 
 export interface ExecutorSeed {
@@ -99,6 +109,7 @@ export function ExerciseExecutor({
   const [confirmExit, setConfirmExit] = React.useState(false);
   const [showFinish, setShowFinish] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [instructionsOpen, setInstructionsOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (paused || showFinish) return;
@@ -278,14 +289,36 @@ export function ExerciseExecutor({
             <h1 className="text-training-exercise text-text-primary">
               {currentEx.exerciseName}
             </h1>
-            <div
-              aria-hidden
-              className="w-[200px] h-[200px] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md"
-            >
-              <span className="text-[120px] leading-none font-bold text-accent/30 select-none">
-                {currentEx.muscleGroup === "Cardio" ? "🏃" : "💪"}
-              </span>
-            </div>
+
+            {/* Media: image, then YouTube embed if no image, else placeholder */}
+            {currentEx.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentEx.imageUrl}
+                alt={currentEx.exerciseName}
+                className="w-full max-w-[280px] aspect-[4/3] rounded-md object-cover shadow-md"
+              />
+            ) : currentEx.videoUrl && extractYoutubeId(currentEx.videoUrl) ? (
+              <div className="w-full max-w-md aspect-video rounded-md overflow-hidden shadow-md bg-bg-elevated">
+                <iframe
+                  src={`https://www.youtube.com/embed/${extractYoutubeId(currentEx.videoUrl)}`}
+                  title={currentEx.exerciseName}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              </div>
+            ) : (
+              <div
+                aria-hidden
+                className="w-[200px] h-[200px] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md"
+              >
+                <span className="text-[120px] leading-none font-bold text-accent/30 select-none">
+                  {currentEx.muscleGroup === "Cardio" ? "🏃" : "💪"}
+                </span>
+              </div>
+            )}
+
             <p className="text-training-label text-text-secondary tnum">
               {currentEx.sets} séries · {currentEx.reps} reps
               {currentEx.restSeconds > 0 && (
@@ -299,6 +332,28 @@ export function ExerciseExecutor({
               <p className="text-caption text-text-muted tnum">
                 Peso sugerido: {formatKg(currentEx.weightKgSuggested)}
               </p>
+            )}
+
+            {currentEx.instructions && (
+              <div className="w-full">
+                <button
+                  type="button"
+                  onClick={() => setInstructionsOpen((v) => !v)}
+                  className="w-full flex items-center justify-between gap-2 px-4 py-2 rounded-md bg-bg-elevated text-text-primary hover:bg-bg-hover transition-colors text-body font-semibold"
+                >
+                  <span>Instruções</span>
+                  {instructionsOpen ? (
+                    <ChevronUp size={16} />
+                  ) : (
+                    <ChevronDown size={16} />
+                  )}
+                </button>
+                {instructionsOpen && (
+                  <p className="mt-2 text-body text-text-secondary whitespace-pre-line text-left px-1">
+                    {currentEx.instructions}
+                  </p>
+                )}
+              </div>
             )}
           </section>
 

@@ -34,6 +34,9 @@ export default async function ExecutarPage({
     reps: p.reps,
     restSeconds: p.restSeconds ?? 60,
     weightKgSuggested: p.weight ?? 0,
+    imageUrl: p.exercise.imageUrl,
+    videoUrl: p.exercise.videoUrl,
+    instructions: p.exercise.instructions,
   }));
 
   const seedMap = new Map<string, ExecutorSeed>();
