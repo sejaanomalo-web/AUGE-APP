@@ -33,29 +33,38 @@ enum InviteStatus {
   REVOKED
 }
 
+enum WorkoutMode {
+  GUIDED
+  FREE
+}
+
 model User {
-  id        String    @id
-  email     String    @unique
-  name      String
-  role      UserRole?
-  avatarUrl String?
-  phone     String?
-  birthDate DateTime?
-  height    Float?
-  goal      String?
-  cref      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id              String    @id
+  email           String    @unique
+  name            String
+  role            UserRole?
+  avatarUrl       String?
+  phone           String?
+  birthDate       DateTime?
+  height          Float?
+  currentWeight   Float?
+  goal            String?
+  cref            String?
+  sportsPracticed Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   trainerLinks    TrainerStudent[] @relation("PersonalRelation")
   studentLinks    TrainerStudent[] @relation("AlunoRelation")
   createdPlans    WorkoutPlan[]    @relation("CreatedByPersonal")
+  ownedPlans      WorkoutPlan[]    @relation("PlanOwner")
   workoutLogs     WorkoutLog[]
   bodyMetrics     BodyMetric[]
   examUploads     ExamUpload[]
   runningSessions RunningSession[]
   customExercises Exercise[]       @relation("ExerciseCreator")
   invitesCreated  InviteCode[]     @relation("InviteCreator")
+  planMetricLogs  PlanMetricLog[]
 
   @@index([email])
   @@index([role])
@@ -96,7 +105,7 @@ model TrainerStudent {
 
 model WorkoutPlan {
   id          String    @id @default(cuid())
-  trainerId   String
+  trainerId   String?
   studentId   String
   name        String
   description String?
@@ -106,8 +115,10 @@ model WorkoutPlan {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  trainer  User             @relation("CreatedByPersonal", fields: [trainerId], references: [id])
-  sessions WorkoutSession[]
+  trainer            User?                  @relation("CreatedByPersonal", fields: [trainerId], references: [id])
+  student            User                   @relation("PlanOwner", fields: [studentId], references: [id], onDelete: Cascade)
+  sessions           WorkoutSession[]
+  metricDefinitions  PlanMetricDefinition[]
 
   @@index([trainerId])
   @@index([studentId])
@@ -166,13 +177,15 @@ model SessionExercise {
 }
 
 model WorkoutLog {
-  id         String           @id @default(cuid())
-  sessionId  String
-  studentId  String
-  startedAt  DateTime         @default(now())
-  finishedAt DateTime?
-  status     WorkoutLogStatus @default(IN_PROGRESS)
-  notes      String?
+  id           String           @id @default(cuid())
+  sessionId    String
+  studentId    String
+  startedAt    DateTime         @default(now())
+  finishedAt   DateTime?
+  status       WorkoutLogStatus @default(IN_PROGRESS)
+  mode         WorkoutMode      @default(GUIDED)
+  notes        String?
+  studentNotes String?
 
   session      WorkoutSession @relation(fields: [sessionId], references: [id])
   student      User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -250,4 +263,37 @@ model RunningSession {
 
   @@index([studentId])
   @@index([date])
+}
+
+/// Personal-defined custom metric to collect from the student during a plan.
+/// Example: "Peso na barra do supino" (kg), or "Foto da execução do agachamento" (attachment required).
+model PlanMetricDefinition {
+  id                 String   @id @default(cuid())
+  planId             String
+  name               String
+  unit               String?
+  requiresAttachment Boolean  @default(false)
+  order              Int      @default(0)
+  createdAt          DateTime @default(now())
+
+  plan WorkoutPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  logs PlanMetricLog[]
+
+  @@index([planId])
+}
+
+model PlanMetricLog {
+  id            String   @id @default(cuid())
+  definitionId  String
+  studentId     String
+  value         String
+  attachmentKey String?
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  definition PlanMetricDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  student    User                 @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([definitionId])
+  @@index([studentId])
 }
