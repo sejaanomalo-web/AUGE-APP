@@ -10,7 +10,6 @@ import {
 import { Sidebar } from "@/components/shared/Sidebar";
 import { MobileDrawer } from "@/components/shared/MobileDrawer";
 import { AppHeader } from "@/components/shared/AppHeader";
-import { personal } from "@/lib/mock-data";
 
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,11 +29,6 @@ export default function PersonalLayout({
       <Sidebar items={items} />
       <div className="lg:pl-60 flex flex-col min-h-screen">
         <AppHeader
-          user={{
-            name: personal.name,
-            email: personal.email,
-            avatar: personal.avatar,
-          }}
           perfilHref="/conta"
           mobileLeftSlot={<MobileDrawer items={items} />}
         />

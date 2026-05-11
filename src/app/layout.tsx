@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ptBR } from "@clerk/localizations";
 import "./globals.css";
 
 const inter = Inter({
@@ -28,10 +30,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`dark ${inter.variable}`}>
-      <body className="font-sans bg-bg-base text-text-primary min-h-screen antialiased">
-        {children}
-      </body>
-    </html>
+    <ClerkProvider
+      localization={ptBR}
+      appearance={{
+        variables: {
+          colorPrimary: "#C9953A",
+          colorBackground: "#181818",
+          colorInputBackground: "#1f1f1f",
+          colorInputText: "#ffffff",
+          colorText: "#ffffff",
+          colorTextSecondary: "#b3b3b3",
+          colorNeutral: "#ffffff",
+          borderRadius: "8px",
+          fontFamily: "Inter, sans-serif",
+        },
+        elements: {
+          formButtonPrimary:
+            "bg-accent hover:bg-accent-hover text-text-on-accent rounded-pill normal-case font-bold",
+          card: "bg-bg-surface border-border-subtle shadow-md",
+          headerTitle: "text-text-primary",
+          headerSubtitle: "text-text-secondary",
+          socialButtonsBlockButton: "border-border hover:bg-bg-hover",
+          formFieldInput: "bg-bg-elevated border-border-subtle text-text-primary",
+          footerActionLink: "text-accent hover:text-accent-hover",
+        },
+      }}
+    >
+      <html lang="pt-BR" className={`dark ${inter.variable}`}>
+        <body className="font-sans bg-bg-base text-text-primary min-h-screen antialiased">
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

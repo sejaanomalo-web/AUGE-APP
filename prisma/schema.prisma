@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  PERSONAL
+  ALUNO
+}
+
+enum TrainerStudentStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum WorkoutLogStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum InviteStatus {
+  ACTIVE
+  USED
+  EXPIRED
+  REVOKED
+}
+
+model User {
+  id        String    @id
+  email     String    @unique
+  name      String
+  role      UserRole?
+  avatarUrl String?
+  phone     String?
+  birthDate DateTime?
+  height    Float?
+  goal      String?
+  cref      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  trainerLinks    TrainerStudent[] @relation("PersonalRelation")
+  studentLinks    TrainerStudent[] @relation("AlunoRelation")
+  createdPlans    WorkoutPlan[]    @relation("CreatedByPersonal")
+  workoutLogs     WorkoutLog[]
+  bodyMetrics     BodyMetric[]
+  examUploads     ExamUpload[]
+  runningSessions RunningSession[]
+  customExercises Exercise[]       @relation("ExerciseCreator")
+  invitesCreated  InviteCode[]     @relation("InviteCreator")
+
+  @@index([email])
+  @@index([role])
+}
+
+model InviteCode {
+  id        String       @id @default(cuid())
+  code      String       @unique
+  trainerId String
+  status    InviteStatus @default(ACTIVE)
+  usedById  String?
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+  usedAt    DateTime?
+
+  trainer User @relation("InviteCreator", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([trainerId])
+}
+
+model TrainerStudent {
+  id        String               @id @default(cuid())
+  trainerId String
+  studentId String
+  status    TrainerStudentStatus @default(ACTIVE)
+  inviteId  String?
+  startedAt DateTime             @default(now())
+  endedAt   DateTime?
+
+  trainer User @relation("PersonalRelation", fields: [trainerId], references: [id], onDelete: Cascade)
+  student User @relation("AlunoRelation", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, studentId])
+  @@index([trainerId])
+  @@index([studentId])
+}
+
+model WorkoutPlan {
+  id          String    @id @default(cuid())
+  trainerId   String
+  studentId   String
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  trainer  User             @relation("CreatedByPersonal", fields: [trainerId], references: [id])
+  sessions WorkoutSession[]
+
+  @@index([trainerId])
+  @@index([studentId])
+}
+
+model WorkoutSession {
+  id        String   @id @default(cuid())
+  planId    String
+  name      String
+  dayOfWeek Int?
+  order     Int      @default(0)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  plan      WorkoutPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  exercises SessionExercise[]
+  logs      WorkoutLog[]
+
+  @@index([planId])
+}
+
+model Exercise {
+  id           String   @id @default(cuid())
+  name         String
+  muscleGroup  String
+  videoUrl     String?
+  imageUrl     String?
+  instructions String?
+  isCustom     Boolean  @default(false)
+  createdById  String?
+  createdAt    DateTime @default(now())
+
+  creator          User?             @relation("ExerciseCreator", fields: [createdById], references: [id])
+  sessionExercises SessionExercise[]
+  exerciseLogs     ExerciseLog[]
+
+  @@index([muscleGroup])
+  @@index([createdById])
+}
+
+model SessionExercise {
+  id          String  @id @default(cuid())
+  sessionId   String
+  exerciseId  String
+  sets        Int
+  reps        String
+  restSeconds Int?
+  weight      Float?
+  notes       String?
+  order       Int     @default(0)
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exercise Exercise       @relation(fields: [exerciseId], references: [id])
+
+  @@index([sessionId])
+}
+
+model WorkoutLog {
+  id         String           @id @default(cuid())
+  sessionId  String
+  studentId  String
+  startedAt  DateTime         @default(now())
+  finishedAt DateTime?
+  status     WorkoutLogStatus @default(IN_PROGRESS)
+  notes      String?
+
+  session      WorkoutSession @relation(fields: [sessionId], references: [id])
+  student      User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  exerciseLogs ExerciseLog[]
+
+  @@index([studentId])
+  @@index([sessionId])
+  @@index([status])
+}
+
+model ExerciseLog {
+  id            String   @id @default(cuid())
+  workoutLogId  String
+  exerciseId    String
+  setNumber     Int
+  weight        Float?
+  reps          Int?
+  completed     Boolean  @default(false)
+  skipped       Boolean  @default(false)
+  skippedReason String?
+  loggedAt      DateTime @default(now())
+
+  workoutLog WorkoutLog @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exercise   Exercise   @relation(fields: [exerciseId], references: [id])
+
+  @@index([workoutLogId])
+}
+
+model BodyMetric {
+  id           String   @id @default(cuid())
+  studentId    String
+  date         DateTime @default(now())
+  weight       Float?
+  bodyFat      Float?
+  measurements Json?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([date])
+}
+
+model ExamUpload {
+  id         String   @id @default(cuid())
+  studentId  String
+  date       DateTime @default(now())
+  type       String
+  storageKey String
+  fileName   String
+  fileSize   Int
+  mimeType   String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+}
+
+model RunningSession {
+  id               String   @id @default(cuid())
+  studentId        String
+  date             DateTime @default(now())
+  distanceKm       Float
+  durationSeconds  Int
+  paceSecondsPerKm Int
+  caloriesBurned   Int?
+  routeJson        Json?
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([date])
+}
