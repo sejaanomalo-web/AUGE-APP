@@ -11,8 +11,27 @@ import { Progress } from "@/components/ui/Progress";
 import { SetRow, type SetRowState } from "./SetRow";
 import { RestTimerOverlay } from "./RestTimerOverlay";
 import { formatDuration, formatKg } from "@/lib/utils";
-import type { WorkoutSessionTemplate } from "@/lib/types";
-import { exercisesById } from "@/lib/mock-data";
+import {
+  abandonWorkout,
+  finishWorkout,
+  logSet,
+} from "@/lib/actions/workout-logs";
+
+export interface ExecutorExercise {
+  id: string;
+  exerciseId: string;
+  exerciseName: string;
+  muscleGroup: string;
+  sets: number;
+  reps: string;
+  restSeconds: number;
+  weightKgSuggested: number;
+}
+
+export interface ExecutorSeed {
+  exerciseId: string;
+  sets: { setNumber: number; weight: number; reps: number; completed: boolean }[];
+}
 
 interface ExerciseProgress {
   prescribedExerciseId: string;
@@ -21,17 +40,17 @@ interface ExerciseProgress {
   skipped: boolean;
 }
 
-function initialState(
-  session: WorkoutSessionTemplate,
-  seed?: SeedSet[],
+function buildInitial(
+  exercises: ExecutorExercise[],
+  seed?: ExecutorSeed[],
 ): ExerciseProgress[] {
-  return session.exercises.map((p) => {
-    const seedForEx = seed?.find((s) => s.prescribedExerciseId === p.id);
+  return exercises.map((p) => {
+    const seedForEx = seed?.find((s) => s.exerciseId === p.exerciseId);
     const sets: SetRowState[] = Array.from({ length: p.sets }).map((_, i) => {
-      const seedSet = seedForEx?.sets[i];
+      const seedSet = seedForEx?.sets.find((s) => s.setNumber === i + 1);
       return {
         setNumber: i + 1,
-        weightKg: seedSet?.weightKg ?? p.weightKgSuggested,
+        weightKg: seedSet?.weight ?? p.weightKgSuggested,
         reps: seedSet?.reps ?? (parseInt(p.reps, 10) || 10),
         completed: seedSet?.completed ?? false,
       };
@@ -45,44 +64,50 @@ function initialState(
   });
 }
 
-export interface SeedSet {
-  prescribedExerciseId: string;
-  sets: { weightKg: number; reps: number; completed: boolean }[];
-}
-
 export function ExerciseExecutor({
-  session,
+  workoutLogId,
+  sessionName,
+  exercises,
   seed,
+  startedAtIso,
 }: {
-  session: WorkoutSessionTemplate;
-  seed?: SeedSet[];
+  workoutLogId: string;
+  sessionName: string;
+  exercises: ExecutorExercise[];
+  seed?: ExecutorSeed[];
+  startedAtIso: string;
 }) {
   const router = useRouter();
   const [state, setState] = React.useState<ExerciseProgress[]>(() =>
-    initialState(session, seed),
+    buildInitial(exercises, seed),
   );
   const [currentIdx, setCurrentIdx] = React.useState(() => {
-    if (!seed) return 0;
-    const firstIncomplete = initialState(session, seed).findIndex(
+    if (!seed?.length) return 0;
+    const firstIncomplete = buildInitial(exercises, seed).findIndex(
       (ex) => !ex.sets.every((s) => s.completed),
     );
     return firstIncomplete === -1 ? 0 : firstIncomplete;
   });
-  const [elapsed, setElapsed] = React.useState(seed ? 12 * 60 + 34 : 0);
+  const startedAtMs = React.useMemo(
+    () => new Date(startedAtIso).getTime(),
+    [startedAtIso],
+  );
+  const [now, setNow] = React.useState(() => Date.now());
   const [paused, setPaused] = React.useState(false);
   const [resting, setResting] = React.useState<number | null>(null);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [confirmExit, setConfirmExit] = React.useState(false);
   const [showFinish, setShowFinish] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (paused || showFinish) return;
-    const i = setInterval(() => setElapsed((s) => s + 1), 1000);
+    const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, [paused, showFinish]);
+  const elapsed = Math.max(0, Math.floor((now - startedAtMs) / 1000));
 
-  const currentEx = session.exercises[currentIdx];
-  const currentMeta = exercisesById.get(currentEx.exerciseId);
+  const currentEx = exercises[currentIdx];
   const currentProgress = state[currentIdx];
 
   const totalSets = state.reduce((a, e) => a + e.sets.length, 0);
@@ -100,34 +125,50 @@ export function ExerciseExecutor({
           : ex,
       ),
     );
+    // No persist on number edits; only on toggle.
   }
 
-  function toggleComplete(setIndex: number) {
-    const wasCompleted = currentProgress.sets[setIndex].completed;
+  async function toggleComplete(setIndex: number) {
+    const setBefore = currentProgress.sets[setIndex];
+    const nextCompleted = !setBefore.completed;
     setState((prev) =>
       prev.map((ex, i) =>
         i === currentIdx
           ? {
               ...ex,
               sets: ex.sets.map((s, j) =>
-                j === setIndex ? { ...s, completed: !s.completed } : s,
+                j === setIndex ? { ...s, completed: nextCompleted } : s,
               ),
             }
           : ex,
       ),
     );
-    // Trigger rest timer when newly completed (not last set of last exercise)
-    if (!wasCompleted) {
+
+    if (nextCompleted) {
       const isLastSet = setIndex === currentProgress.sets.length - 1;
-      const isLastExercise = currentIdx === session.exercises.length - 1;
+      const isLastExercise = currentIdx === exercises.length - 1;
       if (!(isLastSet && isLastExercise)) {
-        setResting(currentEx.restSeconds);
+        setResting(currentEx.restSeconds || 60);
       }
+    }
+
+    // Persist (fire-and-forget; UI updates optimistically)
+    try {
+      await logSet({
+        workoutLogId,
+        exerciseId: currentEx.exerciseId,
+        setNumber: setBefore.setNumber,
+        weight: setBefore.weightKg,
+        reps: setBefore.reps,
+        completed: nextCompleted,
+      });
+    } catch (err) {
+      console.error("logSet failed", err);
     }
   }
 
   function goNext() {
-    if (currentIdx < session.exercises.length - 1) {
+    if (currentIdx < exercises.length - 1) {
       setCurrentIdx((i) => i + 1);
     } else {
       setShowFinish(true);
@@ -141,14 +182,34 @@ export function ExerciseExecutor({
     goNext();
   }
 
-  function finalize() {
-    setShowFinish(false);
-    router.push("/hoje");
+  async function finalize() {
+    setSubmitting(true);
+    try {
+      await finishWorkout(workoutLogId);
+    } finally {
+      setShowFinish(false);
+      router.push("/hoje");
+      router.refresh();
+    }
+  }
+
+  async function exitWithoutSaving() {
+    setSubmitting(true);
+    try {
+      await abandonWorkout(workoutLogId);
+    } finally {
+      router.push("/hoje");
+      router.refresh();
+    }
   }
 
   const totalVolume = state.reduce(
     (a, ex) =>
-      a + ex.sets.reduce((b, s) => b + (s.completed ? s.weightKg * s.reps : 0), 0),
+      a +
+      ex.sets.reduce(
+        (b, s) => b + (s.completed ? s.weightKg * s.reps : 0),
+        0,
+      ),
     0,
   );
   const completedSets = state.reduce(
@@ -156,11 +217,10 @@ export function ExerciseExecutor({
     0,
   );
 
-  const isLastExercise = currentIdx === session.exercises.length - 1;
+  const isLastExercise = currentIdx === exercises.length - 1;
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col">
-      {/* Header sticky */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 bg-bg-base/95 backdrop-blur border-b border-border-subtle">
         <IconButton
           aria-label={paused ? "Retomar" : "Pausar"}
@@ -168,10 +228,7 @@ export function ExerciseExecutor({
         >
           {paused ? <Play size={20} /> : <Pause size={20} />}
         </IconButton>
-        <p
-          aria-live="off"
-          className="text-training-cta text-text-primary tnum font-bold"
-        >
+        <p className="text-training-cta text-text-primary tnum font-bold">
           {formatDuration(elapsed)}
         </p>
         <div className="relative">
@@ -202,11 +259,10 @@ export function ExerciseExecutor({
         </div>
       </header>
 
-      {/* Progress global */}
       <div className="px-4 lg:px-6 pt-4">
         <div className="flex items-center justify-between mb-1.5">
           <p className="text-micro uppercase tracking-[0.08em] text-text-secondary">
-            Exercício {currentIdx + 1} de {session.exercises.length}
+            Exercício {currentIdx + 1} de {exercises.length}
           </p>
           <p className="text-caption text-text-muted tnum">
             {doneSets}/{totalSets} séries
@@ -215,29 +271,29 @@ export function ExerciseExecutor({
         <Progress value={overallPct} thin />
       </div>
 
-      {/* Current exercise */}
       <div className="flex-1 px-4 lg:px-6 py-6 pb-44 lg:pb-24">
         <div className="max-w-2xl mx-auto flex flex-col gap-6">
           <section className="text-center flex flex-col items-center gap-3">
-            <Badge>{currentMeta?.muscleGroup ?? ""}</Badge>
+            <Badge>{currentEx.muscleGroup}</Badge>
             <h1 className="text-training-exercise text-text-primary">
-              {currentMeta?.name ?? "Exercício"}
+              {currentEx.exerciseName}
             </h1>
             <div
               aria-hidden
               className="w-[200px] h-[200px] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md"
             >
               <span className="text-[120px] leading-none font-bold text-accent/30 select-none">
-                {currentEx.exerciseId.includes("agacha")
-                  ? "🏋️"
-                  : currentMeta?.muscleGroup === "Cardio"
-                    ? "🏃"
-                    : "💪"}
+                {currentEx.muscleGroup === "Cardio" ? "🏃" : "💪"}
               </span>
             </div>
             <p className="text-training-label text-text-secondary tnum">
-              {currentEx.sets} séries · {currentEx.reps} reps ·{" "}
-              {formatDuration(currentEx.restSeconds)} descanso
+              {currentEx.sets} séries · {currentEx.reps} reps
+              {currentEx.restSeconds > 0 && (
+                <>
+                  {" "}
+                  · {formatDuration(currentEx.restSeconds)} descanso
+                </>
+              )}
             </p>
             {currentEx.weightKgSuggested > 0 && (
               <p className="text-caption text-text-muted tnum">
@@ -246,10 +302,7 @@ export function ExerciseExecutor({
             )}
           </section>
 
-          <section
-            aria-label="Séries"
-            className="flex flex-col gap-3"
-          >
+          <section aria-label="Séries" className="flex flex-col gap-3">
             {currentProgress.sets.map((s, i) => (
               <SetRow
                 key={i}
@@ -262,7 +315,6 @@ export function ExerciseExecutor({
         </div>
       </div>
 
-      {/* CTAs bottom sticky */}
       <div className="fixed bottom-0 inset-x-0 z-20 bg-bg-base/95 backdrop-blur border-t border-border-subtle px-4 lg:px-6 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <Button
@@ -286,7 +338,6 @@ export function ExerciseExecutor({
         </div>
       </div>
 
-      {/* Rest timer */}
       {resting !== null && (
         <RestTimerOverlay
           durationSeconds={resting}
@@ -295,27 +346,28 @@ export function ExerciseExecutor({
         />
       )}
 
-      {/* Confirm exit */}
       <Dialog
         open={confirmExit}
         onOpenChange={setConfirmExit}
         title="Encerrar treino?"
-        description="Seu progresso atual não será salvo. Tem certeza?"
+        description="O treino será marcado como abandonado. As séries já marcadas continuam salvas."
         footer={
           <>
             <Button
               variant="secondary"
               size="md"
               onClick={() => setConfirmExit(false)}
+              disabled={submitting}
             >
               Continuar treino
             </Button>
             <Button
               variant="destructive"
               size="md"
-              onClick={() => router.push("/hoje")}
+              onClick={exitWithoutSaving}
+              disabled={submitting}
             >
-              Encerrar
+              {submitting ? "Encerrando..." : "Encerrar"}
             </Button>
           </>
         }
@@ -323,7 +375,6 @@ export function ExerciseExecutor({
         <></>
       </Dialog>
 
-      {/* Finish modal */}
       <Dialog
         open={showFinish}
         onOpenChange={setShowFinish}
@@ -338,8 +389,9 @@ export function ExerciseExecutor({
             size="cta"
             onClick={finalize}
             fullWidth
+            disabled={submitting}
           >
-            Voltar para Hoje
+            {submitting ? "Salvando..." : "Voltar para Hoje"}
           </Button>
         }
       >
@@ -364,6 +416,9 @@ export function ExerciseExecutor({
           </div>
         </dl>
       </Dialog>
+
+      {/* placeholder ref for sessionName, in case future header copy uses it */}
+      <span className="sr-only">{sessionName}</span>
     </div>
   );
 }

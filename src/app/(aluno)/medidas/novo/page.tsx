@@ -7,16 +7,58 @@ import { ChevronLeft } from "lucide-react";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Input";
-import { TODAY_ISO } from "@/lib/mock-data";
+import { addMetric } from "@/lib/actions/body-metrics";
+
+function pickNumber(form: FormData, key: string): number | undefined {
+  const raw = form.get(key);
+  if (typeof raw !== "string" || raw.trim() === "") return undefined;
+  const n = parseFloat(raw);
+  return Number.isFinite(n) ? n : undefined;
+}
 
 export default function NovaMedidaPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => router.push("/medidas"), 400);
+    setError(null);
+    const form = new FormData(e.currentTarget);
+    const date = (form.get("date") as string) || new Date().toISOString().slice(0, 10);
+    const weight = pickNumber(form, "weight");
+    const bodyFat = pickNumber(form, "bodyFat");
+    const chest = pickNumber(form, "chest");
+    const waist = pickNumber(form, "waist");
+    const hip = pickNumber(form, "hip");
+    const arm = pickNumber(form, "arm");
+    const thigh = pickNumber(form, "thigh");
+    const calf = pickNumber(form, "calf");
+    const notes = (form.get("notes") as string)?.trim() || undefined;
+
+    const measurements: Record<string, number> = {};
+    if (chest != null) measurements.chest = chest;
+    if (waist != null) measurements.waist = waist;
+    if (hip != null) measurements.hip = hip;
+    if (arm != null) measurements.arm = arm;
+    if (thigh != null) measurements.thigh = thigh;
+    if (calf != null) measurements.calf = calf;
+
+    try {
+      await addMetric({
+        date: new Date(date),
+        weight,
+        bodyFat,
+        measurements: Object.keys(measurements).length > 0 ? measurements : undefined,
+        notes,
+      });
+      router.push("/medidas");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro inesperado");
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -32,13 +74,19 @@ export default function NovaMedidaPage() {
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Field label="Data" htmlFor="date">
-          <Input id="date" type="date" defaultValue={TODAY_ISO} />
+          <Input
+            id="date"
+            name="date"
+            type="date"
+            defaultValue={new Date().toISOString().slice(0, 10)}
+          />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Peso (kg)" htmlFor="weight">
             <Input
               id="weight"
+              name="weight"
               type="number"
               step={0.1}
               min={0}
@@ -46,9 +94,10 @@ export default function NovaMedidaPage() {
               placeholder="80.1"
             />
           </Field>
-          <Field label="% Gordura" htmlFor="bf">
+          <Field label="% Gordura" htmlFor="bodyFat">
             <Input
-              id="bf"
+              id="bodyFat"
+              name="bodyFat"
               type="number"
               step={0.1}
               min={0}
@@ -60,31 +109,38 @@ export default function NovaMedidaPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Peitoral (cm)" htmlFor="chest">
-            <Input id="chest" type="number" step={0.1} placeholder="104" />
+            <Input id="chest" name="chest" type="number" step={0.1} />
           </Field>
           <Field label="Cintura (cm)" htmlFor="waist">
-            <Input id="waist" type="number" step={0.1} placeholder="87" />
+            <Input id="waist" name="waist" type="number" step={0.1} />
           </Field>
           <Field label="Quadril (cm)" htmlFor="hip">
-            <Input id="hip" type="number" step={0.1} placeholder="99" />
+            <Input id="hip" name="hip" type="number" step={0.1} />
           </Field>
           <Field label="Braço (cm)" htmlFor="arm">
-            <Input id="arm" type="number" step={0.1} placeholder="37.5" />
+            <Input id="arm" name="arm" type="number" step={0.1} />
           </Field>
           <Field label="Coxa (cm)" htmlFor="thigh">
-            <Input id="thigh" type="number" step={0.1} placeholder="60" />
+            <Input id="thigh" name="thigh" type="number" step={0.1} />
           </Field>
           <Field label="Panturrilha (cm)" htmlFor="calf">
-            <Input id="calf" type="number" step={0.1} placeholder="38" />
+            <Input id="calf" name="calf" type="number" step={0.1} />
           </Field>
         </div>
 
         <Field label="Notas" htmlFor="notes">
           <Textarea
             id="notes"
+            name="notes"
             placeholder="Como você está se sentindo? Alguma observação?"
           />
         </Field>
+
+        {error && (
+          <p className="text-body text-error" role="alert">
+            {error}
+          </p>
+        )}
 
         <div className="flex items-center gap-3 mt-4">
           <Link href="/medidas">

@@ -8,17 +8,13 @@ import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { StatCard } from "@/components/shared/StatCard";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { WorkoutCard } from "@/components/aluno/WorkoutCard";
 import { EvolutionChart } from "@/components/aluno/EvolutionChart";
-import {
-  activePlan,
-  alunoStats,
-  alunosSummary,
-  bodyMetrics,
-  exams,
-  workoutLogs,
-} from "@/lib/mock-data";
+import { requireRole } from "@/lib/auth-helpers";
+import { getStudentById } from "@/lib/actions/students";
+import { getAlunoWeeklyStats } from "@/lib/aluno-stats";
+import { prisma } from "@/lib/prisma";
 import { formatLongDate, formatShortDate } from "@/lib/date";
 
 export default async function AlunoDetailPage({
@@ -26,19 +22,29 @@ export default async function AlunoDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireRole("PERSONAL");
   const { id } = await params;
-  const summary = alunosSummary.find((s) => s.user.id === id);
-  if (!summary) return notFound();
-  const isBruno = id === "u_aluno_bruno";
-  const logs = isBruno
-    ? [...workoutLogs].sort((a, b) => b.date.localeCompare(a.date))
-    : [];
-  const weight = isBruno
-    ? bodyMetrics.map((m) => ({
-        label: formatShortDate(m.date),
-        value: m.weightKg,
-      }))
-    : [];
+  let student;
+  try {
+    student = await getStudentById(id);
+  } catch {
+    return notFound();
+  }
+  if (!student) return notFound();
+
+  const stats = await getAlunoWeeklyStats(id);
+  const activePlan = await prisma.workoutPlan.findFirst({
+    where: { studentId: id, isActive: true },
+  });
+
+  const weight = student.bodyMetrics
+    .filter((m) => m.weight != null)
+    .slice()
+    .reverse()
+    .map((m) => ({
+      label: formatShortDate(m.date.toISOString().slice(0, 10)),
+      value: m.weight!,
+    }));
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -48,23 +54,25 @@ export default async function AlunoDetailPage({
             <ChevronLeft size={20} />
           </IconButton>
         </Link>
-        <Avatar src={summary.user.avatar} name={summary.user.name} size={56} />
+        <Avatar
+          src={student.avatarUrl ?? undefined}
+          name={student.name}
+          size={56}
+        />
         <div className="flex-1 min-w-0">
-          <h1 className="text-h1 text-text-primary truncate">
-            {summary.user.name}
-          </h1>
+          <h1 className="text-h1 text-text-primary truncate">{student.name}</h1>
           <p className="text-caption text-text-muted truncate">
-            {summary.plano}
+            {activePlan?.name ?? "Sem plano ativo"}
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2">
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" disabled>
             <Pencil size={14} aria-hidden /> Editar
           </Button>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" disabled>
             <Pause size={14} aria-hidden /> Pausar
           </Button>
-          <Button variant="destructive" size="sm">
+          <Button variant="destructive" size="sm" disabled>
             <Trash2 size={14} aria-hidden /> Remover
           </Button>
         </div>
@@ -80,37 +88,50 @@ export default async function AlunoDetailPage({
 
         <TabsContent value="overview">
           <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            <StatCard label="Aderência" value={`${summary.aderencia}%`} />
             <StatCard
               label="Treinos esta sem"
-              value={`${summary.treinosSemana.feitos}/${summary.treinosSemana.prescritos}`}
+              value={stats.completedWorkouts.toString()}
             />
-            <StatCard label="Streak" value={`${alunoStats.streakDias} dias`} />
+            <StatCard label="Streak" value={`${stats.streakDays} dias`} />
             <StatCard
               label="Volume sem"
-              value={`${alunoStats.volumeSemanaKg.toLocaleString("pt-BR")} kg`}
+              value={
+                stats.volume > 0
+                  ? `${stats.volume.toLocaleString("pt-BR")} kg`
+                  : "—"
+              }
+            />
+            <StatCard
+              label="Tempo médio"
+              value={stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "—"}
             />
           </section>
 
           <Card variant="default" className="mb-6">
             <h3 className="text-h3 text-text-primary mb-3">Plano ativo</h3>
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <p className="text-body-lg text-text-primary font-semibold">
-                  {summary.plano}
-                </p>
-                {isBruno && (
-                  <p className="text-caption text-text-muted">
-                    {formatLongDate(activePlan.startDate)} –{" "}
-                    {formatLongDate(activePlan.endDate)}
+            {activePlan ? (
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <p className="text-body-lg text-text-primary font-semibold">
+                    {activePlan.name}
                   </p>
-                )}
+                  <p className="text-caption text-text-muted">
+                    {formatLongDate(activePlan.startDate.toISOString())}
+                    {activePlan.endDate
+                      ? ` – ${formatLongDate(activePlan.endDate.toISOString())}`
+                      : ""}
+                  </p>
+                </div>
+                <Badge variant="concluido">Ativo</Badge>
               </div>
-              <Badge>{summary.status === "ativo" ? "Ativo" : "Pausado"}</Badge>
-            </div>
+            ) : (
+              <p className="text-body text-text-secondary">
+                Sem plano ativo. Crie um para este aluno em /treinos/novo.
+              </p>
+            )}
           </Card>
 
-          {isBruno && weight.length > 0 && (
+          {weight.length >= 2 && (
             <Card variant="default">
               <h3 className="text-h3 text-text-primary mb-3">Peso corporal</h3>
               <EvolutionChart data={weight} unit="kg" variant="line" />
@@ -119,7 +140,7 @@ export default async function AlunoDetailPage({
         </TabsContent>
 
         <TabsContent value="treinos">
-          {logs.length === 0 ? (
+          {student.workoutLogs.length === 0 ? (
             <Card variant="default">
               <p className="text-body text-text-secondary">
                 Sem histórico de treinos para esse aluno ainda.
@@ -127,17 +148,20 @@ export default async function AlunoDetailPage({
             </Card>
           ) : (
             <div className="flex flex-col gap-2">
-              {logs.slice(0, 12).map((l) => (
+              {student.workoutLogs.slice(0, 12).map((l) => (
                 <WorkoutCard
                   key={l.id}
                   log={{
                     id: l.id,
-                    date: l.date,
-                    sessionLetter: l.sessionLetter,
-                    sessionName: l.sessionName,
-                    status: l.status,
-                    durationSeconds: l.durationSeconds,
-                    totalVolumeKg: l.totalVolumeKg,
+                    date: l.startedAt.toISOString().slice(0, 10),
+                    sessionLetter: l.session.name.charAt(0) || "T",
+                    sessionName: l.session.name,
+                    status:
+                      l.status === "COMPLETED"
+                        ? "concluido"
+                        : l.status === "ABANDONED"
+                          ? "pulado"
+                          : "em_andamento",
                   }}
                 />
               ))}
@@ -146,7 +170,12 @@ export default async function AlunoDetailPage({
         </TabsContent>
 
         <TabsContent value="medidas">
-          {isBruno ? (
+          {student.bodyMetrics.length === 0 ? (
+            <EmptyState
+              title="Sem medidas"
+              description="Este aluno ainda não registrou medidas corporais."
+            />
+          ) : (
             <Card variant="default" className="p-0 overflow-hidden">
               <table className="w-full text-body tnum">
                 <thead>
@@ -158,69 +187,36 @@ export default async function AlunoDetailPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {[...bodyMetrics]
-                    .sort((a, b) => b.date.localeCompare(a.date))
-                    .map((m) => (
-                      <tr
-                        key={m.id}
-                        className="border-b border-border-subtle/60"
-                      >
+                  {student.bodyMetrics.map((m) => {
+                    const meas = (m.measurements as Record<string, number> | null) ?? {};
+                    return (
+                      <tr key={m.id} className="border-b border-border-subtle/60">
                         <td className="p-3 text-text-secondary">
-                          {formatShortDate(m.date)}
+                          {formatShortDate(m.date.toISOString().slice(0, 10))}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.weightKg.toFixed(1)}
+                          {m.weight != null ? m.weight.toFixed(1) : "—"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.bodyFatPercent.toFixed(1)}%
+                          {m.bodyFat != null ? `${m.bodyFat.toFixed(1)}%` : "—"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.waistCm.toFixed(1)} cm
+                          {meas.waist != null ? `${meas.waist.toFixed(1)} cm` : "—"}
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </Card>
-          ) : (
-            <Card variant="default">
-              <p className="text-body text-text-secondary">
-                Sem medidas registradas ainda.
-              </p>
-            </Card>
-          )}
-
-          {isBruno && (
-            <div className="mt-4">
-              <h3 className="text-h3 text-text-primary mb-3">Exames</h3>
-              <ul className="flex flex-col gap-2">
-                {exams.map((e) => (
-                  <li key={e.id}>
-                    <Card variant="default">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-body-lg text-text-primary font-semibold truncate">
-                            {e.type}
-                          </p>
-                          <p className="text-caption text-text-muted">
-                            {formatLongDate(e.date)}
-                          </p>
-                        </div>
-                        <StatusBadge status="concluido" />
-                      </div>
-                    </Card>
-                  </li>
-                ))}
-              </ul>
-            </div>
           )}
         </TabsContent>
 
         <TabsContent value="evolucao">
-          {isBruno && weight.length > 0 ? (
+          {weight.length >= 2 ? (
             <Card variant="default">
               <h3 className="text-h3 text-text-primary mb-3">
-                Peso corporal — últimas 12 semanas
+                Peso corporal — histórico
               </h3>
               <EvolutionChart data={weight} unit="kg" variant="line" />
             </Card>

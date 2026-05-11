@@ -6,27 +6,36 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
-import {
-  activePlan,
-  alunosSummary,
-  exercisesById,
-  personalPlans,
-} from "@/lib/mock-data";
+import { requireRole } from "@/lib/auth-helpers";
+import { getPlanById } from "@/lib/actions/workout-plans";
+import { prisma } from "@/lib/prisma";
 import { formatLongDate } from "@/lib/date";
 import { formatKg, formatDuration } from "@/lib/utils";
+
+const DAY_NAMES = [
+  "Domingo",
+  "Segunda",
+  "Terça",
+  "Quarta",
+  "Quinta",
+  "Sexta",
+  "Sábado",
+];
 
 export default async function TreinoPlanDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const personal = await requireRole("PERSONAL");
   const { id } = await params;
-  const plan = personalPlans.find((p) => p.id === id);
-  if (!plan) return notFound();
+  const plan = await getPlanById(id);
+  if (!plan || plan.trainerId !== personal.id) return notFound();
 
-  const isActivePlan = id === activePlan.id;
-  const sessions = isActivePlan ? activePlan.sessions : [];
-  const aluno = alunosSummary.find((s) => s.user.name === plan.aluno);
+  const student = await prisma.user.findUnique({
+    where: { id: plan.studentId },
+    select: { id: true, name: true, email: true, avatarUrl: true },
+  });
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -37,36 +46,39 @@ export default async function TreinoPlanDetailPage({
           </IconButton>
         </Link>
         <div className="flex-1 min-w-0">
-          <Badge>{plan.weeklyFrequency}x semana</Badge>
+          <Badge>{plan.sessions.length}x semana</Badge>
           <h1 className="mt-1 text-h1 text-text-primary truncate">
             {plan.name}
           </h1>
-          {isActivePlan && (
-            <p className="text-caption text-text-muted">
-              {formatLongDate(activePlan.startDate)} –{" "}
-              {formatLongDate(activePlan.endDate)}
-            </p>
-          )}
+          <p className="text-caption text-text-muted">
+            {formatLongDate(plan.startDate.toISOString())}
+            {plan.endDate
+              ? ` – ${formatLongDate(plan.endDate.toISOString())}`
+              : ""}
+          </p>
         </div>
-        <Button variant="secondary" size="sm">
+        <Button variant="secondary" size="sm" disabled>
           <Pencil size={14} aria-hidden /> Editar
         </Button>
       </header>
 
-      {aluno && (
+      {student && (
         <Card variant="default" className="mb-6 flex items-center gap-3">
-          <Avatar src={aluno.user.avatar} name={aluno.user.name} size={40} />
+          <Avatar
+            src={student.avatarUrl ?? undefined}
+            name={student.name}
+            size={40}
+          />
           <div className="flex-1 min-w-0">
             <p className="text-body-lg text-text-primary font-semibold truncate">
-              {aluno.user.name}
+              {student.name}
             </p>
             <p className="text-caption text-text-muted truncate">
-              Aderência {aluno.aderencia}% · {aluno.treinosSemana.feitos}/
-              {aluno.treinosSemana.prescritos} esta semana
+              {student.email}
             </p>
           </div>
           <Link
-            href={`/alunos/${aluno.user.id}`}
+            href={`/alunos/${student.id}`}
             className="text-caption text-accent hover:underline"
           >
             Ver aluno →
@@ -74,54 +86,55 @@ export default async function TreinoPlanDetailPage({
         </Card>
       )}
 
-      {sessions.length > 0 ? (
+      {plan.sessions.length === 0 ? (
+        <Card variant="default">
+          <p className="text-body text-text-secondary">
+            Este plano ainda não tem sessões. Edite-o para adicionar treinos.
+          </p>
+        </Card>
+      ) : (
         <div className="flex flex-col gap-4">
-          {sessions.map((s) => (
+          {plan.sessions.map((s) => (
             <Card key={s.id} variant="default">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div>
-                  <Badge>Treino {s.letter}</Badge>
+                  <Badge>
+                    {s.dayOfWeek != null ? DAY_NAMES[s.dayOfWeek] : "Livre"}
+                  </Badge>
                   <h2 className="mt-1 text-h2 text-text-primary">{s.name}</h2>
                   <p className="text-caption text-text-muted">
-                    {s.exercises.length} exercícios · ~{s.estimatedMinutes} min
-                    · {s.dayOfWeek}
+                    {s.exercises.length}{" "}
+                    {s.exercises.length === 1 ? "exercício" : "exercícios"}
                   </p>
                 </div>
               </div>
               <ul className="flex flex-col gap-2">
-                {s.exercises.map((p, i) => {
-                  const meta = exercisesById.get(p.exerciseId);
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center gap-3 py-2 border-t border-border-subtle/60 first:border-t-0"
-                    >
-                      <span className="text-caption text-text-muted tnum w-6 shrink-0">
-                        {i + 1}.
-                      </span>
-                      <span className="flex-1 text-body text-text-primary truncate">
-                        {meta?.name}
-                      </span>
-                      <span className="text-caption text-text-secondary tnum shrink-0">
-                        {p.sets}×{p.reps} ·{" "}
-                        {p.weightKgSuggested > 0
-                          ? formatKg(p.weightKgSuggested)
-                          : "PC"}{" "}
-                        · {formatDuration(p.restSeconds)}
-                      </span>
-                    </li>
-                  );
-                })}
+                {s.exercises.map((p, i) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 py-2 border-t border-border-subtle/60 first:border-t-0"
+                  >
+                    <span className="text-caption text-text-muted tnum w-6 shrink-0">
+                      {i + 1}.
+                    </span>
+                    <span className="flex-1 text-body text-text-primary truncate">
+                      {p.exercise.name}
+                    </span>
+                    <span className="text-caption text-text-secondary tnum shrink-0">
+                      {p.sets}×{p.reps}
+                      {p.weight && p.weight > 0
+                        ? ` · ${formatKg(p.weight)}`
+                        : ""}
+                      {p.restSeconds && p.restSeconds > 0
+                        ? ` · ${formatDuration(p.restSeconds)}`
+                        : ""}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </Card>
           ))}
         </div>
-      ) : (
-        <Card variant="default">
-          <p className="text-body text-text-secondary">
-            Detalhes deste plano ainda não disponíveis no mock.
-          </p>
-        </Card>
       )}
     </div>
   );

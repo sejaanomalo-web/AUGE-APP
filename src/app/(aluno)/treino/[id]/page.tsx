@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
 import { LinkButton } from "@/components/ui/LinkButton";
-import { activePlan, exercisesById } from "@/lib/mock-data";
+import { requireRole } from "@/lib/auth-helpers";
+import { getSessionById } from "@/lib/actions/workout-sessions";
 import { formatKg, formatDuration } from "@/lib/utils";
 
 export default async function TreinoDetailPage({
@@ -13,8 +14,9 @@ export default async function TreinoDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireRole("ALUNO");
   const { id } = await params;
-  const session = activePlan.sessions.find((s) => s.id === id);
+  const session = await getSessionById(id);
   if (!session) return notFound();
 
   return (
@@ -26,49 +28,46 @@ export default async function TreinoDetailPage({
           </IconButton>
         </Link>
         <div className="min-w-0">
-          <Badge>Treino {session.letter}</Badge>
+          <Badge>{session.plan.name}</Badge>
           <h1 className="mt-2 text-h1 text-text-primary truncate">
             {session.name}
           </h1>
           <p className="text-body text-text-secondary">
-            {session.exercises.length} exercícios · ~{session.estimatedMinutes}{" "}
-            min
+            {session.exercises.length} exercícios
           </p>
         </div>
       </header>
 
       <ol className="flex flex-col gap-3">
-        {session.exercises.map((p, i) => {
-          const meta = exercisesById.get(p.exerciseId);
-          return (
-            <li key={p.id}>
-              <Card variant="default" className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">
-                  <span className="text-body-lg font-bold text-text-primary tnum">
-                    {i + 1}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-body-lg text-text-primary font-semibold truncate">
-                    {meta?.name ?? "Exercício"}
-                  </p>
-                  <p className="text-caption text-text-secondary tnum">
-                    {p.sets} × {p.reps} ·{" "}
-                    {p.weightKgSuggested > 0
-                      ? formatKg(p.weightKgSuggested)
-                      : "PC"}{" "}
-                    sugerido
-                  </p>
+        {session.exercises.map((p, i) => (
+          <li key={p.id}>
+            <Card variant="default" className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">
+                <span className="text-body-lg font-bold text-text-primary tnum">
+                  {i + 1}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-body-lg text-text-primary font-semibold truncate">
+                  {p.exercise.name}
+                </p>
+                <p className="text-caption text-text-secondary tnum">
+                  {p.sets} × {p.reps}
+                  {p.weight && p.weight > 0
+                    ? ` · ${formatKg(p.weight)} sugerido`
+                    : ""}
+                </p>
+                {p.restSeconds && p.restSeconds > 0 && (
                   <p className="text-caption text-text-muted inline-flex items-center gap-1 mt-0.5">
                     <Clock size={12} aria-hidden />
                     {formatDuration(p.restSeconds)} descanso
                   </p>
-                </div>
-                <Badge>{meta?.muscleGroup ?? ""}</Badge>
-              </Card>
-            </li>
-          );
-        })}
+                )}
+              </div>
+              <Badge>{p.exercise.muscleGroup}</Badge>
+            </Card>
+          </li>
+        ))}
       </ol>
 
       <div className="fixed bottom-0 inset-x-0 lg:relative lg:mt-8 bg-bg-base/95 backdrop-blur lg:bg-transparent lg:backdrop-blur-none p-4 lg:p-0 pb-[calc(env(safe-area-inset-bottom)+1rem)] lg:pb-0 border-t border-border-subtle lg:border-0 z-20">
