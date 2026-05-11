@@ -38,6 +38,27 @@ enum WorkoutMode {
   FREE
 }
 
+enum NotificationType {
+  // Para o Aluno
+  WORKOUT_PLAN_CREATED
+  WORKOUT_PLAN_UPDATED
+  WORKOUT_EXERCISE_UPDATED
+  WORKOUT_SCHEDULE_UPDATED
+  WORKOUT_REMINDER_MORNING
+  WORKOUT_REMINDER_EVENING
+  STREAK_BROKEN
+  EXAM_RECEIVED
+  TRAINER_COMMENT
+
+  // Para o Personal
+  STUDENT_WORKOUT_STARTED
+  STUDENT_WORKOUT_FINISHED
+  STUDENT_WORKOUT_SKIPPED
+  STUDENT_METRIC_ADDED
+  STUDENT_EXAM_UPLOADED
+  STUDENT_INVITE_ACCEPTED
+}
+
 model User {
   id              String    @id
   email           String    @unique
@@ -65,6 +86,10 @@ model User {
   customExercises Exercise[]       @relation("ExerciseCreator")
   invitesCreated  InviteCode[]     @relation("InviteCreator")
   planMetricLogs  PlanMetricLog[]
+
+  notifications        Notification[]
+  pushSubscriptions    PushSubscription[]
+  notificationSettings NotificationSettings?
 
   @@index([email])
   @@index([role])
@@ -296,4 +321,52 @@ model PlanMetricLog {
 
   @@index([definitionId])
   @@index([studentId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  read      Boolean          @default(false)
+  readAt    DateTime?
+  pushSent  Boolean          @default(false)
+  pushError String?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt])
+  @@index([createdAt])
+}
+
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model NotificationSettings {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  morningReminder     Boolean @default(true)
+  eveningReminder     Boolean @default(true)
+  streakAlerts        Boolean @default(true)
+  trainerActivity     Boolean @default(true)
+  studentActivity     Boolean @default(true)
+  morningReminderHour Int     @default(7)
+  eveningReminderHour Int     @default(20)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

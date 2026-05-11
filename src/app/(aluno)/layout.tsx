@@ -3,6 +3,7 @@
 import { Sidebar } from "@/components/shared/Sidebar";
 import { AppHeader } from "@/components/shared/AppHeader";
 import { BottomNav, alunoSidebarItems } from "@/components/aluno/BottomNav";
+import { InstallPWAPrompt } from "@/components/notifications/InstallPWAPrompt";
 
 export default function AlunoLayout({
   children,
@@ -18,6 +19,7 @@ export default function AlunoLayout({
           {children}
         </main>
         <BottomNav />
+        <InstallPWAPrompt />
       </div>
     </div>
   );

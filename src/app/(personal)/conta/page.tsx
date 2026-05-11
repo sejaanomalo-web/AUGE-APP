@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { SignOutButton } from "@clerk/nextjs";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -97,6 +98,9 @@ export default async function PerfilPersonalPage() {
       <section>
         <h2 className="text-h3 text-text-primary mb-3">Conta</h2>
         <div className="flex flex-wrap gap-2">
+          <LinkButton href="/conta/notificacoes" variant="secondary" size="md">
+            <Bell size={16} aria-hidden /> Notificações
+          </LinkButton>
           <SignOutButton redirectUrl="/">
             <Button variant="destructive" size="md">
               <LogOut size={16} aria-hidden /> Sair

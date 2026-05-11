@@ -1,4 +1,5 @@
-import { LogOut, UserCircle } from "lucide-react";
+import { Bell, LogOut, UserCircle } from "lucide-react";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { SignOutButton } from "@clerk/nextjs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Avatar } from "@/components/ui/Avatar";
@@ -76,6 +77,9 @@ export default async function PerfilAlunoPage() {
       <section>
         <h2 className="text-h3 text-text-primary mb-3">Conta</h2>
         <div className="flex flex-wrap gap-2">
+          <LinkButton href="/perfil/notificacoes" variant="secondary" size="md">
+            <Bell size={16} aria-hidden /> Notificações
+          </LinkButton>
           <SignOutButton redirectUrl="/">
             <Button variant="destructive" size="md">
               <LogOut size={16} aria-hidden /> Sair

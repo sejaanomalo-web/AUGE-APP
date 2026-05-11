@@ -55,6 +55,31 @@ export function FreeWorkoutExecutor({
     return () => clearInterval(i);
   }, [paused, finishOpen]);
 
+  // Notifica a cada 30 min de treino (modo livre)
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window) || Notification.permission !== "granted")
+      return;
+    if (paused || finishOpen) return;
+
+    const interval = setInterval(
+      () => {
+        try {
+          new Notification("30 minutos de treino 💪", {
+            body: "Continue forte! Mantém o foco.",
+            icon: "/icon-192.png",
+            tag: "auge-30min",
+          });
+        } catch {
+          // silenciosamente ignora — navegador pode bloquear
+        }
+      },
+      30 * 60 * 1000,
+    );
+
+    return () => clearInterval(interval);
+  }, [paused, finishOpen]);
+
   const elapsed = Math.max(
     0,
     Math.floor((now - startedAtMs - pausedTotal) / 1000),

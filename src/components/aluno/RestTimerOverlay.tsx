@@ -17,6 +17,22 @@ export function RestTimerOverlay({
 
   React.useEffect(() => {
     if (remaining <= 0) {
+      // Notifica fim do descanso (local notification, não push)
+      if (
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        try {
+          new Notification("Descanso terminou ⏱️", {
+            body: "Próxima série!",
+            icon: "/icon-192.png",
+            tag: "auge-rest-end",
+          });
+        } catch {
+          // ignora
+        }
+      }
       onComplete();
       return;
     }

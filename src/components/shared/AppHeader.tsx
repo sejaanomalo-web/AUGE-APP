@@ -6,6 +6,7 @@ import { SignOutButton, useUser } from "@clerk/nextjs";
 import { LogOut, User as UserIcon, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
 import { Avatar } from "@/components/ui/Avatar";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -61,7 +62,8 @@ export function AppHeader({
         {rightSlot && <div className="ml-auto">{rightSlot}</div>}
       </div>
 
-      <div className="flex items-center gap-2 lg:ml-2" ref={ref}>
+      <div className="flex items-center gap-1" ref={ref}>
+        <NotificationBell />
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { customAlphabet } from "nanoid";
+import { notifyUser } from "@/lib/notifications/notify";
 
 const generateCode = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
 
@@ -71,6 +72,16 @@ export async function consumeInviteCode(code: string) {
       },
     }),
   ]);
+
+  // Notifica personal
+  notifyUser({
+    userId: invite.trainerId,
+    type: "STUDENT_INVITE_ACCEPTED",
+    title: "Novo aluno vinculado",
+    body: "Um aluno acabou de se vincular usando seu código",
+    data: { studentId: userId },
+    url: "/alunos",
+  }).catch(() => null);
 
   return { trainerId: invite.trainerId };
 }

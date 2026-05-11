@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { notifyUser } from "@/lib/notifications/notify";
 
 /**
  * Check if the given user can edit a plan: must be either the trainer
@@ -57,6 +58,18 @@ export async function createPlan(data: {
     },
   });
 
+  // Só notifica se quem criou foi o personal (não auto-notificar aluno solo)
+  if (trainerId && trainerId !== studentId) {
+    notifyUser({
+      userId: studentId,
+      type: "WORKOUT_PLAN_CREATED",
+      title: "Novo plano de treino",
+      body: `Seu personal criou um novo plano: ${data.name}`,
+      data: { planId: plan.id },
+      url: "/planos",
+    }).catch(() => null);
+  }
+
   revalidatePath("/treinos");
   revalidatePath("/planos");
   return plan;
@@ -79,6 +92,19 @@ export async function updatePlan(
     throw new Error("Sem permissão para editar este plano");
 
   await prisma.workoutPlan.update({ where: { id }, data });
+
+  // Notifica aluno se quem editou foi o personal
+  const updated = await prisma.workoutPlan.findUnique({ where: { id } });
+  if (updated && updated.trainerId === userId && updated.studentId !== userId) {
+    notifyUser({
+      userId: updated.studentId,
+      type: "WORKOUT_PLAN_UPDATED",
+      title: "Plano de treino atualizado",
+      body: "Seu personal fez ajustes no seu plano",
+      data: { planId: id },
+      url: `/planos/${id}`,
+    }).catch(() => null);
+  }
 
   revalidatePath("/treinos");
   revalidatePath("/planos");

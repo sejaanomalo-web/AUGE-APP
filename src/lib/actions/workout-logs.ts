@@ -3,8 +3,31 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { notifyUser } from "@/lib/notifications/notify";
 
 import type { WorkoutMode } from "@prisma/client";
+
+async function notifyTrainerOfStudentActivity(
+  studentId: string,
+  type: Parameters<typeof notifyUser>[0]["type"],
+  title: string,
+  bodyFn: (name: string) => string,
+  data?: Record<string, unknown>,
+) {
+  const link = await prisma.trainerStudent.findFirst({
+    where: { studentId, status: "ACTIVE" },
+    include: { student: true },
+  });
+  if (!link) return;
+  await notifyUser({
+    userId: link.trainerId,
+    type,
+    title,
+    body: bodyFn(link.student.name),
+    data,
+    url: `/alunos/${studentId}`,
+  });
+}
 
 export async function startWorkout(
   sessionId: string,
@@ -27,9 +50,20 @@ export async function startWorkout(
     return existing;
   }
 
-  return prisma.workoutLog.create({
+  const log = await prisma.workoutLog.create({
     data: { sessionId, studentId: userId, status: "IN_PROGRESS", mode },
   });
+
+  // Notify trainer
+  notifyTrainerOfStudentActivity(
+    userId,
+    "STUDENT_WORKOUT_STARTED",
+    "Treino iniciado",
+    (name) => `${name} acabou de iniciar o treino`,
+    { studentId: userId, workoutLogId: log.id },
+  ).catch(() => null);
+
+  return log;
 }
 
 export async function logSet(data: {
@@ -130,6 +164,14 @@ export async function finishWorkout(
       studentNotes: data?.studentNotes,
     },
   });
+
+  notifyTrainerOfStudentActivity(
+    userId,
+    "STUDENT_WORKOUT_FINISHED",
+    "Treino finalizado ✅",
+    (name) => `${name} finalizou o treino`,
+    { studentId: userId, workoutLogId },
+  ).catch(() => null);
 
   revalidatePath("/hoje");
   revalidatePath("/historico");
