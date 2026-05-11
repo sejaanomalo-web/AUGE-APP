@@ -18,15 +18,15 @@ export function BottomNav({ className }: { className?: string }) {
   return (
     <nav
       className={cn(
-        // Glass tab bar — floats over content with translucency + blur.
-        // The dark fill in glass-nav keeps icons legible against any background.
-        "fixed bottom-0 inset-x-0 z-30 glass-nav border-t border-border-subtle px-1 lg:hidden",
-        "pb-[env(safe-area-inset-bottom)]",
+        // Floating capsule — detached from edges with margin, sits above content.
+        // safe-area-bottom keeps clearance from iOS home indicator.
+        "fixed inset-x-0 z-30 px-3 lg:hidden",
+        "bottom-[calc(env(safe-area-inset-bottom)+10px)]",
         className,
       )}
       aria-label="Navegação principal"
     >
-      <ul className="flex items-stretch justify-around h-16">
+      <ul className="mx-auto max-w-md flex items-stretch justify-between gap-1 glass-surface-strong rounded-full p-1.5 h-[64px]">
         {items.map((item) => {
           const Icon = item.icon;
           const active =
@@ -37,22 +37,20 @@ export function BottomNav({ className }: { className?: string }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "h-full flex flex-col items-center justify-center gap-0.5 relative transition-colors px-1",
+                  "h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-all duration-200",
                   active
-                    ? "text-accent"
-                    : "text-text-muted hover:text-text-primary",
+                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(201,149,58,0.35)]"
+                    : "text-text-muted hover:text-text-primary hover:bg-white/[0.04]",
                 )}
               >
-                <Icon size={22} strokeWidth={1.75} aria-hidden />
-                <span className="text-[10px] font-medium leading-none truncate max-w-full">
+                <Icon
+                  size={20}
+                  strokeWidth={active ? 2.25 : 1.75}
+                  aria-hidden
+                />
+                <span className="text-[10px] font-semibold leading-none truncate max-w-full">
                   {item.label}
                 </span>
-                {active && (
-                  <span
-                    aria-hidden
-                    className="absolute -bottom-0 w-1 h-1 rounded-full bg-accent"
-                  />
-                )}
               </Link>
             </li>
           );
