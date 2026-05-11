@@ -232,7 +232,7 @@ export function ExerciseExecutor({
 
   return (
     <div className="min-h-screen bg-bg-base flex flex-col">
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 bg-bg-base/95 backdrop-blur border-b border-border-subtle">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-2 px-4 lg:px-6 h-14 lg:h-16 bg-bg-base/95 backdrop-blur border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content">
         <IconButton
           aria-label={paused ? "Retomar" : "Pausar"}
           onClick={() => setPaused((p) => !p)}

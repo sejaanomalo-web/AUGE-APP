@@ -47,7 +47,9 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-20 flex items-center justify-between gap-3 h-14 lg:h-16 px-4 lg:px-8 bg-bg-base/95 backdrop-blur border-b border-border-subtle",
+        // pt-[env(safe-area-inset-top)] empurra o conteúdo do header pra baixo
+        // da status bar / dynamic island quando o app roda como PWA no iOS
+        "sticky top-0 z-20 flex items-center justify-between gap-3 h-14 lg:h-16 px-4 lg:px-8 bg-bg-base/95 backdrop-blur border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content",
         className,
       )}
     >
