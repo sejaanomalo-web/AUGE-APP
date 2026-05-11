@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ꓥuge — Atinja seu auge",
+  title: "ꓥuge | Seja sua melhor versão",
   description:
     "App de treino para personal trainers e alunos sérios sobre evolução.",
   manifest: "/manifest.json",
@@ -20,13 +20,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "ꓥuge",
   },
-  icons: {
-    icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
-  },
+  // Next auto-detecta src/app/icon.png e src/app/apple-icon.png.
 };
 
 export const viewport: Viewport = {
