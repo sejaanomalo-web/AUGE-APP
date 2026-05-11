@@ -12,9 +12,9 @@ const variantClasses: Record<CardVariant, string> = {
   default: "bg-bg-surface p-4",
   elevated: "bg-bg-card p-5 shadow-md",
   interactive:
-    "bg-bg-surface p-4 cursor-pointer transition-all duration-200 hover:bg-bg-card hover:-translate-y-0.5",
+    "bg-bg-surface p-4 cursor-pointer transition-all duration-200 hover:bg-bg-card hover:shadow-md",
   highlight:
-    "bg-gradient-to-br from-bg-elevated to-bg-card border border-accent/30 p-5",
+    "bg-gradient-to-br from-bg-elevated to-bg-card border border-accent/40 p-5 shadow-md",
 };
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -23,7 +23,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-lg",
+          "rounded-md",
           variantClasses[variant],
           className,
         )}

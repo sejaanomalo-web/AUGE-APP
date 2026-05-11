@@ -56,7 +56,7 @@ export default function LandingPage() {
           ].map((f) => (
             <li
               key={f.title}
-              className="bg-bg-surface rounded-lg p-5 text-left flex flex-col gap-2"
+              className="bg-bg-surface rounded-md p-5 text-left flex flex-col gap-2 shadow-md hover:bg-bg-card transition-colors"
             >
               <f.icon className="text-accent" size={28} aria-hidden />
               <p className="text-h3 text-text-primary">{f.title}</p>

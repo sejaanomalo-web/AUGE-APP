@@ -72,7 +72,7 @@ export function AppHeader({
         {open && (
           <div
             role="menu"
-            className="absolute right-4 top-[calc(100%+4px)] w-56 bg-bg-card rounded-lg shadow-lg p-2 animate-fade-in"
+            className="absolute right-4 top-[calc(100%+4px)] w-56 bg-bg-card rounded-md shadow-lg p-2 animate-fade-in"
           >
             <div className="px-3 py-2 mb-1">
               <p className="text-body font-semibold text-text-primary truncate">

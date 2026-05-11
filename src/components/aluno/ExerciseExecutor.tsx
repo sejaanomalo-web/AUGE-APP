@@ -184,7 +184,7 @@ export function ExerciseExecutor({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 w-52 bg-bg-card rounded-lg shadow-lg p-2 z-20 animate-fade-in"
+              className="absolute right-0 top-full mt-1 w-52 bg-bg-card rounded-md shadow-lg p-2 z-20 animate-fade-in"
             >
               <button
                 type="button"
@@ -225,7 +225,7 @@ export function ExerciseExecutor({
             </h1>
             <div
               aria-hidden
-              className="w-[200px] h-[200px] rounded-lg bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center"
+              className="w-[200px] h-[200px] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md"
             >
               <span className="text-[120px] leading-none font-bold text-accent/30 select-none">
                 {currentEx.exerciseId.includes("agacha")

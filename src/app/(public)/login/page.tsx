@@ -28,7 +28,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={onSubmit}
-          className="flex flex-col gap-4 bg-bg-surface rounded-xl p-6"
+          className="flex flex-col gap-4 bg-bg-surface rounded-md p-6 shadow-lg"
         >
           <h1 className="text-h2 text-text-primary">Entrar</h1>
           <Field label="Email" htmlFor="email">

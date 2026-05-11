@@ -30,7 +30,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => pick("aluno")}
-            className="group bg-bg-surface rounded-lg p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="group bg-bg-surface rounded-md p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <Dumbbell
               size={40}
@@ -47,7 +47,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => pick("personal")}
-            className="group bg-bg-surface rounded-lg p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="group bg-bg-surface rounded-md p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <Users
               size={40}

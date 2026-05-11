@@ -22,7 +22,7 @@ export function SetRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-lg p-3 transition-colors duration-200",
+        "flex items-center gap-3 rounded-md p-3 transition-colors duration-200",
         state.completed
           ? "bg-success/10 ring-1 ring-success/30"
           : "bg-bg-elevated",

@@ -46,7 +46,7 @@ export default function AlunosPage() {
             placeholder="Buscar por nome..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="pl-10"
+            className="pl-10 rounded-pill"
           />
         </div>
         <Select

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 const dicebearUrl = "https://api.dicebear.com/7.x/initials/svg";
 
-export function avatarUrl(name: string, bg: string = "C9953A") {
+export function avatarUrl(name: string, bg: string = "1ed760") {
   const seed = encodeURIComponent(name);
   return `${dicebearUrl}?seed=${seed}&backgroundColor=${bg}`;
 }

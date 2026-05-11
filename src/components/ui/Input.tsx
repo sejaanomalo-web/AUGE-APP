@@ -14,7 +14,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         ref={ref}
         type={type}
         className={cn(
-          "w-full bg-bg-elevated text-text-primary placeholder:text-text-muted border border-border-subtle rounded-md transition-colors duration-200 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow disabled:opacity-40 disabled:cursor-not-allowed",
+          "w-full bg-bg-elevated text-text-primary placeholder:text-text-muted border border-border-subtle rounded-md transition-colors duration-200 focus:outline-none focus:border-text-primary focus:ring-[3px] focus:ring-accent-glow disabled:opacity-40 disabled:cursor-not-allowed",
           inputSize === "default" &&
             "min-h-[48px] px-3.5 py-3 text-body-lg",
           inputSize === "boost" &&

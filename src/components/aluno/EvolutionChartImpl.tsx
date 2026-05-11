@@ -63,10 +63,10 @@ export default function EvolutionChartImpl({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#C9953A"
+              stroke="#1ed760"
               strokeWidth={2.5}
-              dot={{ r: 3, fill: "#C9953A", stroke: "#121212" }}
-              activeDot={{ r: 5, fill: "#C9953A", stroke: "#121212" }}
+              dot={{ r: 3, fill: "#1ed760", stroke: "#121212" }}
+              activeDot={{ r: 5, fill: "#1ed760", stroke: "#121212" }}
               isAnimationActive={false}
             />
           </LineChart>
@@ -88,7 +88,7 @@ export default function EvolutionChartImpl({
             />
             <Bar
               dataKey="value"
-              fill="#C9953A"
+              fill="#1ed760"
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />

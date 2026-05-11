@@ -74,13 +74,13 @@ export default async function HistoricoDetailPage({
       </header>
 
       <section className="grid grid-cols-3 gap-2 mb-6">
-        <div className="bg-bg-surface rounded-lg p-3">
+        <div className="bg-bg-surface rounded-md p-3">
           <p className="text-caption text-text-muted">Tempo</p>
           <p className="text-h3 text-text-primary tnum">
             {log.durationSeconds ? formatDuration(log.durationSeconds) : "—"}
           </p>
         </div>
-        <div className="bg-bg-surface rounded-lg p-3">
+        <div className="bg-bg-surface rounded-md p-3">
           <p className="text-caption text-text-muted">Volume</p>
           <p className="text-h3 text-text-primary tnum">
             {log.totalVolumeKg
@@ -98,7 +98,7 @@ export default async function HistoricoDetailPage({
             </p>
           )}
         </div>
-        <div className="bg-bg-surface rounded-lg p-3">
+        <div className="bg-bg-surface rounded-md p-3">
           <p className="text-caption text-text-muted">Conclusão</p>
           <p className="text-h3 text-text-primary tnum">{completionPct}%</p>
         </div>
