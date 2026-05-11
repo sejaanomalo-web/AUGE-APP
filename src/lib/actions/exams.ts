@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 const ALLOWED_MIMES = ["application/pdf", "image/jpeg", "image/png"];
@@ -26,8 +26,8 @@ export async function uploadExam(formData: FormData) {
   const storageKey = `${userId}/${Date.now()}-${safeName}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  const { error } = await supabaseAdmin.storage
-    .from("exams")
+  const { error } = await getSupabaseAdmin()
+    .storage.from("exams")
     .upload(storageKey, buffer, { contentType: file.type, upsert: false });
 
   if (error) throw new Error(`Upload falhou: ${error.message}`);
@@ -64,8 +64,8 @@ export async function getExamSignedUrl(examId: string) {
   );
   if (!isOwner && !isLinkedTrainer) throw new Error("Sem permissão");
 
-  const { data, error } = await supabaseAdmin.storage
-    .from("exams")
+  const { data, error } = await getSupabaseAdmin()
+    .storage.from("exams")
     .createSignedUrl(exam.storageKey, 60 * 5);
   if (error) throw new Error(error.message);
   return data.signedUrl;
@@ -78,7 +78,7 @@ export async function deleteExam(examId: string) {
   const exam = await prisma.examUpload.findUnique({ where: { id: examId } });
   if (!exam || exam.studentId !== userId) throw new Error("Sem permissão");
 
-  await supabaseAdmin.storage.from("exams").remove([exam.storageKey]);
+  await getSupabaseAdmin().storage.from("exams").remove([exam.storageKey]);
   await prisma.examUpload.delete({ where: { id: examId } });
   revalidatePath("/medidas");
 }
