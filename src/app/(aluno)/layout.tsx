@@ -1,3 +1,5 @@
+"use client";
+
 import { Sidebar } from "@/components/shared/Sidebar";
 import { AppHeader } from "@/components/shared/AppHeader";
 import { BottomNav, alunoSidebarItems } from "@/components/aluno/BottomNav";

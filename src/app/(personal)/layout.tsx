@@ -1,3 +1,5 @@
+"use client";
+
 import {
   LayoutDashboard,
   Users,
@@ -15,7 +17,7 @@ const items = [
   { href: "/alunos", label: "Alunos", icon: Users },
   { href: "/treinos", label: "Treinos", icon: Dumbbell },
   { href: "/exercicios", label: "Exercícios", icon: Library },
-  { href: "/perfil", label: "Perfil", icon: User },
+  { href: "/conta", label: "Perfil", icon: User },
 ];
 
 export default function PersonalLayout({
@@ -33,7 +35,7 @@ export default function PersonalLayout({
             email: personal.email,
             avatar: personal.avatar,
           }}
-          perfilHref="/perfil"
+          perfilHref="/conta"
           mobileLeftSlot={<MobileDrawer items={items} />}
         />
         <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8">{children}</main>
