@@ -14,10 +14,12 @@ export interface SidebarItem {
 
 export function Sidebar({
   items,
+  homeHref = "/",
   footer,
   className,
 }: {
   items: SidebarItem[];
+  homeHref?: string;
   footer?: React.ReactNode;
   className?: string;
 }) {
@@ -30,7 +32,7 @@ export function Sidebar({
         className,
       )}
     >
-      <Link href="/" className="px-3 mb-6 inline-block">
+      <Link href={homeHref} className="px-3 mb-6 inline-block">
         <Logo size="md" />
       </Link>
       <nav className="flex flex-col gap-1 flex-1">

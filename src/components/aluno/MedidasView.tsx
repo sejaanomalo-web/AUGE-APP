@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { Activity, Download, FileText, Plus, Upload, Trash2 } from "lucide-react";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { Button } from "@/components/ui/Button";
@@ -11,8 +10,13 @@ import { StatCard } from "@/components/shared/StatCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input, Label } from "@/components/ui/Input";
+import {
+  MonthYearFilter,
+  type MonthYearValue,
+} from "@/components/shared/MonthYearFilter";
 import { formatLongDate, formatShortDate } from "@/lib/date";
 import { uploadExam, getExamSignedUrl, deleteExam } from "@/lib/actions/exams";
+import { parseISO } from "date-fns";
 
 interface MetricRow {
   id: string;
@@ -43,6 +47,44 @@ export function MedidasView({
   const [uploadOpen, setUploadOpen] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [metricsFilter, setMetricsFilter] = React.useState<MonthYearValue>({
+    year: null,
+    month: null,
+  });
+  const [examsFilter, setExamsFilter] = React.useState<MonthYearValue>({
+    year: null,
+    month: null,
+  });
+
+  const metricYears = React.useMemo(() => {
+    const set = new Set<number>();
+    metrics.forEach((m) => set.add(parseISO(m.date).getFullYear()));
+    return Array.from(set).sort((a, b) => b - a);
+  }, [metrics]);
+
+  const examYears = React.useMemo(() => {
+    const set = new Set<number>();
+    exams.forEach((e) => set.add(parseISO(e.date).getFullYear()));
+    return Array.from(set).sort((a, b) => b - a);
+  }, [exams]);
+
+  const filteredMetrics = metrics.filter((m) => {
+    const d = parseISO(m.date);
+    if (metricsFilter.year !== null && d.getFullYear() !== metricsFilter.year)
+      return false;
+    if (metricsFilter.month !== null && d.getMonth() !== metricsFilter.month)
+      return false;
+    return true;
+  });
+
+  const filteredExams = exams.filter((e) => {
+    const d = parseISO(e.date);
+    if (examsFilter.year !== null && d.getFullYear() !== examsFilter.year)
+      return false;
+    if (examsFilter.month !== null && d.getMonth() !== examsFilter.month)
+      return false;
+    return true;
+  });
 
   const delta = (cur?: number | null, p?: number | null) =>
     cur != null && p != null ? +(cur - p).toFixed(1) : null;
@@ -169,6 +211,20 @@ export function MedidasView({
               )}
             </section>
 
+            <div className="flex justify-end mb-3">
+              <MonthYearFilter
+                value={metricsFilter}
+                onChange={setMetricsFilter}
+                availableYears={metricYears}
+              />
+            </div>
+
+            {filteredMetrics.length === 0 ? (
+              <EmptyState
+                title="Nenhuma medida no período"
+                description="Ajuste os filtros."
+              />
+            ) : (
             <Card variant="default" className="p-0 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-body tnum">
@@ -183,7 +239,7 @@ export function MedidasView({
                     </tr>
                   </thead>
                   <tbody>
-                    {metrics.map((m, i) => (
+                    {filteredMetrics.map((m, i) => (
                       <tr
                         key={m.id}
                         className={
@@ -216,12 +272,22 @@ export function MedidasView({
                 </table>
               </div>
             </Card>
+            )}
           </>
         )}
       </TabsContent>
 
       <TabsContent value="exames">
-        <div className="flex justify-end mb-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          {exams.length > 0 ? (
+            <MonthYearFilter
+              value={examsFilter}
+              onChange={setExamsFilter}
+              availableYears={examYears}
+            />
+          ) : (
+            <div />
+          )}
           <Button
             variant="secondary"
             size="md"
@@ -240,9 +306,15 @@ export function MedidasView({
             title="Nenhum exame anexado"
             description="Anexe seu primeiro exame (PDF, JPG ou PNG) — só você e seu personal vinculado terão acesso."
           />
+        ) : filteredExams.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="Nenhum exame no período"
+            description="Ajuste os filtros."
+          />
         ) : (
           <ul className="flex flex-col gap-2">
-            {exams.map((e) => (
+            {filteredExams.map((e) => (
               <li key={e.id}>
                 <Card variant="default" className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">

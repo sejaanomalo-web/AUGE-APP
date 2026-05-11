@@ -12,11 +12,13 @@ export function AppHeader({
   rightSlot,
   mobileLeftSlot,
   perfilHref,
+  homeHref = "/",
   className,
 }: {
   rightSlot?: React.ReactNode;
   mobileLeftSlot?: React.ReactNode;
   perfilHref: string;
+  homeHref?: string;
   className?: string;
 }) {
   const { user } = useUser();
@@ -50,7 +52,7 @@ export function AppHeader({
     >
       <div className="flex items-center gap-2 lg:hidden">
         {mobileLeftSlot}
-        <Link href="/">
+        <Link href={homeHref}>
           <Logo size="sm" />
         </Link>
       </div>

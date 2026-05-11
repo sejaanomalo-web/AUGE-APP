@@ -3,30 +3,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  // Spotify-style buttons: pill on every variant, uppercase + wide tracking.
-  "inline-flex items-center justify-center gap-2 font-sans uppercase tracking-btn transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap rounded-pill",
+  // Refined: pill geometry kept (Spotify-inspired), UPPERCASE only on CTA size.
+  // Smooth transitions, subtle scale on press, premium focus ring.
+  "inline-flex items-center justify-center gap-2 font-sans transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap rounded-pill active:scale-[0.98]",
   {
     variants: {
       variant: {
-        // Primary: Spotify Green pill
         primary:
-          "bg-accent text-text-on-accent hover:bg-accent-hover active:bg-accent-muted font-bold hover:scale-[1.02]",
-        // Secondary: dark pill with outline
+          "bg-accent text-text-on-accent shadow-sm hover:bg-accent-hover hover:shadow-accent active:bg-accent-muted font-semibold",
         secondary:
-          "bg-bg-elevated text-text-primary border border-border hover:bg-bg-hover hover:border-text-primary font-bold",
-        // Tertiary: ghost
+          "bg-bg-elevated text-text-primary border border-border-subtle hover:bg-bg-hover hover:border-border font-medium",
         tertiary:
-          "bg-transparent text-text-secondary hover:text-text-primary font-bold",
-        // Destructive
+          "bg-transparent text-text-secondary hover:text-text-primary hover:bg-bg-elevated/60 font-medium",
         destructive:
-          "bg-transparent text-error border border-error hover:bg-error/10 font-bold",
+          "bg-transparent text-error border border-error/60 hover:bg-error/10 hover:border-error font-medium",
       },
       size: {
-        sm: "h-9 px-4 text-[12px] tracking-btn-tight",
+        sm: "h-9 px-4 text-[13px]",
         md: "h-11 px-5 text-[14px]",
-        lg: "h-12 px-6 text-[14px]",
-        // Training CTA size (Iniciar Treino / Finalizar)
-        cta: "min-h-[48px] px-8 py-3.5 text-[16px] tracking-[0.12em]",
+        lg: "h-12 px-6 text-[15px]",
+        // CTA: only place that keeps UPPERCASE + wide tracking — Spotify staple.
+        cta: "min-h-[48px] px-8 py-3.5 text-[15px] tracking-[0.1em] uppercase font-bold",
       },
       fullWidth: {
         true: "w-full",

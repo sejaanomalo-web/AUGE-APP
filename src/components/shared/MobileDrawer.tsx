@@ -9,7 +9,13 @@ import { Logo } from "./Logo";
 import { IconButton } from "@/components/ui/IconButton";
 import type { SidebarItem } from "./Sidebar";
 
-export function MobileDrawer({ items }: { items: SidebarItem[] }) {
+export function MobileDrawer({
+  items,
+  homeHref = "/",
+}: {
+  items: SidebarItem[];
+  homeHref?: string;
+}) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
 

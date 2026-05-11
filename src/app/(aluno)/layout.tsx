@@ -11,9 +11,9 @@ export default function AlunoLayout({
 }) {
   return (
     <div className="min-h-screen bg-bg-base">
-      <Sidebar items={alunoSidebarItems} />
+      <Sidebar items={alunoSidebarItems} homeHref="/hoje" />
       <div className="lg:pl-60 flex flex-col min-h-screen">
-        <AppHeader perfilHref="/perfil" />
+        <AppHeader perfilHref="/perfil" homeHref="/hoje" />
         <main className="flex-1 pb-20 lg:pb-12 px-4 lg:px-8 py-6 lg:py-8">
           {children}
         </main>
