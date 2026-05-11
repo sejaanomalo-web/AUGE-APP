@@ -20,6 +20,7 @@ import {
   createSession,
   addExerciseToSession,
 } from "@/lib/actions/workout-sessions";
+import { createPlanMetric } from "@/lib/actions/plan-metrics";
 
 interface StudentOption {
   id: string;
@@ -43,6 +44,13 @@ interface SessionDraft {
   dayOfWeek: string;
   exercises: ExerciseRow[];
   expanded: boolean;
+}
+
+interface MetricDraft {
+  id: string;
+  name: string;
+  unit: string;
+  requiresAttachment: boolean;
 }
 
 const DAY_MAP: Record<string, number> = {
@@ -121,8 +129,29 @@ export function WorkoutBuilder({
   const [sessions, setSessions] = React.useState<SessionDraft[]>([
     makeSession("A", defaultExerciseId),
   ]);
+  const [metrics, setMetrics] = React.useState<MetricDraft[]>([]);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  function addMetric() {
+    setMetrics((prev) => [
+      ...prev,
+      {
+        id: makeId(),
+        name: "",
+        unit: "",
+        requiresAttachment: false,
+      },
+    ]);
+  }
+  function updateMetric(idx: number, patch: Partial<MetricDraft>) {
+    setMetrics((prev) =>
+      prev.map((m, i) => (i === idx ? { ...m, ...patch } : m)),
+    );
+  }
+  function removeMetric(idx: number) {
+    setMetrics((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   function addSession() {
     const nextLetter = String.fromCharCode(65 + sessions.length);
@@ -223,6 +252,19 @@ export function WorkoutBuilder({
             order: j,
           });
         }
+      }
+
+      // Persist custom metrics
+      for (let i = 0; i < metrics.length; i++) {
+        const m = metrics[i];
+        if (!m.name.trim()) continue;
+        await createPlanMetric({
+          planId: plan.id,
+          name: m.name.trim(),
+          unit: m.unit.trim() || undefined,
+          requiresAttachment: m.requiresAttachment,
+          order: i,
+        });
       }
 
       router.push(successRedirect);
@@ -555,6 +597,85 @@ export function WorkoutBuilder({
             </Card>
           </TabsContent>
         </Tabs>
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-h3 text-text-primary">
+              3. Métricas a coletar
+              <span className="ml-2 text-caption text-text-muted font-normal">
+                (opcional)
+              </span>
+            </h2>
+            <p className="text-caption text-text-muted">
+              Campos custom que o aluno preenche durante o plano.
+            </p>
+          </div>
+          <Button variant="secondary" size="sm" onClick={addMetric}>
+            <Plus size={14} aria-hidden /> Adicionar métrica
+          </Button>
+        </div>
+
+        {metrics.length === 0 ? (
+          <Card variant="default">
+            <p className="text-caption text-text-muted">
+              Nenhuma métrica adicionada. Use isso para pedir registros como
+              "Peso na barra do supino (kg)", "Foto da execução do agachamento"
+              (com anexo obrigatório), etc.
+            </p>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {metrics.map((m, idx) => (
+              <Card key={m.id} variant="default">
+                <div className="grid grid-cols-1 sm:grid-cols-[2fr_120px_auto_44px] gap-2 items-end">
+                  <Field label="Nome da métrica" htmlFor={`m-name-${m.id}`}>
+                    <Input
+                      id={`m-name-${m.id}`}
+                      value={m.name}
+                      onChange={(e) =>
+                        updateMetric(idx, { name: e.target.value })
+                      }
+                      placeholder="ex: Peso na barra do supino"
+                    />
+                  </Field>
+                  <Field label="Unidade" htmlFor={`m-unit-${m.id}`}>
+                    <Input
+                      id={`m-unit-${m.id}`}
+                      value={m.unit}
+                      onChange={(e) =>
+                        updateMetric(idx, { unit: e.target.value })
+                      }
+                      placeholder="kg / cm / —"
+                    />
+                  </Field>
+                  <label className="flex items-center gap-2 cursor-pointer min-h-[48px]">
+                    <input
+                      type="checkbox"
+                      checked={m.requiresAttachment}
+                      onChange={(e) =>
+                        updateMetric(idx, {
+                          requiresAttachment: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-accent"
+                    />
+                    <span className="text-caption text-text-secondary whitespace-nowrap">
+                      Anexo obrigatório
+                    </span>
+                  </label>
+                  <IconButton
+                    aria-label="Remover métrica"
+                    onClick={() => removeMetric(idx)}
+                  >
+                    <Trash2 size={16} className="text-error" />
+                  </IconButton>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       {error && (

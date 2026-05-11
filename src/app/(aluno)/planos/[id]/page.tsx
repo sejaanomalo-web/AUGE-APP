@@ -7,6 +7,11 @@ import { IconButton } from "@/components/ui/IconButton";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { requireRole } from "@/lib/auth-helpers";
 import { getPlanById } from "@/lib/actions/workout-plans";
+import {
+  getPlanMetrics,
+  getPlanMetricLogs,
+} from "@/lib/actions/plan-metrics";
+import { PlanMetricsSection } from "@/components/aluno/PlanMetricsSection";
 import { formatLongDate } from "@/lib/date";
 import { formatDuration, formatKg } from "@/lib/utils";
 
@@ -31,6 +36,10 @@ export default async function PlanoDetailAlunoPage({
   if (!plan || plan.studentId !== me.id) return notFound();
 
   const isSelfCreated = plan.trainerId === null;
+  const [metrics, metricLogs] = await Promise.all([
+    getPlanMetrics(id),
+    getPlanMetricLogs(id),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -125,6 +134,22 @@ export default async function PlanoDetailAlunoPage({
           ))}
         </div>
       )}
+
+      <PlanMetricsSection
+        metrics={metrics.map((m) => ({
+          id: m.id,
+          name: m.name,
+          unit: m.unit,
+          requiresAttachment: m.requiresAttachment,
+        }))}
+        logs={metricLogs.map((l) => ({
+          id: l.id,
+          definitionId: l.definitionId,
+          value: l.value,
+          attachmentKey: l.attachmentKey,
+          date: l.date.toISOString(),
+        }))}
+      />
     </div>
   );
 }
