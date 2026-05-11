@@ -103,9 +103,11 @@ function makeSession(letter: string, defaultExerciseId: string): SessionDraft {
 export function WorkoutBuilder({
   students,
   exercises,
+  successRedirect = "/treinos",
 }: {
   students: StudentOption[];
   exercises: ExerciseOption[];
+  successRedirect?: string;
 }) {
   const router = useRouter();
   const defaultExerciseId = exercises[0]?.id ?? "";
@@ -223,7 +225,7 @@ export function WorkoutBuilder({
         }
       }
 
-      router.push("/treinos");
+      router.push(successRedirect);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar plano");
@@ -275,19 +277,29 @@ export function WorkoutBuilder({
                 placeholder="Bloco de hipertrofia 4x/sem com volume progressivo."
               />
             </Field>
-            <Field label="Aluno" htmlFor="plan-student">
-              <Select
-                id="plan-student"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
-              >
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            {students.length > 1 ? (
+              <Field label="Aluno" htmlFor="plan-student">
+                <Select
+                  id="plan-student"
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                >
+                  {students.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ) : (
+              <Field label="Para" htmlFor="plan-student">
+                <Input
+                  id="plan-student"
+                  value={students[0]?.name ?? "—"}
+                  readOnly
+                />
+              </Field>
+            )}
             <Field label="Frequência (x/sem)" htmlFor="plan-freq">
               <Input
                 id="plan-freq"

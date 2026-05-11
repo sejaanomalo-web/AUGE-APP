@@ -203,7 +203,7 @@ export default async function HojePage() {
           <div className="flex items-end justify-between mb-3">
             <h2 className="text-h2 text-text-primary">Próximos treinos</h2>
             <Link
-              href="/historico"
+              href="/planos"
               className="text-caption text-accent hover:underline"
             >
               Ver tudo
