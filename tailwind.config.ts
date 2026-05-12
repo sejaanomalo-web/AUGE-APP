@@ -49,6 +49,17 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        // Display family — Helvetica Bold (system font, no extra HTTP cost).
+        // Used for hero text and large numeric values for stronger contrast
+        // against the Inter body copy.
+        display: [
+          "Helvetica Neue",
+          "Helvetica",
+          "Arial",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif",
+        ],
       },
       fontSize: {
         micro: ["10px", { lineHeight: "1.3", letterSpacing: "0.08em", fontWeight: "600" }],

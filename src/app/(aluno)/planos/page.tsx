@@ -2,14 +2,15 @@ import Link from "next/link";
 import { ListChecks, Plus } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { HeroCard } from "@/components/visual/HeroCard";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyPlans } from "@/lib/actions/workout-plans";
 import { getMyTrainer } from "@/lib/actions/users";
 import { capitalize, formatDayMonth, formatLongDate, formatRelativeFromNow } from "@/lib/date";
 import { nextUpcomingSessions } from "@/lib/aluno-stats";
+import { cn } from "@/lib/utils";
 
 const DAY_NAMES = [
   "Domingo",
@@ -88,13 +89,14 @@ export default async function PlanosPage() {
                       href={`/treino/${u.session.id}`}
                       className="snap-start shrink-0 w-[220px]"
                     >
-                      <Card
-                        variant="interactive"
-                        className={
-                          isNext
-                            ? "h-32 flex flex-col justify-between !border-accent/60 ring-1 ring-accent/30 shadow-accent"
-                            : "h-32 flex flex-col justify-between"
-                        }
+                      <HeroCard
+                        intensity={isNext ? "strong" : "medium"}
+                        className={cn(
+                          "h-32 p-4 flex flex-col justify-between transition duration-150",
+                          "hover:-translate-y-px hover:border-border",
+                          isNext &&
+                            "ring-1 ring-accent/30 shadow-accent",
+                        )}
                       >
                         <div>
                           <p
@@ -117,7 +119,7 @@ export default async function PlanosPage() {
                         <p className="text-caption text-text-muted">
                           {u.session.exercises.length} exercícios
                         </p>
-                      </Card>
+                      </HeroCard>
                     </Link>
                   );
                 })}
@@ -195,24 +197,24 @@ function PlanCard({
 
   return (
     <Link href={`/planos/${plan.id}`} className="block">
-      <Card
-        variant="interactive"
-        className={
-          featured
-            ? "!border-accent/60 ring-1 ring-accent/30 shadow-accent"
-            : undefined
-        }
+      <HeroCard
+        intensity={featured ? "strong" : "medium"}
+        className={cn(
+          "p-5 transition duration-150 cursor-pointer",
+          "hover:-translate-y-px hover:border-border",
+          featured && "ring-1 ring-accent/30 shadow-accent",
+        )}
       >
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
-            <p className="text-caption text-text-muted mb-1">
+            <p className="text-stat-label uppercase text-text-muted mb-2">
               {plan.trainerId
                 ? `Criado por ${createdByTrainerName ?? "seu personal"}`
                 : `Criado por você · ${formatRelativeFromNow(plan.createdAt.toISOString(), nowIso)}`}
             </p>
-            <h3 className="text-h3 text-text-primary">{plan.name}</h3>
+            <h3 className="text-h2 text-text-primary">{plan.name}</h3>
             {plan.description && (
-              <p className="mt-0.5 text-caption text-text-muted line-clamp-2">
+              <p className="mt-1 text-body text-text-secondary line-clamp-2">
                 {plan.description}
               </p>
             )}
@@ -242,7 +244,7 @@ function PlanCard({
             ))
           )}
         </div>
-      </Card>
+      </HeroCard>
     </Link>
   );
 }
