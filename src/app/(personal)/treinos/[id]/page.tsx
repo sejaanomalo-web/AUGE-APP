@@ -57,9 +57,11 @@ export default async function TreinoPlanDetailPage({
               : ""}
           </p>
         </div>
-        <Button variant="secondary" size="sm" disabled>
-          <Pencil size={14} aria-hidden /> Editar
-        </Button>
+        <Link href={`/treinos/${plan.id}/editar`}>
+          <Button variant="secondary" size="sm">
+            <Pencil size={14} aria-hidden /> Editar
+          </Button>
+        </Link>
       </header>
 
       {student && (

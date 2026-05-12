@@ -75,7 +75,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
   return (
     <>
       {logs.length > 0 && (
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-start mb-4">
           <MonthYearFilter
             value={filter}
             onChange={setFilter}

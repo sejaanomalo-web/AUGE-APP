@@ -14,7 +14,10 @@ import {
   ExerciseSelector,
   type ExerciseOption,
 } from "./ExerciseSelector";
-import { createPlan } from "@/lib/actions/workout-plans";
+import {
+  createPlan,
+  replacePlanContent,
+} from "@/lib/actions/workout-plans";
 import {
   createSession,
   addExerciseToSession,
@@ -99,29 +102,126 @@ function makeSession(letter: string, defaultExerciseId: string): SessionDraft {
   };
 }
 
+export interface WorkoutBuilderInitialData {
+  planId: string;
+  studentId: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  sessions: Array<{
+    name: string;
+    dayOfWeek: number;
+    exercises: Array<{
+      exerciseId: string;
+      sets: number;
+      reps: string;
+      restSeconds: number;
+      weight: number;
+      notes: string;
+    }>;
+  }>;
+}
+
+/**
+ * Group existing DB sessions (each tied to a single dayOfWeek) into templates
+ * + weekly schedule. Sessions with identical content signature collapse into
+ * the same template, assigned to multiple days.
+ */
+function buildInitialState(
+  initial: WorkoutBuilderInitialData,
+): { sessions: SessionDraft[]; schedule: WeekSchedule } {
+  const NUM_TO_DAY: Record<number, string> = {
+    0: "domingo",
+    1: "segunda",
+    2: "terca",
+    3: "quarta",
+    4: "quinta",
+    5: "sexta",
+    6: "sabado",
+  };
+  const sigToTemplate = new Map<string, SessionDraft>();
+  const schedule: WeekSchedule = Object.fromEntries(
+    WEEK_ORDER.map((d) => [d, null]),
+  );
+  for (const s of initial.sessions) {
+    const sig = JSON.stringify({
+      n: s.name,
+      e: s.exercises.map((e) => ({
+        id: e.exerciseId,
+        s: e.sets,
+        r: e.reps,
+        t: e.restSeconds,
+        w: e.weight,
+      })),
+    });
+    let tpl = sigToTemplate.get(sig);
+    if (!tpl) {
+      const letter = String.fromCharCode(65 + sigToTemplate.size);
+      tpl = {
+        id: makeId(),
+        letter,
+        name: s.name.startsWith("Treino ") ? "" : s.name,
+        exercises: s.exercises.map((e) => ({
+          id: makeId(),
+          exerciseId: e.exerciseId,
+          sets: e.sets,
+          reps: e.reps,
+          rest: e.restSeconds,
+          weight: e.weight,
+          notes: e.notes,
+        })),
+        expanded: false,
+      };
+      sigToTemplate.set(sig, tpl);
+    }
+    const dayKey = NUM_TO_DAY[s.dayOfWeek];
+    if (dayKey) schedule[dayKey] = tpl.id;
+  }
+  const sessions = [...sigToTemplate.values()];
+  return {
+    sessions: sessions.length > 0 ? sessions : [],
+    schedule,
+  };
+}
+
 export function WorkoutBuilder({
   students,
   exercises,
   successRedirect = "/treinos",
+  initialData,
 }: {
   students: StudentOption[];
   exercises: ExerciseOption[];
   successRedirect?: string;
+  initialData?: WorkoutBuilderInitialData;
 }) {
   const router = useRouter();
+  const isEdit = !!initialData;
   const defaultExerciseId = exercises[0]?.id ?? "";
-  const [studentId, setStudentId] = React.useState(students[0]?.id ?? "");
-  const [planName, setPlanName] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [startDate, setStartDate] = React.useState(
-    new Date().toISOString().slice(0, 10),
+
+  const prebuilt = React.useMemo(
+    () => (initialData ? buildInitialState(initialData) : null),
+    [initialData],
   );
-  const [endDate, setEndDate] = React.useState("");
-  const [sessions, setSessions] = React.useState<SessionDraft[]>([
-    makeSession("A", defaultExerciseId),
-  ]);
-  const [schedule, setSchedule] = React.useState<WeekSchedule>(() =>
-    Object.fromEntries(WEEK_ORDER.map((d) => [d, null])),
+
+  const [studentId, setStudentId] = React.useState(
+    initialData?.studentId ?? students[0]?.id ?? "",
+  );
+  const [planName, setPlanName] = React.useState(initialData?.name ?? "");
+  const [description, setDescription] = React.useState(
+    initialData?.description ?? "",
+  );
+  const [startDate, setStartDate] = React.useState(
+    initialData?.startDate ?? new Date().toISOString().slice(0, 10),
+  );
+  const [endDate, setEndDate] = React.useState(initialData?.endDate ?? "");
+  const [sessions, setSessions] = React.useState<SessionDraft[]>(
+    prebuilt?.sessions ?? [makeSession("A", defaultExerciseId)],
+  );
+  const [schedule, setSchedule] = React.useState<WeekSchedule>(
+    prebuilt?.schedule ??
+      Object.fromEntries(WEEK_ORDER.map((d) => [d, null])),
   );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -214,7 +314,6 @@ export function WorkoutBuilder({
       if (!planName.trim()) throw new Error("Preencha o nome do plano");
       if (sessions.length === 0) throw new Error("Adicione ao menos um treino");
 
-      // Templates that are actually scheduled to at least one day.
       const scheduledTemplateIds = new Set(
         Object.values(schedule).filter((v): v is string => v !== null),
       );
@@ -224,40 +323,72 @@ export function WorkoutBuilder({
         );
       }
 
-      const plan = await createPlan({
-        studentId,
-        name: planName.trim(),
-        description: description.trim() || undefined,
-        startDate: new Date(startDate),
-        endDate: endDate ? new Date(endDate) : undefined,
-      });
-
-      // Persist one WorkoutSession per scheduled day, copying the template's
-      // exercises. WEEK_ORDER drives the order so days come out chronologically.
-      let order = 0;
+      // Flatten schedule → array of (dayOfWeek, template) pairs in week order.
+      const scheduleRows: Array<{
+        dayOfWeek: number;
+        name: string;
+        exercises: Array<{
+          exerciseId: string;
+          sets: number;
+          reps: string;
+          restSeconds?: number;
+          weight?: number;
+          notes?: string;
+        }>;
+      }> = [];
       for (const day of WEEK_ORDER) {
         const templateId = schedule[day];
         if (!templateId) continue;
         const template = sessions.find((s) => s.id === templateId);
         if (!template) continue;
-        const sessionName =
-          template.name.trim() || `Treino ${template.letter}`;
-        const session = await createSession(plan.id, {
-          name: sessionName,
+        scheduleRows.push({
           dayOfWeek: DAY_MAP[day],
-          order,
-        });
-        order++;
-        for (let j = 0; j < template.exercises.length; j++) {
-          const ex = template.exercises[j];
-          await addExerciseToSession(session.id, ex.exerciseId, {
+          name: template.name.trim() || `Treino ${template.letter}`,
+          exercises: template.exercises.map((ex) => ({
+            exerciseId: ex.exerciseId,
             sets: ex.sets,
             reps: ex.reps,
             restSeconds: ex.rest,
             weight: ex.weight || undefined,
             notes: ex.notes || undefined,
-            order: j,
+          })),
+        });
+      }
+
+      if (isEdit && initialData) {
+        await replacePlanContent(initialData.planId, {
+          name: planName.trim(),
+          description: description.trim() || undefined,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : undefined,
+          schedule: scheduleRows,
+        });
+      } else {
+        const plan = await createPlan({
+          studentId,
+          name: planName.trim(),
+          description: description.trim() || undefined,
+          startDate: new Date(startDate),
+          endDate: endDate ? new Date(endDate) : undefined,
+        });
+        for (let i = 0; i < scheduleRows.length; i++) {
+          const row = scheduleRows[i];
+          const session = await createSession(plan.id, {
+            name: row.name,
+            dayOfWeek: row.dayOfWeek,
+            order: i,
           });
+          for (let j = 0; j < row.exercises.length; j++) {
+            const ex = row.exercises[j];
+            await addExerciseToSession(session.id, ex.exerciseId, {
+              sets: ex.sets,
+              reps: ex.reps,
+              restSeconds: ex.restSeconds,
+              weight: ex.weight,
+              notes: ex.notes,
+              order: j,
+            });
+          }
         }
       }
 
@@ -313,7 +444,7 @@ export function WorkoutBuilder({
                 placeholder="Bloco de hipertrofia 4x/sem com volume progressivo."
               />
             </Field>
-            {students.length > 1 ? (
+            {students.length > 1 && !isEdit ? (
               <Field label="Aluno" htmlFor="plan-student">
                 <Select
                   id="plan-student"
@@ -331,7 +462,11 @@ export function WorkoutBuilder({
               <Field label="Para" htmlFor="plan-student">
                 <Input
                   id="plan-student"
-                  value={students[0]?.name ?? "—"}
+                  value={
+                    students.find((s) => s.id === studentId)?.name ??
+                    students[0]?.name ??
+                    "—"
+                  }
                   readOnly
                 />
               </Field>
@@ -610,7 +745,11 @@ export function WorkoutBuilder({
           disabled={saving}
           onClick={save}
         >
-          {saving ? "Salvando..." : "Salvar plano"}
+          {saving
+            ? "Salvando..."
+            : isEdit
+              ? "Salvar alterações"
+              : "Salvar plano"}
         </Button>
       </div>
     </div>

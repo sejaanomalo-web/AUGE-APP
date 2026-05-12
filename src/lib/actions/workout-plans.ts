@@ -110,6 +110,108 @@ export async function updatePlan(
   revalidatePath("/planos");
 }
 
+/**
+ * Replace an entire plan's content (metadata + sessions + exercises) in one
+ * transaction. Blocks if any session has been logged by the student, since
+ * deleting those rows would break the WorkoutLog FK (Restrict).
+ */
+export async function replacePlanContent(
+  planId: string,
+  data: {
+    name: string;
+    description?: string;
+    startDate: Date;
+    endDate?: Date;
+    schedule: Array<{
+      dayOfWeek: number;
+      name: string;
+      exercises: Array<{
+        exerciseId: string;
+        sets: number;
+        reps: string;
+        restSeconds?: number;
+        weight?: number;
+        notes?: string;
+      }>;
+    }>;
+  },
+) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Não autenticado");
+
+  if (!(await canEditPlan(userId, planId)))
+    throw new Error("Sem permissão para editar este plano");
+
+  const sessionsWithLogs = await prisma.workoutSession.findMany({
+    where: { planId, logs: { some: {} } },
+    select: { id: true },
+  });
+  if (sessionsWithLogs.length > 0) {
+    throw new Error(
+      "Este plano já tem treinos registrados pelo aluno. Para mudar a estrutura, crie um novo plano.",
+    );
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.workoutPlan.update({
+      where: { id: planId },
+      data: {
+        name: data.name,
+        description: data.description,
+        startDate: data.startDate,
+        endDate: data.endDate,
+      },
+    });
+
+    // Cascade deletes child SessionExercise rows.
+    await tx.workoutSession.deleteMany({ where: { planId } });
+
+    for (let i = 0; i < data.schedule.length; i++) {
+      const s = data.schedule[i];
+      const session = await tx.workoutSession.create({
+        data: {
+          planId,
+          name: s.name,
+          dayOfWeek: s.dayOfWeek,
+          order: i,
+        },
+      });
+      for (let j = 0; j < s.exercises.length; j++) {
+        const ex = s.exercises[j];
+        await tx.sessionExercise.create({
+          data: {
+            sessionId: session.id,
+            exerciseId: ex.exerciseId,
+            sets: ex.sets,
+            reps: ex.reps,
+            restSeconds: ex.restSeconds,
+            weight: ex.weight,
+            notes: ex.notes,
+            order: j,
+          },
+        });
+      }
+    }
+  });
+
+  const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } });
+  if (plan && plan.trainerId === userId && plan.studentId !== userId) {
+    notifyUser({
+      userId: plan.studentId,
+      type: "WORKOUT_PLAN_UPDATED",
+      title: "Plano atualizado",
+      body: "Seu personal fez ajustes nos treinos",
+      data: { planId },
+      url: `/planos/${planId}`,
+    }).catch(() => null);
+  }
+
+  revalidatePath("/treinos");
+  revalidatePath(`/treinos/${planId}`);
+  revalidatePath("/planos");
+  revalidatePath(`/planos/${planId}`);
+}
+
 export async function deletePlan(id: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
