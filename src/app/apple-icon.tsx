@@ -18,15 +18,15 @@ export default function AppleIcon() {
       >
         <svg
           width="120"
-          height="120"
-          viewBox="0 0 22 22"
+          height="110"
+          viewBox="0 0 22 20"
           fill="none"
           stroke="#C9953A"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="2"
+          strokeLinejoin="miter"
+          strokeMiterlimit="10"
         >
-          <path d="M2 18 L11 4 L20 18" />
+          <path d="M11 2 L20 18 L2 18 Z" />
         </svg>
       </div>
     ),

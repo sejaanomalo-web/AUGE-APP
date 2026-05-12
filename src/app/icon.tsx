@@ -16,19 +16,19 @@ export default function Icon() {
           background: "#000000",
         }}
       >
-        {/* ꓥ rendered as an inverted V — guarantees the glyph shows
-         * regardless of font availability. */}
+        {/* Closed triangle outline — peak top, sharp miter corners,
+         * matches the ꓥuge brand mark. Gold on pure black. */}
         <svg
           width="22"
-          height="22"
-          viewBox="0 0 22 22"
+          height="20"
+          viewBox="0 0 22 20"
           fill="none"
           stroke="#C9953A"
-          strokeWidth="3.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="2.4"
+          strokeLinejoin="miter"
+          strokeMiterlimit="10"
         >
-          <path d="M2 18 L11 4 L20 18" />
+          <path d="M11 2 L20 18 L2 18 Z" />
         </svg>
       </div>
     ),

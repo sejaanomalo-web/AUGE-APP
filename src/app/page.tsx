@@ -20,7 +20,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-[calc(env(safe-area-inset-top)+5rem)] pb-12 sm:pt-12">
         <h1 className="text-[40px] sm:text-[48px] leading-[1.05] font-bold text-text-primary tracking-[-0.03em] max-w-[640px]">
           Atinja seu <span className="text-accent">auge</span>.
         </h1>
