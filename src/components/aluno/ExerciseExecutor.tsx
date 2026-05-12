@@ -2,7 +2,16 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ChevronDown, ChevronUp, MoreVertical, Pause, Play } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Dumbbell,
+  HeartPulse,
+  MoreVertical,
+  Pause,
+  Play,
+} from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -323,9 +332,19 @@ export function ExerciseExecutor({
                 aria-hidden
                 className="w-[200px] h-[200px] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md"
               >
-                <span className="text-[120px] leading-none font-bold text-accent/30 select-none">
-                  {currentEx.muscleGroup === "Cardio" ? "🏃" : "💪"}
-                </span>
+                {currentEx.muscleGroup === "Cardio" ? (
+                  <HeartPulse
+                    size={92}
+                    strokeWidth={1.5}
+                    className="text-accent/40"
+                  />
+                ) : (
+                  <Dumbbell
+                    size={92}
+                    strokeWidth={1.5}
+                    className="text-accent/40"
+                  />
+                )}
               </div>
             )}
 
@@ -443,11 +462,7 @@ export function ExerciseExecutor({
       <Dialog
         open={showFinish}
         onOpenChange={setShowFinish}
-        title={
-          <span className="inline-flex items-center gap-2">
-            Treino finalizado! <span aria-hidden>🎉</span>
-          </span>
-        }
+        title="Treino finalizado"
         footer={
           <Button
             variant="primary"

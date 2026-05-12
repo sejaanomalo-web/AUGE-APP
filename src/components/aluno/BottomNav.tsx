@@ -30,21 +30,38 @@ export function BottomNav({ className }: { className?: string }) {
       )}
       aria-label="Navegação principal"
     >
-      <ul className="mx-auto max-w-md flex items-stretch justify-between gap-1 glass-surface-strong rounded-full p-1.5 h-[64px]">
+      {/* Liquid Glass capsule — heavier blur + saturate gives the iOS feel,
+       * darker fill ensures icons/labels stay legible over any background,
+       * inner specular highlight + accent ring add depth. */}
+      <ul
+        className={cn(
+          "relative mx-auto max-w-md flex items-stretch justify-between gap-1",
+          "rounded-full p-1.5 h-[64px]",
+          "bg-black/65 supports-[backdrop-filter]:bg-black/55",
+          "backdrop-blur-2xl backdrop-saturate-200",
+          "border border-white/[0.08]",
+          "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),inset_0_-1px_0_0_rgba(0,0,0,0.45),0_18px_50px_-12px_rgba(0,0,0,0.75)]",
+        )}
+      >
+        {/* Soft top sheen — sells the glass effect */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-6 top-0 h-px rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
+        />
         {items.map((item) => {
           const Icon = item.icon;
           const active =
             pathname === item.href || pathname?.startsWith(`${item.href}/`);
           return (
-            <li key={item.href} className="flex-1 min-w-0">
+            <li key={item.href} className="relative flex-1 min-w-0">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-colors duration-150",
+                  "relative h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-colors duration-150",
                   active
                     ? "bg-accent text-text-on-accent shadow-accent"
-                    : "text-text-muted hover:text-text-primary",
+                    : "text-text-secondary hover:text-text-primary",
                 )}
               >
                 <Icon

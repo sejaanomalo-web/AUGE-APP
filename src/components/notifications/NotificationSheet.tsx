@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Trash2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Trash2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -55,71 +56,88 @@ export function NotificationSheet({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal
-      aria-label="Notificações"
-      className="fixed inset-0 z-[60] bg-bg-base flex flex-col animate-fade-in"
-    >
-      <header
-        className="flex items-center justify-between gap-3 px-4 lg:px-6 h-14 lg:h-16 border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content bg-bg-base"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Fechar"
-          className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="notif-sheet"
+          role="dialog"
+          aria-modal
+          aria-label="Notificações"
+          initial={{ opacity: 0, y: "100%" }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: "100%" }}
+          transition={{
+            // iOS-style spring slide-up
+            type: "spring",
+            damping: 32,
+            stiffness: 320,
+            mass: 0.9,
+          }}
+          className="fixed inset-0 z-[60] bg-bg-base flex flex-col"
         >
-          <X size={22} strokeWidth={2} aria-hidden />
-        </button>
-        <h2 className="flex-1 text-h3 font-bold text-text-primary text-center">
-          Notificações
-        </h2>
-        {notifications.length > 0 ? (
-          <button
-            type="button"
-            onClick={onClearAll}
-            className="text-caption text-accent font-semibold hover:text-accent-hover px-2"
-          >
-            Limpar todas
-          </button>
-        ) : (
-          <span className="w-10" aria-hidden />
-        )}
-      </header>
+          <header className="flex items-center justify-between gap-3 px-4 lg:px-6 h-14 lg:h-16 border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content bg-bg-base">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar"
+              className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+            >
+              <X size={22} strokeWidth={2} aria-hidden />
+            </button>
+            <h2 className="flex-1 text-h3 font-bold text-text-primary text-center">
+              Notificações
+            </h2>
+            {notifications.length > 0 ? (
+              <button
+                type="button"
+                onClick={onClearAll}
+                className="text-caption text-accent font-semibold hover:text-accent-hover px-2"
+              >
+                Limpar todas
+              </button>
+            ) : (
+              <span className="w-10" aria-hidden />
+            )}
+          </header>
 
-      <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
-        {notifications.length === 0 ? (
-          <div className="h-full min-h-[60vh] flex items-center justify-center px-6">
-            <div className="text-center">
-              <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-bg-elevated flex items-center justify-center">
-                <X size={24} className="text-text-muted" aria-hidden />
+          <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+            {notifications.length === 0 ? (
+              <div className="h-full min-h-[60vh] flex items-center justify-center px-6">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 w-14 h-14 rounded-full bg-bg-elevated flex items-center justify-center">
+                    <Bell
+                      size={24}
+                      className="text-text-muted"
+                      aria-hidden
+                    />
+                  </div>
+                  <p className="text-body-lg text-text-primary font-semibold">
+                    Nenhuma notificação
+                  </p>
+                  <p className="mt-1 text-body text-text-secondary">
+                    Tudo limpo por aqui. Você verá novos alertas neste espaço.
+                  </p>
+                </div>
               </div>
-              <p className="text-body-lg text-text-primary font-semibold">
-                Nenhuma notificação
-              </p>
-              <p className="mt-1 text-body text-text-secondary">
-                Tudo limpo por aqui. Você verá novos alertas neste espaço.
-              </p>
-            </div>
+            ) : (
+              <ul className="flex flex-col">
+                <AnimatePresence initial={false}>
+                  {notifications.map((notif) => (
+                    <SwipeRow
+                      key={notif.id}
+                      notif={notif}
+                      onTap={() => onOpenNotification(notif)}
+                      onDelete={() => onDelete(notif.id)}
+                    />
+                  ))}
+                </AnimatePresence>
+              </ul>
+            )}
           </div>
-        ) : (
-          <ul className="flex flex-col">
-            {notifications.map((notif) => (
-              <SwipeRow
-                key={notif.id}
-                notif={notif}
-                onTap={() => onOpenNotification(notif)}
-                onDelete={() => onDelete(notif.id)}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -175,10 +193,11 @@ function SwipeRow({
     if (!dragging.current) return;
     dragging.current = false;
     if (offset <= -SWIPE_THRESHOLD) {
-      // Commit delete with an exit animation.
+      // Pin the row to the fully-swiped position and trigger removal;
+      // AnimatePresence on the parent <ul> animates the exit.
       setRemoving(true);
       setOffset(-MAX_SWIPE);
-      setTimeout(() => onDelete(), DELETE_ANIMATION_MS);
+      onDelete();
     } else {
       setOffset(0);
     }
@@ -194,10 +213,15 @@ function SwipeRow({
   }
 
   return (
-    <li
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        "relative bg-bg-base border-b border-border-subtle overflow-hidden transition-[max-height,opacity] duration-200",
-        removing ? "max-h-0 opacity-0" : "max-h-[200px] opacity-100",
+        "relative bg-bg-base border-b border-border-subtle overflow-hidden",
+        removing && "pointer-events-none",
       )}
     >
       {/* Underlay revealed by swipe — solid red with trash icon */}
@@ -248,6 +272,6 @@ function SwipeRow({
           </div>
         </div>
       </button>
-    </li>
+    </motion.li>
   );
 }

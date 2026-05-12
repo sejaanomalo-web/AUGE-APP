@@ -1,4 +1,4 @@
-import { Activity, Sparkles, TrendingUp } from "lucide-react";
+import { Activity, Flame, Sparkles, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -94,10 +94,15 @@ export default async function EvolucaoPage() {
         <HeroCard className="p-5" bare={stats.streakDays === 0}>
           <StatHero
             value={
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-2">
                 {stats.streakDays}
                 {stats.streakDays > 0 && (
-                  <span className="text-stat-medium not-italic">🔥</span>
+                  <Flame
+                    size={26}
+                    strokeWidth={2.5}
+                    className="text-accent"
+                    aria-hidden
+                  />
                 )}
               </span>
             }
@@ -175,7 +180,7 @@ export default async function EvolucaoPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-stat-label uppercase text-accent">
-                ✨ Análise inteligente
+                Análise inteligente
               </p>
               <h2 className="mt-2 text-h2 text-text-primary">
                 Resumo da jornada

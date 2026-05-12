@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import {
+  Dumbbell,
+  HeartPulse,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -163,10 +172,18 @@ function ExerciseCard({
               alt={ex.name}
               className="w-full h-full object-cover"
             />
+          ) : ex.muscleGroup === "Cardio" ? (
+            <HeartPulse
+              size={48}
+              strokeWidth={1.5}
+              className="text-accent/40"
+            />
           ) : (
-            <span className="text-[64px] leading-none select-none">
-              {ex.muscleGroup === "Cardio" ? "🏃" : "💪"}
-            </span>
+            <Dumbbell
+              size={48}
+              strokeWidth={1.5}
+              className="text-accent/40"
+            />
           )}
         </div>
         <div className="flex items-center gap-2">

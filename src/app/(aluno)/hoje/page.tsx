@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Flame } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/LinkButton";
@@ -178,11 +179,16 @@ export default async function HojePage() {
         >
           <StatHero
             value={
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-2">
                 {stats.streakDays}
-                <span className="text-stat-medium not-italic">
-                  {stats.streakDays > 0 ? "🔥" : ""}
-                </span>
+                {stats.streakDays > 0 && (
+                  <Flame
+                    size={26}
+                    strokeWidth={2.5}
+                    className="text-accent"
+                    aria-hidden
+                  />
+                )}
               </span>
             }
             label="Dias seguidos"
