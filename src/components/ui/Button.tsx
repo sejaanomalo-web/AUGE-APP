@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   // Liquid-Glass-inspired base: smooth motion, refined focus ring,
   // subtle press feedback. Pill geometry retained as the AUGE signature.
-  "relative inline-flex items-center justify-center gap-2 font-sans transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap rounded-pill active:scale-[0.97] select-none",
+  "relative inline-flex items-center justify-center gap-2 font-sans transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap rounded-pill active:scale-[0.97] select-none",
   {
     variants: {
       variant: {
@@ -58,12 +58,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, fullWidth }), className)}
         {...props}
       >
-        {/* Inner specular highlight — only on solid primary, gives the
-         * "liquid" lift effect at the top edge without overdoing it. */}
+        {/* Inner specular highlight — only on solid primary. Static
+         * gradient (no blend mode) keeps the GPU happy. */}
         {isPrimary && (
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-pill bg-gradient-to-b from-white/25 via-transparent to-black/10 mix-blend-overlay"
+            className="pointer-events-none absolute inset-0 rounded-pill bg-gradient-to-b from-white/20 to-transparent"
           />
         )}
         <span className="relative z-[1] inline-flex items-center justify-center gap-2">

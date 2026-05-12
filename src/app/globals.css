@@ -13,14 +13,38 @@
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Subtle warm glow from top — adds depth without distracting */
+    /* iOS Safari quirk: background-attachment: fixed kills scroll perf and
+     * doesn't render reliably. Pin the glow to the html element instead. */
+  }
+
+  html {
+    background-color: #000000;
     background-image:
       radial-gradient(
         ellipse 90% 60% at 50% -10%,
         rgba(201, 149, 58, 0.06) 0%,
         rgba(201, 149, 58, 0) 60%
       );
-    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Smooth, GPU-accelerated scrolling */
+  html,
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+
+  /* Respect users that prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Tabular numerals for training values */
@@ -124,33 +148,40 @@
    * ───────────────────────────────────────────────────────────── */
   .glass-surface {
     background-color: rgba(255, 255, 255, 0.04);
-    backdrop-filter: saturate(1.6) blur(20px);
-    -webkit-backdrop-filter: saturate(1.6) blur(20px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.10);
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
       0 10px 30px -10px rgba(0, 0, 0, 0.55);
+    /* Promote to its own GPU layer — keeps blur off the main paint thread. */
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   .glass-surface-strong {
     background-color: rgba(255, 255, 255, 0.06);
-    backdrop-filter: saturate(1.8) blur(28px);
-    -webkit-backdrop-filter: saturate(1.8) blur(28px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
       inset 0 0 0 1px rgba(255, 255, 255, 0.08),
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
       0 24px 50px -16px rgba(0, 0, 0, 0.7);
+    transform: translateZ(0);
+    will-change: transform;
   }
 
-  /* Nav bars (sticky headers, bottom tabs) — strong blur, low fill,
-   * keeps content visible underneath. */
+  /* Nav bars (sticky headers, bottom tabs) — moderate blur, dark fill,
+   * keeps content visible underneath without saturate() (expensive on iOS). */
   .glass-nav {
-    background-color: rgba(0, 0, 0, 0.55);
-    backdrop-filter: saturate(1.8) blur(24px);
-    -webkit-backdrop-filter: saturate(1.8) blur(24px);
+    background-color: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   /* Glass-prominent — for primary actions on glass (CTAs).

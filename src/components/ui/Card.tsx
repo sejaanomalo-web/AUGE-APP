@@ -17,7 +17,7 @@ const variantClasses: Record<CardVariant, string> = {
   elevated:
     "bg-bg-elevated border border-border-subtle p-5 shadow-md",
   interactive:
-    "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition-all duration-200 hover:bg-bg-elevated hover:border-border hover:shadow-md hover:-translate-y-px active:translate-y-0",
+    "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition duration-150 hover:bg-bg-elevated hover:border-border hover:shadow-md hover:-translate-y-px active:translate-y-0",
   highlight:
     "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent",
 };

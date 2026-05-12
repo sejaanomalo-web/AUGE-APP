@@ -88,7 +88,7 @@ function ModeCard({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group bg-bg-elevated rounded-md p-5 text-left transition-all duration-200",
+        "group bg-bg-elevated rounded-md p-5 text-left transition duration-150",
         "hover:bg-bg-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         "disabled:opacity-50 disabled:pointer-events-none relative",
         recommended && "ring-1 ring-accent/40",

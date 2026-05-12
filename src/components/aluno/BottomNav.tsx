@@ -37,15 +37,15 @@ export function BottomNav({ className }: { className?: string }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-all duration-200",
+                  "h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-colors duration-150",
                   active
-                    ? "bg-accent/15 text-accent shadow-[inset_0_0_0_1px_rgba(201,149,58,0.35)]"
-                    : "text-text-muted hover:text-text-primary hover:bg-white/[0.04]",
+                    ? "bg-accent text-text-on-accent shadow-accent"
+                    : "text-text-muted hover:text-text-primary",
                 )}
               >
                 <Icon
                   size={20}
-                  strokeWidth={active ? 2.25 : 1.75}
+                  strokeWidth={active ? 2.5 : 1.75}
                   aria-hidden
                 />
                 <span className="text-[10px] font-semibold leading-none truncate max-w-full">
