@@ -39,3 +39,17 @@ export async function markAllAsRead() {
   });
   revalidatePath("/");
 }
+
+export async function deleteNotification(id: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  await prisma.notification.deleteMany({ where: { id, userId } });
+  revalidatePath("/");
+}
+
+export async function deleteAllNotifications() {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+  await prisma.notification.deleteMany({ where: { userId } });
+  revalidatePath("/");
+}
