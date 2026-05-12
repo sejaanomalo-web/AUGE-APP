@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -65,9 +66,13 @@ export default function RootLayout({
         },
       }}
     >
-      <html lang="pt-BR" className={`dark ${inter.variable}`}>
+      <html
+        lang="pt-BR"
+        className={inter.variable}
+        suppressHydrationWarning
+      >
         <body className="font-sans bg-bg-base text-text-primary min-h-screen antialiased">
-          {children}
+          <ThemeProvider>{children}</ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

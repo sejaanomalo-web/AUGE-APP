@@ -2,40 +2,158 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────
+ * Theme tokens
+ *
+ * All theme-switching tokens are RGB-channel CSS vars (space-separated
+ * "R G B") so Tailwind's <alpha-value> modifier works (bg-accent/15 etc).
+ * Tokens that are already alpha-baked rgba() are full strings.
+ * ───────────────────────────────────────────────────────────── */
+
+:root,
+.dark {
+  /* Backgrounds — pure black premium */
+  --bg-base: 0 0 0;
+  --bg-surface: 13 13 13;
+  --bg-elevated: 22 22 22;
+  --bg-card: 28 28 28;
+  --bg-hover: 34 34 34;
+
+  /* Accent — gold #C9953A */
+  --accent: 201 149 58;
+  --accent-hover: 212 161 79;
+  --accent-muted: 138 104 36;
+  --accent-glow: rgba(201, 149, 58, 0.18);
+
+  /* Text */
+  --text-primary: 255 255 255;
+  --text-secondary: 168 168 168;
+  --text-muted: 110 110 110;
+  --text-on-accent: 10 10 10;
+
+  /* Borders — alpha-baked white */
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.18);
+
+  /* Glass overlay tokens (iOS-style frosted) */
+  --glass-bg-subtle: rgba(0, 0, 0, 0.55);
+  --glass-bg-medium: rgba(0, 0, 0, 0.65);
+  --glass-bg-strong: rgba(0, 0, 0, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-border-strong: rgba(255, 255, 255, 0.16);
+  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --glass-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --glass-shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.6);
+
+  --hero-gradient: radial-gradient(
+    ellipse 90% 60% at 50% -10%,
+    rgba(201, 149, 58, 0.06) 0%,
+    rgba(201, 149, 58, 0) 60%
+  );
+}
+
+.light {
+  --bg-base: 255 255 255;
+  --bg-surface: 247 247 247;
+  --bg-elevated: 255 255 255;
+  --bg-card: 250 250 250;
+  --bg-hover: 240 240 240;
+
+  /* Darker gold for WCAG AA contrast on light backgrounds */
+  --accent: 160 113 32;
+  --accent-hover: 138 97 28;
+  --accent-muted: 201 160 92;
+  --accent-glow: rgba(160, 113, 32, 0.12);
+
+  --text-primary: 18 18 18;
+  --text-secondary: 77 77 77;
+  --text-muted: 124 124 124;
+  --text-on-accent: 255 255 255;
+
+  --border-default: rgba(0, 0, 0, 0.10);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-strong: rgba(0, 0, 0, 0.18);
+
+  --glass-bg-subtle: rgba(255, 255, 255, 0.60);
+  --glass-bg-medium: rgba(255, 255, 255, 0.75);
+  --glass-bg-strong: rgba(247, 247, 247, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-strong: rgba(0, 0, 0, 0.12);
+  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --glass-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --glass-shadow-lg: 0 16px 64px rgba(0, 0, 0, 0.14);
+
+  --hero-gradient: radial-gradient(
+    ellipse 90% 60% at 50% -10%,
+    rgba(160, 113, 32, 0.08) 0%,
+    rgba(160, 113, 32, 0) 60%
+  );
+}
+
 @layer base {
+  html {
+    background-color: rgb(var(--bg-base));
+    background-image: var(--hero-gradient);
+    background-repeat: no-repeat;
+  }
+
   html,
   body {
-    background-color: #000000;
-    color: #ffffff;
+    color: rgb(var(--text-primary));
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
 
   body {
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* iOS Safari quirk: background-attachment: fixed kills scroll perf and
-     * doesn't render reliably. Pin the glow to the html element instead. */
   }
 
-  html {
-    background-color: #000000;
-    background-image:
-      radial-gradient(
-        ellipse 90% 60% at 50% -10%,
-        rgba(201, 149, 58, 0.06) 0%,
-        rgba(201, 149, 58, 0) 60%
-      );
-    background-repeat: no-repeat;
-  }
-
-  /* Smooth, GPU-accelerated scrolling */
+  /* Smooth theme transitions on color-bearing properties only —
+   * avoids cascading transition cost from `*` selector. */
   html,
-  body {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
+  body,
+  [data-theme-transition] {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 150ms ease;
   }
 
-  /* Respect users that prefer reduced motion */
+  .tnum,
+  .font-mono-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.25);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.45);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgb(var(--accent) / 0.3);
+    color: rgb(var(--text-primary));
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -46,44 +164,9 @@
       scroll-behavior: auto !important;
     }
   }
-
-  /* Tabular numerals for training values */
-  .tnum {
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Scrollbars (dark, subtle) */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 9999px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.16);
-  }
-
-  /* Native focus rings — use accent color, refined */
-  :focus-visible {
-    outline: 2px solid #c9953a;
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
-
-  /* Smooth selection */
-  ::selection {
-    background: rgba(201, 149, 58, 0.3);
-    color: #ffffff;
-  }
 }
 
 @layer base {
-  /* Date / time inputs: prevent native iOS spinner from blowing out width */
   input[type="date"],
   input[type="datetime-local"],
   input[type="time"],
@@ -94,7 +177,6 @@
     max-width: 100%;
     box-sizing: border-box;
   }
-
   input[type="date"]::-webkit-date-and-time-value {
     text-align: left;
   }
@@ -102,8 +184,6 @@
     filter: invert(0.7);
     cursor: pointer;
   }
-
-  /* File inputs: same constraint */
   input[type="file"] {
     min-width: 0;
     max-width: 100%;
@@ -112,7 +192,6 @@
 }
 
 @layer utilities {
-  /* Hide scrollbar utility for horizontal carousels */
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -121,13 +200,12 @@
     display: none;
   }
 
-  /* Skeleton shimmer background */
   .skeleton {
     background: linear-gradient(
       90deg,
-      #161616 0%,
-      #1f1f1f 50%,
-      #161616 100%
+      rgb(var(--bg-elevated)) 0%,
+      rgb(var(--bg-hover)) 50%,
+      rgb(var(--bg-elevated)) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite linear;
@@ -138,71 +216,96 @@
   }
 
   /* ─────────────────────────────────────────────────────────────
-   * Liquid Glass — navigation-layer surfaces (toolbars, tab bars,
-   * sticky CTAs, sheets). NOT for content cards.
+   * Glass Overlay System (iOS-style frosted glass)
    *
-   * Web adaptation: backdrop-filter + translucent fill + inner
-   * top highlight (specular) + inner bottom shade. No real
-   * lensing/refraction possible — we approximate with layered
-   * shadows + saturate boost.
+   * USE ONLY for transient overlays: dialogs, toasts, popovers,
+   * bottom sheets, fullscreen timers, scroll-blurred headers, banners.
+   * DO NOT use on persistent content surfaces (cards, page bg,
+   * sidebar, bottom nav). Stacked glass kills hierarchy.
+   *
+   * saturate() is what gives the iOS feel — without it glass just
+   * looks like a translucent card.
+   * ───────────────────────────────────────────────────────────── */
+  .glass-subtle {
+    background-color: var(--glass-bg-subtle);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-sm);
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .glass-medium {
+    background-color: var(--glass-bg-medium);
+    backdrop-filter: blur(32px) saturate(180%);
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow-md);
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  .glass-strong {
+    background-color: var(--glass-bg-strong);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: var(--glass-shadow-lg);
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+   * Legacy glass classes (kept for backward compat during the
+   * migration to .glass-subtle/.glass-medium/.glass-strong).
+   * Will be removed once all callsites migrate.
    * ───────────────────────────────────────────────────────────── */
   .glass-surface {
-    background-color: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background-color: var(--glass-bg-subtle);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border);
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
-      0 10px 30px -10px rgba(0, 0, 0, 0.55);
-    /* Promote to its own GPU layer — keeps blur off the main paint thread. */
+      var(--glass-shadow-sm);
     transform: translateZ(0);
     will-change: transform;
   }
 
   .glass-surface-strong {
-    background-color: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background-color: var(--glass-bg-strong);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border-strong);
     box-shadow:
       inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
       inset 0 0 0 1px rgba(255, 255, 255, 0.08),
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
-      0 24px 50px -16px rgba(0, 0, 0, 0.7);
+      var(--glass-shadow-md);
     transform: translateZ(0);
     will-change: transform;
   }
 
-  /* Nav bars (sticky headers, bottom tabs) — moderate blur, dark fill,
-   * keeps content visible underneath without saturate() (expensive on iOS). */
   .glass-nav {
-    background-color: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background-color: var(--glass-bg-medium);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
     transform: translateZ(0);
     will-change: transform;
   }
 
-  /* Glass-prominent — for primary actions on glass (CTAs).
-   * Solid accent fill + inner specular highlight + accent glow. */
-  .glass-prominent {
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.28),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
-      0 10px 32px -8px rgba(201, 149, 58, 0.45),
-      0 0 0 1px rgba(201, 149, 58, 0.4) inset;
-  }
-
-  /* Fallback for browsers without backdrop-filter — fall back to
-   * a more opaque dark surface so glass elements stay legible. */
   @supports not (
     (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
   ) {
+    .glass-subtle,
+    .glass-medium,
+    .glass-strong,
     .glass-surface,
     .glass-surface-strong,
     .glass-nav {
-      background-color: rgba(20, 20, 20, 0.95);
+      background-color: rgb(var(--bg-elevated) / 0.96);
     }
   }
 }
