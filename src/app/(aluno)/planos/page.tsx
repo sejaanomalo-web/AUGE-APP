@@ -37,13 +37,15 @@ export default async function PlanosPage() {
         title="Meus planos"
         subtitle={
           trainer
-            ? `Planos do seu personal ${trainer.name.split(" ")[0]} e seus próprios.`
+            ? `Planos prescritos pelo seu personal ${trainer.name.split(" ")[0]}.`
             : "Seus planos de treino. Crie um pra começar."
         }
         actions={
-          <LinkButton href="/planos/novo" variant="primary" size="md">
-            <Plus size={18} aria-hidden /> Novo plano
-          </LinkButton>
+          trainer ? undefined : (
+            <LinkButton href="/planos/novo" variant="primary" size="md">
+              <Plus size={18} aria-hidden /> Novo plano
+            </LinkButton>
+          )
         }
       />
 
@@ -53,13 +55,15 @@ export default async function PlanosPage() {
           title="Nenhum plano ainda"
           description={
             trainer
-              ? "Aguarde seu personal montar um plano, ou crie um pra você mesmo."
+              ? "Aguarde seu personal montar um plano para você. Ele vai aparecer aqui assim que estiver pronto."
               : "Crie seu primeiro plano de treino — você define os exercícios, séries e descansos."
           }
           action={
-            <LinkButton href="/planos/novo" variant="primary" size="md">
-              <Plus size={16} aria-hidden /> Criar plano
-            </LinkButton>
+            trainer ? undefined : (
+              <LinkButton href="/planos/novo" variant="primary" size="md">
+                <Plus size={16} aria-hidden /> Criar plano
+              </LinkButton>
+            )
           }
         />
       ) : (

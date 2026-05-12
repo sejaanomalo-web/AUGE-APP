@@ -13,7 +13,14 @@ async function canEditPlan(userId: string, planId: string): Promise<boolean> {
   const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } });
   if (!plan) return false;
   if (plan.trainerId === userId) return true;
-  if (plan.trainerId === null && plan.studentId === userId) return true;
+  if (plan.trainerId === null && plan.studentId === userId) {
+    // Solo plan: still editable by the student UNLESS they now have an
+    // active trainer (in which case the trainer is responsible for plans).
+    const activeLink = await prisma.trainerStudent.findFirst({
+      where: { studentId: userId, status: "ACTIVE" },
+    });
+    return !activeLink;
+  }
   return false;
 }
 
@@ -42,7 +49,16 @@ export async function createPlan(data: {
     trainerId = userId;
     studentId = data.studentId;
   } else {
-    // Aluno
+    // Aluno: a student with an active trainer cannot self-create plans —
+    // their plans are owned by the personal trainer.
+    const activeLink = await prisma.trainerStudent.findFirst({
+      where: { studentId: userId, status: "ACTIVE" },
+    });
+    if (activeLink) {
+      throw new Error(
+        "Você tem um personal vinculado. Apenas seu personal pode criar planos para você.",
+      );
+    }
     studentId = userId;
   }
 
@@ -248,10 +264,22 @@ export async function getMyPlans() {
   const me = await prisma.user.findUnique({ where: { id: userId } });
   if (!me) return [];
 
-  const where =
-    me.role === "PERSONAL"
-      ? { trainerId: userId }
+  let where:
+    | { trainerId: string }
+    | { studentId: string }
+    | { studentId: string; trainerId: { not: null } };
+  if (me.role === "PERSONAL") {
+    where = { trainerId: userId };
+  } else {
+    // Aluno: when there's an active trainer, hide self-created solo plans —
+    // only trainer-owned plans should appear.
+    const activeLink = await prisma.trainerStudent.findFirst({
+      where: { studentId: userId, status: "ACTIVE" },
+    });
+    where = activeLink
+      ? { studentId: userId, trainerId: { not: null } }
       : { studentId: userId };
+  }
 
   return prisma.workoutPlan.findMany({
     where,

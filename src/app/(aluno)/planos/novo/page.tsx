@@ -1,12 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { IconButton } from "@/components/ui/IconButton";
 import { WorkoutBuilder } from "@/components/personal/WorkoutBuilder";
 import { requireRole } from "@/lib/auth-helpers";
 import { getExercises } from "@/lib/actions/exercises";
+import { getMyTrainer } from "@/lib/actions/users";
 
 export default async function NovoPlanoAlunoPage() {
   const me = await requireRole("ALUNO");
+  // Students with a personal can't self-create plans — bounce back to /planos.
+  const trainer = await getMyTrainer();
+  if (trainer) redirect("/planos");
   const exercises = await getExercises();
 
   return (
