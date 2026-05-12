@@ -4,6 +4,9 @@ import * as React from "react";
 import { History } from "lucide-react";
 import { WorkoutCard } from "./WorkoutCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { HeroCard } from "@/components/visual/HeroCard";
+import { StatHero } from "@/components/visual/StatHero";
+import { WorkoutBarChart } from "@/components/visual/WorkoutBarChart";
 import {
   MonthYearFilter,
   type MonthYearValue,
@@ -13,7 +16,7 @@ import type { WorkoutStatus } from "@/components/shared/StatusBadge";
 
 export interface HistoricoLog {
   id: string;
-  dateIso: string; // full ISO with time
+  dateIso: string;
   sessionLetter: string;
   sessionName: string;
   status: WorkoutStatus;
@@ -56,12 +59,41 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
     return Array.from(set).sort((a, b) => b - a);
   }, [logs]);
 
-  const filtered = logs.filter((l) => {
-    const d = parseISO(l.dateIso);
-    if (filter.year !== null && d.getFullYear() !== filter.year) return false;
-    if (filter.month !== null && d.getMonth() !== filter.month) return false;
-    return true;
-  });
+  const filtered = React.useMemo(
+    () =>
+      logs.filter((l) => {
+        const d = parseISO(l.dateIso);
+        if (filter.year !== null && d.getFullYear() !== filter.year)
+          return false;
+        if (filter.month !== null && d.getMonth() !== filter.month)
+          return false;
+        return true;
+      }),
+    [logs, filter],
+  );
+
+  // Stats reflect the active filter — counted only on COMPLETED logs so
+  // numbers stay meaningful (incomplete sessions don't pollute totals).
+  const stats = React.useMemo(() => {
+    const completed = filtered.filter((l) => l.status === "concluido");
+    const totalVolume = completed.reduce(
+      (a, l) => a + (l.totalVolumeKg ?? 0),
+      0,
+    );
+    const totalSeconds = completed.reduce(
+      (a, l) => a + (l.durationSeconds ?? 0),
+      0,
+    );
+    const avgMinutes = completed.length
+      ? Math.round(totalSeconds / 60 / completed.length)
+      : 0;
+    return {
+      count: completed.length,
+      totalVolume,
+      avgMinutes,
+      chartData: completed.map((l) => ({ date: parseISO(l.dateIso) })),
+    };
+  }, [filtered]);
 
   const grouped = new Map<string, HistoricoLog[]>();
   for (const l of filtered) {
@@ -73,15 +105,50 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
   );
 
   return (
-    <>
+    <div className="flex flex-col gap-6">
+      {/* Filter — pinned to the top so stats + chart + list all react to it */}
       {logs.length > 0 && (
-        <div className="flex justify-start mb-4">
+        <div className="flex justify-start">
           <MonthYearFilter
             value={filter}
             onChange={setFilter}
             availableYears={years}
           />
         </div>
+      )}
+
+      {/* Period stats — synced with the filter */}
+      {logs.length > 0 && (
+        <section className="grid grid-cols-3 gap-3">
+          <HeroCard className="p-4">
+            <StatHero value={stats.count} label="Treinos" size="sm" />
+          </HeroCard>
+          <HeroCard className="p-4">
+            <StatHero
+              value={
+                stats.totalVolume > 0
+                  ? `${(stats.totalVolume / 1000).toFixed(0)}k`
+                  : "—"
+              }
+              label="kg totais"
+              size="sm"
+            />
+          </HeroCard>
+          <HeroCard className="p-4">
+            <StatHero
+              value={stats.avgMinutes > 0 ? `${stats.avgMinutes}` : "—"}
+              label="min médios"
+              size="sm"
+            />
+          </HeroCard>
+        </section>
+      )}
+
+      {/* Self-explanatory bar chart (treinos por semana/mês) */}
+      {stats.chartData.length > 0 && (
+        <HeroCard className="p-5">
+          <WorkoutBarChart workouts={stats.chartData} />
+        </HeroCard>
       )}
 
       {logs.length === 0 ? (
@@ -123,6 +190,6 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }

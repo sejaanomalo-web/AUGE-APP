@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Flame } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { Progress } from "@/components/ui/Progress";
 import { HeroCard } from "@/components/visual/HeroCard";
@@ -11,10 +10,7 @@ import { capitalize, formatDayMonth } from "@/lib/date";
 import { requireRole } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { getActivePlanForStudent } from "@/lib/actions/workout-plans";
-import {
-  getAlunoWeeklyStats,
-  nextUpcomingSessions,
-} from "@/lib/aluno-stats";
+import { getAlunoWeeklyStats } from "@/lib/aluno-stats";
 
 export default async function HojePage() {
   const user = await requireRole("ALUNO");
@@ -51,8 +47,6 @@ export default async function HojePage() {
         },
       })
     : null;
-
-  const upcoming = plan ? nextUpcomingSessions(plan.sessions, today, 5) : [];
 
   const last4Weight = metrics
     .filter((m) => m.weight)
@@ -224,64 +218,6 @@ export default async function HojePage() {
           />
         </HeroCard>
       </section>
-
-      {/* Scroll horizontal — próximos treinos */}
-      {plan && upcoming.length > 0 && (
-        <section>
-          <div className="flex items-end justify-between mb-3">
-            <h2 className="text-h2 text-text-primary">Próximos treinos</h2>
-            <Link
-              href="/planos"
-              className="text-caption text-accent hover:underline"
-            >
-              Ver tudo
-            </Link>
-          </div>
-          <div className="-mx-4 px-4 lg:mx-0 lg:px-0 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory">
-            {upcoming.map((u, i) => {
-              const isNext = i === 0;
-              return (
-                <Link
-                  key={`${u.session.id}-${i}`}
-                  href={`/treino/${u.session.id}`}
-                  className="snap-start shrink-0 w-[220px]"
-                >
-                  <Card
-                    variant="interactive"
-                    className={
-                      isNext
-                        ? "h-32 flex flex-col justify-between !border-accent/60 ring-1 ring-accent/30 shadow-accent"
-                        : "h-32 flex flex-col justify-between"
-                    }
-                  >
-                    <div>
-                      <p
-                        className={`text-stat-label uppercase ${
-                          isNext ? "text-accent" : "text-text-muted"
-                        }`}
-                      >
-                        {isNext
-                          ? "Próximo"
-                          : capitalize(
-                              formatDayMonth(
-                                u.date.toISOString().slice(0, 10),
-                              ).split(",")[0],
-                            )}
-                      </p>
-                      <p className="mt-2 text-h3 text-text-primary line-clamp-2">
-                        {u.session.name}
-                      </p>
-                    </div>
-                    <p className="text-caption text-text-muted">
-                      {u.session.exercises.length} exercícios
-                    </p>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* Peso corporal */}
       {last4Weight.length >= 2 && (

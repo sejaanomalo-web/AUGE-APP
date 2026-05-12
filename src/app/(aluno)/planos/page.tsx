@@ -8,7 +8,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyPlans } from "@/lib/actions/workout-plans";
 import { getMyTrainer } from "@/lib/actions/users";
-import { formatLongDate, formatRelativeFromNow } from "@/lib/date";
+import { capitalize, formatDayMonth, formatLongDate, formatRelativeFromNow } from "@/lib/date";
+import { nextUpcomingSessions } from "@/lib/aluno-stats";
 
 const DAY_NAMES = [
   "Domingo",
@@ -30,6 +31,9 @@ export default async function PlanosPage() {
 
   const activePlan = plans.find((p) => p.isActive);
   const otherPlans = plans.filter((p) => !p.isActive);
+  const upcoming = activePlan
+    ? nextUpcomingSessions(activePlan.sessions, new Date(), 5)
+    : [];
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -68,6 +72,59 @@ export default async function PlanosPage() {
         />
       ) : (
         <div className="flex flex-col gap-6">
+          {/* Próximos treinos — moved here from /hoje. Sits above the
+           * active plan so the student lands on actionable cards first. */}
+          {upcoming.length > 0 && (
+            <section>
+              <h2 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
+                Próximos treinos
+              </h2>
+              <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory">
+                {upcoming.map((u, i) => {
+                  const isNext = i === 0;
+                  return (
+                    <Link
+                      key={`${u.session.id}-${i}`}
+                      href={`/treino/${u.session.id}`}
+                      className="snap-start shrink-0 w-[220px]"
+                    >
+                      <Card
+                        variant="interactive"
+                        className={
+                          isNext
+                            ? "h-32 flex flex-col justify-between !border-accent/60 ring-1 ring-accent/30 shadow-accent"
+                            : "h-32 flex flex-col justify-between"
+                        }
+                      >
+                        <div>
+                          <p
+                            className={`text-stat-label uppercase ${
+                              isNext ? "text-accent" : "text-text-muted"
+                            }`}
+                          >
+                            {isNext
+                              ? "Próximo"
+                              : capitalize(
+                                  formatDayMonth(
+                                    u.date.toISOString().slice(0, 10),
+                                  ).split(",")[0],
+                                )}
+                          </p>
+                          <p className="mt-2 text-h3 text-text-primary line-clamp-2">
+                            {u.session.name}
+                          </p>
+                        </div>
+                        <p className="text-caption text-text-muted">
+                          {u.session.exercises.length} exercícios
+                        </p>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {activePlan && (
             <section>
               <h2 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
