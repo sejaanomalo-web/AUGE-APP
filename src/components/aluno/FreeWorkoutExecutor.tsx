@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { IconButton } from "@/components/ui/IconButton";
 import { Textarea } from "@/components/ui/Input";
+import { useToast } from "@/components/providers/ToastProvider";
 import { formatDuration } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +35,7 @@ export function FreeWorkoutExecutor({
   startedAtIso: string;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const startedAtMs = React.useMemo(
     () => new Date(startedAtIso).getTime(),
     [startedAtIso],
@@ -112,6 +114,14 @@ export function FreeWorkoutExecutor({
         studentNotes: notes.trim() || undefined,
         completedExerciseIds: Array.from(completed),
       });
+      toast({
+        type: "success",
+        title: "Treino registrado!",
+        description: "Sessão livre salva no histórico.",
+      });
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([60, 30, 60]);
+      }
     } finally {
       router.push("/hoje");
       router.refresh();

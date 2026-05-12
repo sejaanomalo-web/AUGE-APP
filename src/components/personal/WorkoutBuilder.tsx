@@ -22,6 +22,7 @@ import {
   createSession,
   addExerciseToSession,
 } from "@/lib/actions/workout-sessions";
+import { useToast } from "@/components/providers/ToastProvider";
 
 interface StudentOption {
   id: string;
@@ -197,6 +198,7 @@ export function WorkoutBuilder({
   initialData?: WorkoutBuilderInitialData;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const isEdit = !!initialData;
   const defaultExerciseId = exercises[0]?.id ?? "";
 
@@ -392,10 +394,22 @@ export function WorkoutBuilder({
         }
       }
 
+      toast({
+        type: "success",
+        title: isEdit ? "Plano atualizado!" : "Plano salvo!",
+        description: isEdit
+          ? "As alterações já estão valendo para o aluno."
+          : "O aluno já consegue acessar o novo plano.",
+      });
       router.push(successRedirect);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao salvar plano");
+      toast({
+        type: "error",
+        title: "Não foi possível salvar",
+        description: err instanceof Error ? err.message : undefined,
+      });
       setSaving(false);
     }
   }

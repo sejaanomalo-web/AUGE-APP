@@ -10,6 +10,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Progress } from "@/components/ui/Progress";
 import { SetRow, type SetRowState } from "./SetRow";
 import { RestTimerOverlay } from "./RestTimerOverlay";
+import { useToast } from "@/components/providers/ToastProvider";
 import { formatDuration, formatKg } from "@/lib/utils";
 import {
   abandonWorkout,
@@ -88,6 +89,7 @@ export function ExerciseExecutor({
   startedAtIso: string;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [state, setState] = React.useState<ExerciseProgress[]>(() =>
     buildInitial(exercises, seed),
   );
@@ -197,6 +199,14 @@ export function ExerciseExecutor({
     setSubmitting(true);
     try {
       await finishWorkout(workoutLogId);
+      toast({
+        type: "success",
+        title: "Treino concluído!",
+        description: "Seu progresso já está salvo no histórico.",
+      });
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([60, 30, 60]);
+      }
     } finally {
       setShowFinish(false);
       router.push("/hoje");
