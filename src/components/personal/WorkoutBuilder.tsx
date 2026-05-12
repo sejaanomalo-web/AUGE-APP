@@ -9,7 +9,6 @@ import { Field, Input, Textarea } from "@/components/ui/Input";
 import { IconButton } from "@/components/ui/IconButton";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
-import { DayPicker } from "@/components/ui/DayPicker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import {
   ExerciseSelector,
@@ -20,7 +19,6 @@ import {
   createSession,
   addExerciseToSession,
 } from "@/lib/actions/workout-sessions";
-import { createPlanMetric } from "@/lib/actions/plan-metrics";
 
 interface StudentOption {
   id: string;
@@ -41,17 +39,11 @@ interface SessionDraft {
   id: string;
   letter: string;
   name: string;
-  dayOfWeek: string;
   exercises: ExerciseRow[];
   expanded: boolean;
 }
 
-interface MetricDraft {
-  id: string;
-  name: string;
-  unit: string;
-  requiresAttachment: boolean;
-}
+type WeekSchedule = Record<string, string | null>;
 
 const DAY_MAP: Record<string, number> = {
   domingo: 0,
@@ -92,7 +84,6 @@ function makeSession(letter: string, defaultExerciseId: string): SessionDraft {
     id: makeId(),
     letter,
     name: "",
-    dayOfWeek: "segunda",
     exercises: [
       {
         id: makeId(),
@@ -129,29 +120,11 @@ export function WorkoutBuilder({
   const [sessions, setSessions] = React.useState<SessionDraft[]>([
     makeSession("A", defaultExerciseId),
   ]);
-  const [metrics, setMetrics] = React.useState<MetricDraft[]>([]);
+  const [schedule, setSchedule] = React.useState<WeekSchedule>(() =>
+    Object.fromEntries(WEEK_ORDER.map((d) => [d, null])),
+  );
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-
-  function addMetric() {
-    setMetrics((prev) => [
-      ...prev,
-      {
-        id: makeId(),
-        name: "",
-        unit: "",
-        requiresAttachment: false,
-      },
-    ]);
-  }
-  function updateMetric(idx: number, patch: Partial<MetricDraft>) {
-    setMetrics((prev) =>
-      prev.map((m, i) => (i === idx ? { ...m, ...patch } : m)),
-    );
-  }
-  function removeMetric(idx: number) {
-    setMetrics((prev) => prev.filter((_, i) => i !== idx));
-  }
 
   function addSession() {
     const nextLetter = String.fromCharCode(65 + sessions.length);
@@ -163,7 +136,24 @@ export function WorkoutBuilder({
     );
   }
   function removeSession(idx: number) {
-    setSessions((prev) => prev.filter((_, i) => i !== idx));
+    setSessions((prev) => {
+      const removed = prev[idx];
+      // Clear any schedule slot pointing to this template.
+      if (removed) {
+        setSchedule((curr) =>
+          Object.fromEntries(
+            Object.entries(curr).map(([day, sid]) => [
+              day,
+              sid === removed.id ? null : sid,
+            ]),
+          ),
+        );
+      }
+      return prev.filter((_, i) => i !== idx);
+    });
+  }
+  function assignDay(day: string, sessionId: string | null) {
+    setSchedule((prev) => ({ ...prev, [day]: sessionId }));
   }
   function addExercise(sessionIdx: number) {
     setSessions((prev) =>
@@ -224,6 +214,16 @@ export function WorkoutBuilder({
       if (!planName.trim()) throw new Error("Preencha o nome do plano");
       if (sessions.length === 0) throw new Error("Adicione ao menos um treino");
 
+      // Templates that are actually scheduled to at least one day.
+      const scheduledTemplateIds = new Set(
+        Object.values(schedule).filter((v): v is string => v !== null),
+      );
+      if (scheduledTemplateIds.size === 0) {
+        throw new Error(
+          "Atribua pelo menos um treino a um dia no cronograma semanal.",
+        );
+      }
+
       const plan = await createPlan({
         studentId,
         name: planName.trim(),
@@ -232,17 +232,24 @@ export function WorkoutBuilder({
         endDate: endDate ? new Date(endDate) : undefined,
       });
 
-      for (let i = 0; i < sessions.length; i++) {
-        const s = sessions[i];
+      // Persist one WorkoutSession per scheduled day, copying the template's
+      // exercises. WEEK_ORDER drives the order so days come out chronologically.
+      let order = 0;
+      for (const day of WEEK_ORDER) {
+        const templateId = schedule[day];
+        if (!templateId) continue;
+        const template = sessions.find((s) => s.id === templateId);
+        if (!template) continue;
         const sessionName =
-          s.name.trim() || `Treino ${s.letter}`;
+          template.name.trim() || `Treino ${template.letter}`;
         const session = await createSession(plan.id, {
           name: sessionName,
-          dayOfWeek: DAY_MAP[s.dayOfWeek],
-          order: i,
+          dayOfWeek: DAY_MAP[day],
+          order,
         });
-        for (let j = 0; j < s.exercises.length; j++) {
-          const ex = s.exercises[j];
+        order++;
+        for (let j = 0; j < template.exercises.length; j++) {
+          const ex = template.exercises[j];
           await addExerciseToSession(session.id, ex.exerciseId, {
             sets: ex.sets,
             reps: ex.reps,
@@ -252,19 +259,6 @@ export function WorkoutBuilder({
             order: j,
           });
         }
-      }
-
-      // Persist custom metrics
-      for (let i = 0; i < metrics.length; i++) {
-        const m = metrics[i];
-        if (!m.name.trim()) continue;
-        await createPlanMetric({
-          planId: plan.id,
-          name: m.name.trim(),
-          unit: m.unit.trim() || undefined,
-          requiresAttachment: m.requiresAttachment,
-          order: i,
-        });
       }
 
       router.push(successRedirect);
@@ -346,7 +340,9 @@ export function WorkoutBuilder({
               <Input
                 id="plan-freq"
                 type="number"
-                value={sessions.length}
+                value={
+                  Object.values(schedule).filter((v) => v !== null).length
+                }
                 readOnly
               />
             </Field>
@@ -385,7 +381,8 @@ export function WorkoutBuilder({
             <div className="flex flex-col gap-3">
               {sessions.map((s, sIdx) => (
                 <Card key={s.id} variant="default">
-                  {/* Header em uma linha só — Badge + Input nome + DayPicker + ações */}
+                  {/* Header: Badge + nome do treino + ações.
+                   * Sem DayPicker — os dias são definidos na aba "Cronograma semanal". */}
                   <div className="flex items-center gap-2 mb-4 flex-nowrap">
                     <Badge className="shrink-0">Treino {s.letter}</Badge>
                     <Input
@@ -395,13 +392,6 @@ export function WorkoutBuilder({
                         updateSession(sIdx, { name: e.target.value })
                       }
                       placeholder={`ex: Peito e bíceps com foco em recuperação`}
-                    />
-                    <DayPicker
-                      value={s.dayOfWeek}
-                      onChange={(v) =>
-                        updateSession(sIdx, { dayOfWeek: v })
-                      }
-                      className="shrink-0"
                     />
                     <IconButton
                       aria-label={s.expanded ? "Recolher" : "Expandir"}
@@ -567,35 +557,37 @@ export function WorkoutBuilder({
           <TabsContent value="schedule">
             <Card variant="default">
               <p className="text-caption text-text-muted mb-4">
-                Visualização do que o aluno fará em cada dia da semana,
-                baseado nos treinos definidos acima. Edite o dia em "Treinos
-                do plano".
+                Atribua a cada dia da semana um dos treinos criados na aba
+                "Treinos do plano". O mesmo treino pode ser repetido em vários
+                dias. Dias sem atribuição contam como descanso.
               </p>
               <ul className="flex flex-col gap-2">
                 {WEEK_ORDER.map((d) => {
-                  const matches = sessions.filter((s) => s.dayOfWeek === d);
+                  const assigned = schedule[d];
                   return (
                     <li
                       key={d}
-                      className="flex items-center justify-between gap-3 py-2 px-3 rounded-md bg-bg-elevated"
+                      className="flex items-center gap-3 py-2 px-3 rounded-md bg-bg-elevated"
                     >
                       <span className="text-body font-semibold text-text-primary w-24 shrink-0">
                         {DAY_SHORT[d]}
                       </span>
-                      <div className="flex-1 min-w-0 flex flex-wrap gap-1.5 justify-end">
-                        {matches.length === 0 ? (
-                          <span className="text-caption text-text-muted italic">
-                            Descanso
-                          </span>
-                        ) : (
-                          matches.map((m) => (
-                            <Badge key={m.id} variant="default">
-                              Treino {m.letter}
-                              {m.name ? ` — ${m.name}` : ""}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
+                      <Select
+                        aria-label={`Treino de ${DAY_SHORT[d]}`}
+                        value={assigned ?? ""}
+                        onChange={(e) =>
+                          assignDay(d, e.target.value || null)
+                        }
+                        className="flex-1 min-w-0"
+                      >
+                        <option value="">Descanso</option>
+                        {sessions.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            Treino {s.letter}
+                            {s.name ? ` — ${s.name}` : ""}
+                          </option>
+                        ))}
+                      </Select>
                     </li>
                   );
                 })}
@@ -603,85 +595,6 @@ export function WorkoutBuilder({
             </Card>
           </TabsContent>
         </Tabs>
-      </section>
-
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-h3 text-text-primary">
-              3. Métricas a coletar
-              <span className="ml-2 text-caption text-text-muted font-normal">
-                (opcional)
-              </span>
-            </h2>
-            <p className="text-caption text-text-muted">
-              Campos custom que o aluno preenche durante o plano.
-            </p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={addMetric}>
-            <Plus size={14} aria-hidden /> Adicionar métrica
-          </Button>
-        </div>
-
-        {metrics.length === 0 ? (
-          <Card variant="default">
-            <p className="text-caption text-text-muted">
-              Nenhuma métrica adicionada. Use isso para pedir registros como
-              "Peso na barra do supino (kg)", "Foto da execução do agachamento"
-              (com anexo obrigatório), etc.
-            </p>
-          </Card>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {metrics.map((m, idx) => (
-              <Card key={m.id} variant="default">
-                <div className="grid grid-cols-1 sm:grid-cols-[2fr_120px_auto_44px] gap-2 items-end">
-                  <Field label="Nome da métrica" htmlFor={`m-name-${m.id}`}>
-                    <Input
-                      id={`m-name-${m.id}`}
-                      value={m.name}
-                      onChange={(e) =>
-                        updateMetric(idx, { name: e.target.value })
-                      }
-                      placeholder="ex: Peso na barra do supino"
-                    />
-                  </Field>
-                  <Field label="Unidade" htmlFor={`m-unit-${m.id}`}>
-                    <Input
-                      id={`m-unit-${m.id}`}
-                      value={m.unit}
-                      onChange={(e) =>
-                        updateMetric(idx, { unit: e.target.value })
-                      }
-                      placeholder="kg / cm / —"
-                    />
-                  </Field>
-                  <label className="flex items-center gap-2 cursor-pointer min-h-[48px]">
-                    <input
-                      type="checkbox"
-                      checked={m.requiresAttachment}
-                      onChange={(e) =>
-                        updateMetric(idx, {
-                          requiresAttachment: e.target.checked,
-                        })
-                      }
-                      className="w-4 h-4 accent-accent"
-                    />
-                    <span className="text-caption text-text-secondary whitespace-nowrap">
-                      Anexo obrigatório
-                    </span>
-                  </label>
-                  <IconButton
-                    aria-label="Remover métrica"
-                    onClick={() => removeMetric(idx)}
-                  >
-                    <Trash2 size={16} className="text-error" />
-                  </IconButton>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
       </section>
 
       {error && (
