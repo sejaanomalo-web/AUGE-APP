@@ -1,9 +1,19 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { notifyUser } from "@/lib/notifications/notify";
+
+/**
+ * Return-shape for actions whose errors must be readable on the client in
+ * production. Next.js sanitises the message of any thrown error in a server
+ * action, so structured failures travel back as data instead.
+ */
+export type ReplacePlanResult =
+  | { ok: true }
+  | { ok: false; error: string };
 
 /**
  * Check if the given user can edit a plan: must be either the trainer
@@ -151,81 +161,158 @@ export async function replacePlanContent(
       }>;
     }>;
   },
-) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
+): Promise<ReplacePlanResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false, error: "Não autenticado." };
 
-  if (!(await canEditPlan(userId, planId)))
-    throw new Error("Sem permissão para editar este plano");
+    if (!(await canEditPlan(userId, planId))) {
+      return { ok: false, error: "Sem permissão para editar este plano." };
+    }
 
-  const sessionsWithLogs = await prisma.workoutSession.findMany({
-    where: { planId, logs: { some: {} } },
-    select: { id: true },
-  });
-  if (sessionsWithLogs.length > 0) {
-    throw new Error(
-      "Este plano já tem treinos registrados pelo aluno. Para mudar a estrutura, crie um novo plano.",
-    );
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.workoutPlan.update({
-      where: { id: planId },
-      data: {
-        name: data.name,
-        description: data.description,
-        startDate: data.startDate,
-        endDate: data.endDate,
-      },
-    });
-
-    // Cascade deletes child SessionExercise rows.
-    await tx.workoutSession.deleteMany({ where: { planId } });
-
-    for (let i = 0; i < data.schedule.length; i++) {
-      const s = data.schedule[i];
-      const session = await tx.workoutSession.create({
-        data: {
-          planId,
-          name: s.name,
-          dayOfWeek: s.dayOfWeek,
-          order: i,
-        },
-      });
-      for (let j = 0; j < s.exercises.length; j++) {
-        const ex = s.exercises[j];
-        await tx.sessionExercise.create({
-          data: {
-            sessionId: session.id,
-            exerciseId: ex.exerciseId,
-            sets: ex.sets,
-            reps: ex.reps,
-            restSeconds: ex.restSeconds,
-            weight: ex.weight,
-            notes: ex.notes,
-            order: j,
-          },
-        });
+    // ── Input sanity ─────────────────────────────────────────
+    if (!data.name?.trim()) {
+      return { ok: false, error: "Nome do plano é obrigatório." };
+    }
+    if (
+      !(data.startDate instanceof Date) ||
+      Number.isNaN(data.startDate.getTime())
+    ) {
+      return { ok: false, error: "Data de início inválida." };
+    }
+    if (
+      data.endDate &&
+      (!(data.endDate instanceof Date) || Number.isNaN(data.endDate.getTime()))
+    ) {
+      return { ok: false, error: "Data de fim inválida." };
+    }
+    if (!Array.isArray(data.schedule) || data.schedule.length === 0) {
+      return {
+        ok: false,
+        error: "Atribua pelo menos um treino a um dia no cronograma semanal.",
+      };
+    }
+    for (const row of data.schedule) {
+      if (
+        typeof row.dayOfWeek !== "number" ||
+        row.dayOfWeek < 0 ||
+        row.dayOfWeek > 6
+      ) {
+        return { ok: false, error: "Dia da semana inválido no cronograma." };
+      }
+      for (const ex of row.exercises) {
+        if (!ex.exerciseId) {
+          return {
+            ok: false,
+            error: "Existe exercício sem seleção. Confira o cronograma.",
+          };
+        }
       }
     }
-  });
 
-  const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } });
-  if (plan && plan.trainerId === userId && plan.studentId !== userId) {
-    notifyUser({
-      userId: plan.studentId,
-      type: "WORKOUT_PLAN_UPDATED",
-      title: "Plano atualizado",
-      body: "Seu personal fez ajustes nos treinos",
-      data: { planId },
-      url: `/planos/${planId}`,
-    }).catch(() => null);
+    // Pre-check: deleting a session with logs would hit a Restrict FK and
+    // tank the whole transaction. Surface a friendly message instead.
+    const sessionsWithLogs = await prisma.workoutSession.findMany({
+      where: { planId, logs: { some: {} } },
+      select: { id: true },
+    });
+    if (sessionsWithLogs.length > 0) {
+      return {
+        ok: false,
+        error:
+          "Este plano já tem treinos registrados pelo aluno. Para mudar a estrutura, crie um novo plano.",
+      };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.workoutPlan.update({
+        where: { id: planId },
+        data: {
+          name: data.name.trim(),
+          description: data.description,
+          startDate: data.startDate,
+          endDate: data.endDate ?? null,
+        },
+      });
+
+      // Cascade deletes child SessionExercise rows.
+      await tx.workoutSession.deleteMany({ where: { planId } });
+
+      for (let i = 0; i < data.schedule.length; i++) {
+        const s = data.schedule[i];
+        const session = await tx.workoutSession.create({
+          data: {
+            planId,
+            name: s.name,
+            dayOfWeek: s.dayOfWeek,
+            order: i,
+          },
+        });
+        for (let j = 0; j < s.exercises.length; j++) {
+          const ex = s.exercises[j];
+          await tx.sessionExercise.create({
+            data: {
+              sessionId: session.id,
+              exerciseId: ex.exerciseId,
+              sets: ex.sets,
+              reps: ex.reps,
+              restSeconds: ex.restSeconds,
+              weight: ex.weight,
+              notes: ex.notes,
+              order: j,
+            },
+          });
+        }
+      }
+    });
+
+    // Notify the student in a fire-and-forget fashion. A failure here must
+    // never invalidate the save.
+    try {
+      const plan = await prisma.workoutPlan.findUnique({
+        where: { id: planId },
+      });
+      if (plan && plan.trainerId === userId && plan.studentId !== userId) {
+        notifyUser({
+          userId: plan.studentId,
+          type: "WORKOUT_PLAN_UPDATED",
+          title: "Plano atualizado",
+          body: "Seu personal fez ajustes nos treinos",
+          data: { planId },
+          url: `/planos/${planId}`,
+        }).catch((e) =>
+          console.error("[replacePlanContent] notify failed", e),
+        );
+      }
+    } catch (e) {
+      console.error("[replacePlanContent] post-save notify lookup failed", e);
+    }
+
+    revalidatePath("/treinos");
+    revalidatePath(`/treinos/${planId}`);
+    revalidatePath("/planos");
+    revalidatePath(`/planos/${planId}`);
+    return { ok: true };
+  } catch (err) {
+    console.error("[replacePlanContent] failed", { planId, err });
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2003" || err.code === "P2014") {
+        return {
+          ok: false,
+          error:
+            "Este plano já tem treinos registrados pelo aluno. Para mudar a estrutura, crie um novo plano.",
+        };
+      }
+      if (err.code === "P2025") {
+        return { ok: false, error: "Plano não encontrado." };
+      }
+      return { ok: false, error: `Falha ao salvar o plano (${err.code}).` };
+    }
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Erro inesperado.",
+    };
   }
-
-  revalidatePath("/treinos");
-  revalidatePath(`/treinos/${planId}`);
-  revalidatePath("/planos");
-  revalidatePath(`/planos/${planId}`);
 }
 
 export async function deletePlan(id: string) {

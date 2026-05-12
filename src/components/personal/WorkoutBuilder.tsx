@@ -358,13 +358,23 @@ export function WorkoutBuilder({
       }
 
       if (isEdit && initialData) {
-        await replacePlanContent(initialData.planId, {
+        const result = await replacePlanContent(initialData.planId, {
           name: planName.trim(),
           description: description.trim() || undefined,
           startDate: new Date(startDate),
           endDate: endDate ? new Date(endDate) : undefined,
           schedule: scheduleRows,
         });
+        if (!result.ok) {
+          setError(result.error);
+          toast({
+            type: "error",
+            title: "Não foi possível salvar",
+            description: result.error,
+          });
+          setSaving(false);
+          return;
+        }
       } else {
         const plan = await createPlan({
           studentId,
