@@ -176,11 +176,12 @@ export default async function HojePage() {
             <span className="inline-flex items-center gap-1.5">
               {stats.streakDays} dias{" "}
               {stats.streakDays > 0 && (
-                <Flame size={20} className="text-warning" aria-hidden />
+                <Flame size={20} aria-hidden />
               )}
             </span>
           }
           icon={Flame}
+          accent={stats.streakDays > 0}
         />
         <StatCard
           label="Volume da semana"
@@ -210,29 +211,45 @@ export default async function HojePage() {
             </Link>
           </div>
           <div className="-mx-4 px-4 lg:mx-0 lg:px-0 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory">
-            {upcoming.map((u, i) => (
-              <Link
-                key={`${u.session.id}-${i}`}
-                href={`/treino/${u.session.id}`}
-                className="snap-start shrink-0 w-[200px]"
-              >
-                <Card variant="interactive" className="h-full">
-                  <p className="text-caption text-text-muted uppercase tracking-[0.08em]">
-                    {capitalize(
-                      formatDayMonth(u.date.toISOString().slice(0, 10)).split(
-                        ",",
-                      )[0],
-                    )}
-                  </p>
-                  <p className="mt-2 text-body-lg text-text-primary font-semibold">
-                    {u.session.name}
-                  </p>
-                  <div className="mt-3">
-                    <Badge>{u.session.exercises.length} exercícios</Badge>
-                  </div>
-                </Card>
-              </Link>
-            ))}
+            {upcoming.map((u, i) => {
+              const isNext = i === 0;
+              return (
+                <Link
+                  key={`${u.session.id}-${i}`}
+                  href={`/treino/${u.session.id}`}
+                  className="snap-start shrink-0 w-[200px]"
+                >
+                  <Card
+                    variant="interactive"
+                    className={
+                      isNext
+                        ? "h-full !border-accent/60 ring-1 ring-accent/30 shadow-accent"
+                        : "h-full"
+                    }
+                  >
+                    <p
+                      className={`text-caption uppercase tracking-[0.08em] ${
+                        isNext ? "text-accent font-bold" : "text-text-muted"
+                      }`}
+                    >
+                      {isNext
+                        ? "Próximo"
+                        : capitalize(
+                            formatDayMonth(
+                              u.date.toISOString().slice(0, 10),
+                            ).split(",")[0],
+                          )}
+                    </p>
+                    <p className="mt-2 text-body-lg text-text-primary font-semibold">
+                      {u.session.name}
+                    </p>
+                    <div className="mt-3">
+                      <Badge>{u.session.exercises.length} exercícios</Badge>
+                    </div>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

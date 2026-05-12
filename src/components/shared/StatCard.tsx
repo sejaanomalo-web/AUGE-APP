@@ -8,6 +8,7 @@ export function StatCard({
   delta,
   icon: Icon,
   className,
+  accent = false,
 }: {
   label: string;
   value: React.ReactNode;
@@ -15,21 +16,49 @@ export function StatCard({
   delta?: { value: string; positive?: boolean };
   icon?: LucideIcon;
   className?: string;
+  /** Solid gold tone — use sparingly for a single hero stat. */
+  accent?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "bg-bg-surface rounded-md p-4 flex flex-col gap-2 min-w-0",
+        "rounded-md p-4 flex flex-col gap-2 min-w-0 border",
+        accent
+          ? "bg-accent text-text-on-accent border-accent shadow-accent"
+          : "bg-bg-surface border-border-subtle shadow-sm",
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2 text-text-secondary">
-        <span className="text-caption">{label}</span>
-        {Icon && <Icon size={16} aria-hidden className="text-text-muted" />}
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2",
+          accent ? "text-text-on-accent/80" : "text-text-secondary",
+        )}
+      >
+        <span className="text-caption font-semibold">{label}</span>
+        {Icon && (
+          <Icon
+            size={16}
+            aria-hidden
+            className={accent ? "text-text-on-accent/80" : "text-text-muted"}
+          />
+        )}
       </div>
-      <div className="text-h1 text-text-primary tnum truncate">{value}</div>
+      <div
+        className={cn(
+          "text-h1 tnum truncate",
+          accent ? "text-text-on-accent font-bold" : "text-text-primary",
+        )}
+      >
+        {value}
+      </div>
       {(hint || delta) && (
-        <div className="flex items-center gap-2 text-caption text-text-muted">
+        <div
+          className={cn(
+            "flex items-center gap-2 text-caption",
+            accent ? "text-text-on-accent/80" : "text-text-muted",
+          )}
+        >
           {delta && (
             <span
               className={cn(

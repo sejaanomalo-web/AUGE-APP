@@ -69,7 +69,12 @@ export default async function PlanosPage() {
               <h2 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
                 Ativo
               </h2>
-              <PlanCard plan={activePlan} createdByTrainerName={trainer?.name} nowIso={nowIso} />
+              <PlanCard
+                plan={activePlan}
+                createdByTrainerName={trainer?.name}
+                nowIso={nowIso}
+                featured
+              />
             </section>
           )}
 
@@ -100,6 +105,7 @@ function PlanCard({
   plan,
   createdByTrainerName,
   nowIso,
+  featured = false,
 }: {
   plan: {
     id: string;
@@ -114,6 +120,8 @@ function PlanCard({
   };
   createdByTrainerName?: string;
   nowIso: string;
+  /** Active/hero plan — gets a gold ring to read as the headline. */
+  featured?: boolean;
 }) {
   const sessionsByDay = new Map<number, typeof plan.sessions>();
   for (const s of plan.sessions) {
@@ -126,7 +134,14 @@ function PlanCard({
 
   return (
     <Link href={`/planos/${plan.id}`} className="block">
-      <Card variant="interactive">
+      <Card
+        variant="interactive"
+        className={
+          featured
+            ? "!border-accent/60 ring-1 ring-accent/30 shadow-accent"
+            : undefined
+        }
+      >
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
             <p className="text-caption text-text-muted mb-1">

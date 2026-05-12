@@ -1,7 +1,12 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-type CardVariant = "default" | "elevated" | "interactive" | "highlight";
+type CardVariant =
+  | "default"
+  | "elevated"
+  | "interactive"
+  | "highlight"
+  | "accent";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
@@ -20,6 +25,11 @@ const variantClasses: Record<CardVariant, string> = {
     "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition duration-150 hover:bg-bg-elevated hover:border-border hover:shadow-md hover:-translate-y-px active:translate-y-0",
   highlight:
     "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent",
+  // Solid gold block — matches the active nav chip language. Use sparingly
+  // for the single most important action on the screen. Children are
+  // expected to be dark (text-text-on-accent) for contrast.
+  accent:
+    "relative bg-accent text-text-on-accent border border-accent p-5 shadow-accent overflow-hidden",
 };
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
