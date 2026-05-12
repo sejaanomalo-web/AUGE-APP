@@ -18,10 +18,14 @@ export function BottomNav({ className }: { className?: string }) {
   return (
     <nav
       className={cn(
-        // Floating capsule — detached from edges with margin, sits above content.
-        // safe-area-bottom keeps clearance from iOS home indicator.
-        "fixed inset-x-0 z-30 px-3 lg:hidden",
-        "bottom-[calc(env(safe-area-inset-bottom)+10px)]",
+        // Anchor at bottom: 0 and absorb safe-area + visual offset via padding.
+        // Why: on iOS Safari, env(safe-area-inset-bottom) changes dynamically
+        // as the toolbar shows/hides during scroll — placing it in `bottom`
+        // makes the nav "jump". Padding doesn't trigger re-layout of the
+        // fixed anchor, so the nav stays locked in place.
+        "fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] lg:hidden",
+        // Force a separate compositing layer so scroll never repaints the nav.
+        "[transform:translate3d(0,0,0)] [will-change:transform] [contain:layout_paint]",
         className,
       )}
       aria-label="Navegação principal"
