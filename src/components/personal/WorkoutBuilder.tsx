@@ -456,74 +456,80 @@ export function WorkoutBuilder({
                               }
                             />
                           </div>
-                          <label className="min-w-0 block sm:contents">
-                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
-                              Séries
-                            </span>
-                            <Input
-                              type="number"
-                              aria-label="Séries"
-                              min={1}
-                              value={ex.sets}
-                              onChange={(e) =>
-                                updateExercise(sIdx, exIdx, {
-                                  sets: parseInt(e.target.value) || 0,
-                                })
-                              }
-                              className="text-center"
-                            />
-                          </label>
-                          <label className="min-w-0 block sm:contents">
-                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
-                              Reps
-                            </span>
-                            <Input
-                              aria-label="Reps"
-                              value={ex.reps}
-                              onChange={(e) =>
-                                updateExercise(sIdx, exIdx, {
-                                  reps: e.target.value,
-                                })
-                              }
-                              className="text-center"
-                              placeholder="8-10"
-                            />
-                          </label>
-                          <label className="min-w-0 block sm:contents">
-                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
-                              Descanso (s)
-                            </span>
-                            <Input
-                              type="number"
-                              aria-label="Descanso (s)"
-                              min={0}
-                              value={ex.rest}
-                              onChange={(e) =>
-                                updateExercise(sIdx, exIdx, {
-                                  rest: parseInt(e.target.value) || 0,
-                                })
-                              }
-                              className="text-center"
-                            />
-                          </label>
-                          <label className="min-w-0 block sm:contents">
-                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
-                              Peso (kg)
-                            </span>
-                            <Input
-                              type="number"
-                              aria-label="Peso sugerido (kg)"
-                              min={0}
-                              step={0.5}
-                              value={ex.weight}
-                              onChange={(e) =>
-                                updateExercise(sIdx, exIdx, {
-                                  weight: parseFloat(e.target.value) || 0,
-                                })
-                              }
-                              className="text-center"
-                            />
-                          </label>
+                          {/* Mobile: 2x2 grid for the 4 numeric inputs.
+                           * Desktop (sm+): wrapper dissolves (contents) so each
+                           * input becomes a direct child of the parent grid,
+                           * keeping the 70/90/90/90 column layout. */}
+                          <div className="grid grid-cols-2 gap-2 sm:contents">
+                            <label className="min-w-0 block sm:contents">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                                Séries
+                              </span>
+                              <Input
+                                type="number"
+                                aria-label="Séries"
+                                min={1}
+                                value={ex.sets}
+                                onChange={(e) =>
+                                  updateExercise(sIdx, exIdx, {
+                                    sets: parseInt(e.target.value) || 0,
+                                  })
+                                }
+                                className="text-center"
+                              />
+                            </label>
+                            <label className="min-w-0 block sm:contents">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                                Reps
+                              </span>
+                              <Input
+                                aria-label="Reps"
+                                value={ex.reps}
+                                onChange={(e) =>
+                                  updateExercise(sIdx, exIdx, {
+                                    reps: e.target.value,
+                                  })
+                                }
+                                className="text-center"
+                                placeholder="8-10"
+                              />
+                            </label>
+                            <label className="min-w-0 block sm:contents">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                                Descanso (s)
+                              </span>
+                              <Input
+                                type="number"
+                                aria-label="Descanso (s)"
+                                min={0}
+                                value={ex.rest}
+                                onChange={(e) =>
+                                  updateExercise(sIdx, exIdx, {
+                                    rest: parseInt(e.target.value) || 0,
+                                  })
+                                }
+                                className="text-center"
+                              />
+                            </label>
+                            <label className="min-w-0 block sm:contents">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                                Peso (kg)
+                              </span>
+                              <Input
+                                type="number"
+                                aria-label="Peso sugerido (kg)"
+                                min={0}
+                                step={0.5}
+                                value={ex.weight}
+                                onChange={(e) =>
+                                  updateExercise(sIdx, exIdx, {
+                                    weight: parseFloat(e.target.value) || 0,
+                                  })
+                                }
+                                className="text-center"
+                              />
+                            </label>
+                          </div>
                           <div className="flex sm:block justify-end">
                             <IconButton
                               aria-label="Remover exercício"
