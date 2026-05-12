@@ -92,28 +92,38 @@ export default async function HojePage() {
         <h1 className="text-hero-name text-text-primary">Olá, {firstName}</h1>
       </section>
 
-      {/* Hero do treino — Netflix-style */}
+      {/* Hero do treino — Netflix-style, sempre em dourado */}
       {!plan ? (
-        <Card variant="default">
-          <Badge>Sem plano</Badge>
-          <h2 className="mt-2 text-h2 text-text-primary">
+        <HeroCard
+          intensity="strong"
+          className="min-h-[280px] sm:min-h-[320px] p-6 sm:p-8 flex flex-col justify-center gap-4"
+        >
+          <span className="inline-block self-start px-3 py-1 rounded-pill bg-accent/15 text-accent text-stat-label uppercase">
+            Sem plano
+          </span>
+          <h2 className="text-hero-name text-text-primary max-w-md">
             Você ainda não tem um plano ativo
           </h2>
-          <p className="mt-1 text-body text-text-secondary">
+          <p className="text-body-lg text-text-secondary max-w-md">
             Aguarde seu personal criar um plano de treino para você. Quando
             estiver pronto, você verá o treino do dia aqui.
           </p>
-        </Card>
+        </HeroCard>
       ) : isRest ? (
-        <Card variant="default">
-          <Badge>Descanso</Badge>
-          <h2 className="mt-2 text-h2 text-text-primary">
+        <HeroCard
+          intensity="strong"
+          className="min-h-[280px] sm:min-h-[320px] p-6 sm:p-8 flex flex-col justify-center gap-4"
+        >
+          <span className="inline-block self-start px-3 py-1 rounded-pill bg-accent/15 text-accent text-stat-label uppercase">
+            Descanso
+          </span>
+          <h2 className="text-hero-name text-text-primary max-w-md">
             Hoje é dia de descanso
           </h2>
-          <p className="mt-1 text-body text-text-secondary">
+          <p className="text-body-lg text-text-secondary max-w-md">
             Aproveite para hidratar bem e dormir cedo. Amanhã tem treino.
           </p>
-        </Card>
+        </HeroCard>
       ) : (
         <HeroCard
           intensity="strong"
