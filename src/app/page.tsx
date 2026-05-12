@@ -6,7 +6,7 @@ import { LinkButton } from "@/components/ui/LinkButton";
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-bg-base">
-      <header className="flex items-center justify-between px-6 lg:px-10 h-16 lg:h-20">
+      <header className="flex items-center justify-between px-6 lg:px-10 h-16 lg:h-20 pt-[calc(env(safe-area-inset-top)+0.5rem)] box-content">
         <Link href="/" aria-label="Página inicial">
           <Logo size="sm" />
         </Link>
@@ -20,7 +20,7 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-[calc(env(safe-area-inset-top)+5rem)] pb-12 sm:pt-12">
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-8 pb-12 sm:pt-12">
         <h1 className="text-[40px] sm:text-[48px] leading-[1.05] font-bold text-text-primary tracking-[-0.03em] max-w-[640px]">
           Atinja seu <span className="text-accent">auge</span>.
         </h1>
