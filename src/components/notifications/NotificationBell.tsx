@@ -120,7 +120,16 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[360px] max-w-[calc(100vw-24px)] glass-surface-strong rounded-lg z-50 overflow-hidden animate-fade-in">
+        <div
+          className={[
+            // Mobile: full-width drawer pinned below the header with margins;
+            // legible solid background, never transparent.
+            "fixed left-3 right-3 top-[calc(56px+env(safe-area-inset-top)+6px)] z-50",
+            // Desktop: anchored to the bell button at top-right.
+            "sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px]",
+            "bg-bg-elevated border border-border-subtle rounded-lg shadow-xl overflow-hidden animate-fade-in",
+          ].join(" ")}
+        >
           <div className="flex items-center justify-between p-4 border-b border-border-subtle">
             <h3 className="text-body-lg font-bold text-text-primary">
               Notificações

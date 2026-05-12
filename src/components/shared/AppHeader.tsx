@@ -88,7 +88,13 @@ export function AppHeader({
         {open && (
           <div
             role="menu"
-            className="absolute right-4 top-[calc(100%+4px)] w-56 glass-surface-strong rounded-md p-2 animate-fade-in"
+            className={[
+              // Mobile: anchored full-width drawer below the header.
+              "fixed left-3 right-3 top-[calc(56px+env(safe-area-inset-top)+6px)] z-50",
+              // Desktop: anchored under the avatar button.
+              "sm:absolute sm:left-auto sm:right-4 sm:top-[calc(100%+4px)] sm:w-56",
+              "bg-bg-elevated border border-border-subtle rounded-lg shadow-xl p-2 animate-fade-in",
+            ].join(" ")}
           >
             <div className="px-3 py-2 mb-1">
               <p className="text-body font-semibold text-text-primary truncate">
