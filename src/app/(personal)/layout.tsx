@@ -10,6 +10,7 @@ import {
 import { Sidebar } from "@/components/shared/Sidebar";
 import { MobileDrawer } from "@/components/shared/MobileDrawer";
 import { AppHeader } from "@/components/shared/AppHeader";
+import { PageTransition } from "@/components/shared/PageTransition";
 
 const items = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,7 +34,9 @@ export default function PersonalLayout({
           homeHref="/dashboard"
           mobileLeftSlot={<MobileDrawer items={items} homeHref="/dashboard" />}
         />
-        <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8">{children}</main>
+        <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </div>
   );

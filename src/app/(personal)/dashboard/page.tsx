@@ -1,16 +1,11 @@
 import Link from "next/link";
-import {
-  AlertTriangle,
-  Dumbbell,
-  Target,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { AlertTriangle, Dumbbell } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/LinkButton";
-import { StatCard } from "@/components/shared/StatCard";
+import { HeroCard } from "@/components/visual/HeroCard";
+import { StatHero } from "@/components/visual/StatHero";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { capitalize, formatDayMonth, formatRelativeFromNow } from "@/lib/date";
 import { requireRole } from "@/lib/auth-helpers";
@@ -98,35 +93,59 @@ export default async function DashboardPersonalPage() {
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">
-      <section>
-        <h1 className="text-h1 text-text-primary">
-          Olá, {personal.name.split(" ")[0]} <span aria-hidden>👋</span>
-        </h1>
-        <p className="mt-1 text-body-lg text-text-secondary">
+      <section className="flex flex-col gap-1">
+        <div className="text-stat-label text-text-muted uppercase">
           {capitalize(formatDayMonth(todayIso))}
-        </p>
+        </div>
+        <h1 className="text-hero-name text-text-primary">
+          Olá, {personal.name.split(" ")[0]}
+        </h1>
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Alunos ativos" value={studentLinks.length} icon={Users} />
-        <StatCard
-          label="Treinos hoje"
-          value={finishedToday + startedToday}
-          hint={`${finishedToday} finalizado · ${startedToday} em andamento`}
-          icon={Dumbbell}
-        />
-        <StatCard
-          label="Treinos da semana"
-          value={
-            logsThisWeek.filter((l) => l.status === "COMPLETED").length
-          }
-          icon={TrendingUp}
-        />
-        <StatCard
-          label="Aderência média"
-          value={studentLinks.length > 0 ? `${avgAdherence}%` : "—"}
-          icon={Target}
-        />
+        <HeroCard className="p-5">
+          <StatHero
+            value={studentLinks.length}
+            label="Alunos ativos"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={finishedToday + startedToday}
+            label="Treinos hoje"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={
+              logsThisWeek.filter((l) => l.status === "COMPLETED").length
+            }
+            label="Concluídos · semana"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={studentLinks.length > 0 ? `${avgAdherence}%` : "—"}
+            label="Aderência média"
+            size="sm"
+            variation={
+              studentLinks.length > 0
+                ? {
+                    value: avgAdherence,
+                    type:
+                      avgAdherence >= 80
+                        ? "positive"
+                        : avgAdherence >= 60
+                          ? "neutral"
+                          : "negative",
+                  }
+                : undefined
+            }
+          />
+        </HeroCard>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -1,7 +1,7 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AnimatedSetButton } from "@/components/visual/AnimatedSetButton";
 
 export interface SetRowState {
   setNumber: number;
@@ -22,27 +22,47 @@ export function SetRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-md p-3 transition-colors duration-200",
+        "flex items-center gap-4 rounded-xl border p-4 transition-colors duration-200",
         state.completed
-          ? "bg-success/10 ring-1 ring-success/30"
-          : "bg-bg-elevated",
+          ? "bg-success/10 border-success/30"
+          : "bg-bg-surface border-border-subtle",
       )}
     >
+      {/* Caliber-style numbered indicator */}
       <div
         aria-hidden
         className={cn(
-          "flex items-center justify-center w-9 h-9 rounded-full text-body font-bold shrink-0 tnum",
+          "flex items-center justify-center w-10 h-10 rounded-full font-bold text-h3 shrink-0 tnum",
           state.completed
-            ? "bg-success text-text-on-accent"
-            : "bg-bg-card text-text-secondary",
+            ? "bg-success text-bg-base"
+            : "bg-bg-elevated text-text-muted",
         )}
       >
         {state.setNumber}
       </div>
 
-      <div className="flex-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      {/* Big italic inputs */}
+      <div className="flex-1 grid grid-cols-2 gap-3 min-w-0">
         <label className="flex flex-col items-center gap-1 min-w-0">
-          <span className="text-caption text-text-muted">Peso (kg)</span>
+          <span className="text-stat-label uppercase text-text-muted">
+            Reps
+          </span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={state.reps}
+            onChange={(e) =>
+              onChange({ ...state, reps: parseInt(e.target.value) || 0 })
+            }
+            className="w-full bg-transparent text-training-value italic font-mono-num text-text-primary text-center focus:outline-none"
+            aria-label={`Reps da série ${state.setNumber}`}
+          />
+        </label>
+        <label className="flex flex-col items-center gap-1 min-w-0">
+          <span className="text-stat-label uppercase text-text-muted">
+            Kg
+          </span>
           <input
             type="number"
             inputMode="decimal"
@@ -52,45 +72,19 @@ export function SetRow({
             onChange={(e) =>
               onChange({ ...state, weightKg: parseFloat(e.target.value) || 0 })
             }
-            className="w-full text-center bg-bg-card text-text-primary border border-border-subtle rounded-md min-h-[56px] text-[28px] font-bold tnum focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow"
+            className="w-full bg-transparent text-training-value italic font-mono-num text-text-primary text-center focus:outline-none"
             aria-label={`Peso da série ${state.setNumber}`}
-          />
-        </label>
-        <span aria-hidden className="text-h2 text-text-muted">
-          ×
-        </span>
-        <label className="flex flex-col items-center gap-1 min-w-0">
-          <span className="text-caption text-text-muted">Reps</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={state.reps}
-            onChange={(e) =>
-              onChange({ ...state, reps: parseInt(e.target.value) || 0 })
-            }
-            className="w-full text-center bg-bg-card text-text-primary border border-border-subtle rounded-md min-h-[56px] text-[28px] font-bold tnum focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow"
-            aria-label={`Reps da série ${state.setNumber}`}
           />
         </label>
       </div>
 
-      <button
-        type="button"
-        onClick={onToggleComplete}
-        aria-label={
+      <AnimatedSetButton
+        completed={state.completed}
+        onToggle={onToggleComplete}
+        ariaLabel={
           state.completed ? "Desmarcar série" : "Marcar série concluída"
         }
-        aria-pressed={state.completed}
-        className={cn(
-          "w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-          state.completed
-            ? "bg-accent text-text-on-accent"
-            : "bg-bg-card text-text-secondary hover:text-text-primary hover:bg-bg-hover ring-1 ring-border-subtle",
-        )}
-      >
-        <Check size={22} strokeWidth={3} />
-      </button>
+      />
     </div>
   );
 }

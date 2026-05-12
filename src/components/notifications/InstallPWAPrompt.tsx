@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Share, X } from "lucide-react";
+import { GlassOverlay } from "@/components/visual/GlassOverlay";
 
 export function InstallPWAPrompt() {
   const [show, setShow] = React.useState(false);
@@ -34,31 +35,33 @@ export function InstallPWAPrompt() {
     <div
       role="dialog"
       aria-label="Instalar ꓥuge"
-      className="fixed bottom-20 left-4 right-4 lg:bottom-4 lg:right-4 lg:left-auto lg:max-w-sm z-40 glass-surface-strong border-accent/50 rounded-lg p-4 animate-slide-up"
+      className="fixed bottom-24 left-4 right-4 lg:bottom-4 lg:right-4 lg:left-auto lg:max-w-sm z-40 animate-slide-up"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-text-primary mb-1">
-            Instale o ꓥuge no seu iPhone
-          </p>
-          <p className="text-caption text-text-secondary">
-            Toque em <Share className="inline w-4 h-4 mx-1" aria-hidden /> e
-            depois{" "}
-            <span className="font-semibold text-accent">
-              &quot;Adicionar à Tela de Início&quot;
-            </span>{" "}
-            para receber notificações de treino.
-          </p>
+      <GlassOverlay intensity="strong" rounded="2xl" className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-text-primary mb-1">
+              Instale o ꓥuge no seu iPhone
+            </p>
+            <p className="text-caption text-text-secondary">
+              Toque em <Share className="inline w-4 h-4 mx-1" aria-hidden /> e
+              depois{" "}
+              <span className="font-semibold text-accent">
+                &quot;Adicionar à Tela de Início&quot;
+              </span>{" "}
+              para receber notificações de treino.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="p-1 hover:bg-bg-hover rounded shrink-0"
+            aria-label="Dispensar"
+          >
+            <X className="w-4 h-4 text-text-muted" aria-hidden />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={dismiss}
-          className="p-1 hover:bg-bg-hover rounded shrink-0"
-          aria-label="Dispensar"
-        >
-          <X className="w-4 h-4 text-text-muted" aria-hidden />
-        </button>
-      </div>
+      </GlassOverlay>
     </div>
   );
 }

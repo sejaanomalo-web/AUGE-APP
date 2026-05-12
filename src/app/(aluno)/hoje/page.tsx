@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { Clock, Dumbbell, Flame, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { Progress } from "@/components/ui/Progress";
-import { StatCard } from "@/components/shared/StatCard";
+import { HeroCard } from "@/components/visual/HeroCard";
+import { StatHero } from "@/components/visual/StatHero";
 import { WeightSparkline } from "@/components/aluno/WeightSparkline";
 import { capitalize, formatDayMonth } from "@/lib/date";
 import { requireRole } from "@/lib/auth-helpers";
@@ -65,17 +65,33 @@ export default async function HojePage() {
   const firstWeight = last4Weight[0]?.weightKg ?? currentWeight;
   const weightDelta = currentWeight - firstWeight;
 
+  const firstName = user.name.split(" ")[0];
+  const weeklyFreq = plan?.sessions.length ?? 0;
+  const estimatedMin = session ? Math.max(20, session.exercises.length * 4) : 0;
+  const ctaHref = todayCompleted
+    ? `/historico/${todayCompleted.id}`
+    : inProgressLog
+      ? `/treino/${session!.id}/executar`
+      : session
+        ? `/treino/${session.id}`
+        : "#";
+  const ctaLabel = todayCompleted
+    ? "Ver detalhes →"
+    : inProgressLog
+      ? "Retomar treino →"
+      : "Iniciar treino →";
+
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-6">
-      <section>
-        <h1 className="text-h1 text-text-primary">
-          Olá, {user.name.split(" ")[0]} <span aria-hidden>👋</span>
-        </h1>
-        <p className="mt-1 text-body-lg text-text-secondary">
+    <div className="max-w-5xl mx-auto flex flex-col gap-8">
+      {/* Saudação minimalista */}
+      <section className="flex flex-col gap-1">
+        <div className="text-stat-label text-text-muted uppercase">
           {capitalize(formatDayMonth(today.toISOString().slice(0, 10)))}
-        </p>
+        </div>
+        <h1 className="text-hero-name text-text-primary">Olá, {firstName}</h1>
       </section>
 
+      {/* Hero do treino — Netflix-style */}
       {!plan ? (
         <Card variant="default">
           <Badge>Sem plano</Badge>
@@ -98,107 +114,102 @@ export default async function HojePage() {
           </p>
         </Card>
       ) : (
-        <Card variant="highlight" className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge>{session.name}</Badge>
-            {inProgressLog && (
-              <Badge variant="in_progress">Em andamento</Badge>
-            )}
-            {todayCompleted && <Badge variant="concluido">Concluído</Badge>}
-          </div>
-          <h2 className="text-h2 text-text-primary">{session.name}</h2>
-          <p className="text-body text-text-secondary">
-            {plan.sessions.length}x semana · plano {plan.name}
-          </p>
-
-          <div className="mt-1">
-            <div className="flex items-center justify-between text-caption text-text-secondary mb-1.5">
-              <span>Esta semana</span>
-              <span className="tnum">
-                {stats.completedWorkouts} de {plan.sessions.length} treinos
+        <HeroCard
+          intensity="strong"
+          className="min-h-[420px] sm:min-h-[440px] p-6 sm:p-8 flex flex-col justify-between gap-6"
+        >
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-block px-3 py-1 rounded-pill bg-accent/15 text-accent text-stat-label uppercase">
+                Treino · {stats.completedWorkouts}/{weeklyFreq}
               </span>
+              {inProgressLog && (
+                <Badge variant="in_progress">Em andamento</Badge>
+              )}
+              {todayCompleted && <Badge variant="concluido">Concluído</Badge>}
             </div>
-            <Progress
-              value={stats.completedWorkouts}
-              max={plan.sessions.length}
-            />
-          </div>
+            <h2 className="text-hero-name text-text-primary max-w-md">
+              {session.name}
+            </h2>
+            <div className="flex items-center gap-3 text-body-lg text-text-secondary flex-wrap">
+              <span className="tnum">
+                {session.exercises.length} exercícios
+              </span>
+              <span aria-hidden>·</span>
+              <span className="tnum">~{estimatedMin} min</span>
+              <span aria-hidden>·</span>
+              <span>plano {plan.name}</span>
+            </div>
 
-          {todayCompleted ? (
-            <LinkButton
-              variant="tertiary"
-              size="md"
-              href={`/historico/${todayCompleted.id}`}
-            >
-              Ver detalhes →
-            </LinkButton>
-          ) : inProgressLog ? (
-            <LinkButton
-              variant="primary"
-              size="cta"
-              fullWidth
-              href={`/treino/${session.id}/executar`}
-            >
-              Retomar treino
-            </LinkButton>
-          ) : (
-            <LinkButton
-              variant="primary"
-              size="cta"
-              fullWidth
-              href={`/treino/${session.id}`}
-            >
-              Iniciar treino
-            </LinkButton>
-          )}
-        </Card>
-      )}
-
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="Treinos da semana"
-          value={`${stats.completedWorkouts}/${plan?.sessions.length ?? 0}`}
-          hint={
-            plan ? (
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-caption text-text-secondary mb-1.5">
+                <span className="text-stat-label uppercase text-text-muted">
+                  Esta semana
+                </span>
+                <span className="tnum font-bold text-text-primary">
+                  {stats.completedWorkouts} / {weeklyFreq}
+                </span>
+              </div>
               <Progress
                 value={stats.completedWorkouts}
-                max={plan.sessions.length || 1}
-                thin
-                className="mt-1"
+                max={weeklyFreq || 1}
               />
-            ) : null
-          }
-          icon={Dumbbell}
-        />
-        <StatCard
-          label="Streak atual"
-          value={
-            <span className="inline-flex items-center gap-1.5">
-              {stats.streakDays} dias{" "}
-              {stats.streakDays > 0 && (
-                <Flame size={20} aria-hidden />
-              )}
-            </span>
-          }
-          icon={Flame}
-          accent={stats.streakDays > 0}
-        />
-        <StatCard
-          label="Volume da semana"
-          value={
-            stats.volume > 0
-              ? `${stats.volume.toLocaleString("pt-BR")} kg`
-              : "—"
-          }
-          icon={TrendingUp}
-        />
-        <StatCard
-          label="Tempo médio"
-          value={stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "—"}
-          icon={Clock}
-        />
+            </div>
+          </div>
+
+          <LinkButton variant="primary" size="cta" fullWidth href={ctaHref}>
+            {ctaLabel}
+          </LinkButton>
+        </HeroCard>
+      )}
+
+      {/* Stats row — números gigantes */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <HeroCard className="p-5">
+          <StatHero
+            value={`${stats.completedWorkouts}/${weeklyFreq || 0}`}
+            label="Treinos da semana"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard
+          className="p-5"
+          bare={stats.streakDays === 0}
+        >
+          <StatHero
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                {stats.streakDays}
+                <span className="text-stat-medium not-italic">
+                  {stats.streakDays > 0 ? "🔥" : ""}
+                </span>
+              </span>
+            }
+            label="Dias seguidos"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={
+              stats.volume > 0
+                ? `${(stats.volume / 1000).toFixed(1)}k`
+                : "—"
+            }
+            label="kg esta semana"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={stats.avgMinutes > 0 ? `${stats.avgMinutes}` : "—"}
+            label={stats.avgMinutes > 0 ? "Min médios" : "Tempo médio"}
+            size="sm"
+          />
+        </HeroCard>
       </section>
 
+      {/* Scroll horizontal — próximos treinos */}
       {plan && upcoming.length > 0 && (
         <section>
           <div className="flex items-end justify-between mb-3">
@@ -217,35 +228,37 @@ export default async function HojePage() {
                 <Link
                   key={`${u.session.id}-${i}`}
                   href={`/treino/${u.session.id}`}
-                  className="snap-start shrink-0 w-[200px]"
+                  className="snap-start shrink-0 w-[220px]"
                 >
                   <Card
                     variant="interactive"
                     className={
                       isNext
-                        ? "h-full !border-accent/60 ring-1 ring-accent/30 shadow-accent"
-                        : "h-full"
+                        ? "h-32 flex flex-col justify-between !border-accent/60 ring-1 ring-accent/30 shadow-accent"
+                        : "h-32 flex flex-col justify-between"
                     }
                   >
-                    <p
-                      className={`text-caption uppercase tracking-[0.08em] ${
-                        isNext ? "text-accent font-bold" : "text-text-muted"
-                      }`}
-                    >
-                      {isNext
-                        ? "Próximo"
-                        : capitalize(
-                            formatDayMonth(
-                              u.date.toISOString().slice(0, 10),
-                            ).split(",")[0],
-                          )}
-                    </p>
-                    <p className="mt-2 text-body-lg text-text-primary font-semibold">
-                      {u.session.name}
-                    </p>
-                    <div className="mt-3">
-                      <Badge>{u.session.exercises.length} exercícios</Badge>
+                    <div>
+                      <p
+                        className={`text-stat-label uppercase ${
+                          isNext ? "text-accent" : "text-text-muted"
+                        }`}
+                      >
+                        {isNext
+                          ? "Próximo"
+                          : capitalize(
+                              formatDayMonth(
+                                u.date.toISOString().slice(0, 10),
+                              ).split(",")[0],
+                            )}
+                      </p>
+                      <p className="mt-2 text-h3 text-text-primary line-clamp-2">
+                        {u.session.name}
+                      </p>
                     </div>
+                    <p className="text-caption text-text-muted">
+                      {u.session.exercises.length} exercícios
+                    </p>
                   </Card>
                 </Link>
               );
@@ -254,24 +267,38 @@ export default async function HojePage() {
         </section>
       )}
 
+      {/* Peso corporal */}
       {last4Weight.length >= 2 && (
         <section>
-          <Card variant="default" className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-caption text-text-muted">Peso corporal</p>
-                <p className="text-h2 text-text-primary tnum">
-                  {currentWeight.toFixed(1)} kg
-                </p>
-              </div>
-              <span
-                className={`tnum text-body font-semibold ${
-                  weightDelta <= 0 ? "text-success" : "text-warning"
-                }`}
-              >
-                {weightDelta > 0 ? "+" : ""}
-                {weightDelta.toFixed(1)} kg
-              </span>
+          <HeroCard className="p-5 flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <StatHero
+                value={
+                  <span>
+                    {currentWeight.toFixed(1)}
+                    <span className="text-stat-medium text-text-muted ml-1 not-italic">
+                      kg
+                    </span>
+                  </span>
+                }
+                label="Peso corporal"
+                size="sm"
+                variation={
+                  weightDelta === 0
+                    ? undefined
+                    : {
+                        value: Math.round(
+                          (Math.abs(weightDelta) / (firstWeight || 1)) * 100,
+                        ),
+                        type:
+                          weightDelta < 0
+                            ? "positive"
+                            : weightDelta > 0
+                              ? "negative"
+                              : "neutral",
+                      }
+                }
+              />
             </div>
             <WeightSparkline data={last4Weight} />
             <Link
@@ -280,7 +307,7 @@ export default async function HojePage() {
             >
               Ver evolução completa →
             </Link>
-          </Card>
+          </HeroCard>
         </section>
       )}
     </div>

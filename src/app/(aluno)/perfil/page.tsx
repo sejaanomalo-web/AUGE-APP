@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProfileEditor } from "@/components/shared/ProfileEditor";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { LinkTrainerDialog } from "@/components/aluno/LinkTrainerDialog";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyTrainer } from "@/lib/actions/users";
@@ -72,6 +73,11 @@ export default async function PerfilAlunoPage() {
             <LinkTrainerDialog />
           </Card>
         )}
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-h3 text-text-primary mb-3">Aparência</h2>
+        <ThemeToggle />
       </section>
 
       <section>

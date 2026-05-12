@@ -1,8 +1,10 @@
-import { Activity, Calendar, Flame, Scale, Sparkles, TrendingUp } from "lucide-react";
+import { Activity, Sparkles, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { StatCard } from "@/components/shared/StatCard";
+import { HeroCard } from "@/components/visual/HeroCard";
+import { StatHero } from "@/components/visual/StatHero";
+import { FrequencyHeatmap } from "@/components/visual/FrequencyHeatmap";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { EvolutionChart } from "@/components/aluno/EvolutionChart";
 import { requireRole } from "@/lib/auth-helpers";
@@ -27,14 +29,25 @@ export default async function EvolucaoPage() {
     label: formatShortDate(w.week),
     value: Math.round(w.volume),
   }));
-  const totalMonthVolume = volumeData.slice(-4).reduce((a, p) => a + p.value, 0);
+  const totalMonthVolume = volumeData
+    .slice(-4)
+    .reduce((a, p) => a + p.value, 0);
   const currentWeight = weightData.at(-1)?.value ?? null;
   const firstWeight = weightData[0]?.value ?? null;
+  const weightDelta =
+    currentWeight && firstWeight ? currentWeight - firstWeight : 0;
+  const weightDeltaPct =
+    currentWeight && firstWeight
+      ? Math.round((Math.abs(weightDelta) / firstWeight) * 100)
+      : 0;
 
   if (weightData.length === 0 && volumeData.length === 0) {
     return (
       <div className="max-w-5xl mx-auto">
-        <PageHeader title="Evolução" subtitle="O que mudou nas últimas semanas" />
+        <PageHeader
+          title="Evolução"
+          subtitle="O que mudou nas últimas semanas"
+        />
         <EmptyState
           icon={TrendingUp}
           title="Dados insuficientes"
@@ -45,79 +58,129 @@ export default async function EvolucaoPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <PageHeader title="Evolução" subtitle="O que mudou nas últimas semanas" />
+    <div className="max-w-5xl mx-auto flex flex-col gap-8">
+      <PageHeader
+        title="Evolução"
+        subtitle="O que mudou nas últimas semanas"
+      />
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <StatCard
-          label="Volume (último mês)"
-          value={
-            totalMonthVolume > 0
-              ? `${totalMonthVolume.toLocaleString("pt-BR")} kg`
-              : "—"
-          }
-          icon={TrendingUp}
-        />
-        <StatCard
-          label="Frequência"
-          value={`${stats.completedWorkouts}/sem`}
-          icon={Calendar}
-        />
-        <StatCard
-          label="Streak"
-          value={`${stats.streakDays} dias`}
-          icon={Flame}
-        />
-        <StatCard
-          label="Peso atual"
-          value={currentWeight ? `${currentWeight.toFixed(1)} kg` : "—"}
-          delta={
-            currentWeight && firstWeight
-              ? {
-                  value: `${(currentWeight - firstWeight).toFixed(1)} kg`,
-                  positive: currentWeight <= firstWeight,
-                }
-              : undefined
-          }
-          hint={weightData.length > 1 ? `vs ${weightData.length} sem` : undefined}
-          icon={Scale}
-        />
+      {/* Hero stat: volume do último mês */}
+      {totalMonthVolume > 0 && (
+        <HeroCard intensity="medium" className="p-6 sm:p-8">
+          <StatHero
+            label="Volume · último mês"
+            value={
+              <span>
+                {(totalMonthVolume / 1000).toFixed(1)}
+                <span className="text-stat-medium text-text-muted ml-2 not-italic">
+                  k kg
+                </span>
+              </span>
+            }
+            size="lg"
+          />
+        </HeroCard>
+      )}
+
+      {/* Stats row */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <HeroCard className="p-5">
+          <StatHero
+            value={`${stats.completedWorkouts}`}
+            label="Treinos / semana"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5" bare={stats.streakDays === 0}>
+          <StatHero
+            value={
+              <span className="inline-flex items-center gap-1.5">
+                {stats.streakDays}
+                {stats.streakDays > 0 && (
+                  <span className="text-stat-medium not-italic">🔥</span>
+                )}
+              </span>
+            }
+            label="Streak"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={
+              currentWeight ? `${currentWeight.toFixed(1)}` : "—"
+            }
+            label={currentWeight ? "kg atual" : "Peso atual"}
+            size="sm"
+            variation={
+              currentWeight && firstWeight && weightDelta !== 0
+                ? {
+                    value: weightDeltaPct,
+                    type: weightDelta < 0 ? "positive" : "negative",
+                  }
+                : undefined
+            }
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={`${evolution.avgPerWeek.toFixed(1)}x`}
+            label="Média trimestral"
+            size="sm"
+          />
+        </HeroCard>
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+      {/* Frequency heatmap (90 dias) */}
+      {evolution.totalWorkouts > 0 && (
+        <section>
+          <h2 className="text-h2 text-text-primary mb-4">
+            Frequência · últimos 90 dias
+          </h2>
+          <HeroCard className="p-5">
+            <FrequencyHeatmap workouts={evolution.dailyWorkouts} days={90} />
+          </HeroCard>
+        </section>
+      )}
+
+      {/* Charts */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {weightData.length >= 2 && (
-          <Card variant="default">
+          <HeroCard className="p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-h3 text-text-primary">Peso corporal</h2>
               <Badge>{weightData.length} pontos</Badge>
             </div>
             <EvolutionChart data={weightData} unit="kg" variant="line" />
-          </Card>
+          </HeroCard>
         )}
 
         {volumeData.length >= 2 && (
-          <Card variant="default">
+          <HeroCard className="p-5">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-h3 text-text-primary">Volume semanal</h2>
               <Badge>{volumeData.length} semanas</Badge>
             </div>
             <EvolutionChart data={volumeData} unit="kg" variant="bar" />
-          </Card>
+          </HeroCard>
         )}
       </section>
 
+      {/* IA insight */}
       {evolution.totalWorkouts > 4 && (
-        <Card variant="elevated" className="border border-accent/20">
+        <HeroCard intensity="medium" className="p-5">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-accent-glow flex items-center justify-center shrink-0">
               <Sparkles size={20} className="text-accent" aria-hidden />
             </div>
-            <div className="flex-1">
-              <Badge>Análise inteligente</Badge>
+            <div className="flex-1 min-w-0">
+              <p className="text-stat-label uppercase text-accent">
+                ✨ Análise inteligente
+              </p>
               <h2 className="mt-2 text-h2 text-text-primary">
                 Resumo da jornada
               </h2>
-              <p className="mt-2 text-body-lg text-text-secondary">
+              <p className="mt-2 text-body-lg text-text-secondary leading-relaxed">
                 Você completou{" "}
                 <strong className="text-text-primary">
                   {evolution.totalWorkouts} treinos
@@ -130,15 +193,17 @@ export default async function EvolucaoPage() {
               </p>
             </div>
           </div>
-        </Card>
+        </HeroCard>
       )}
 
       {evolution.totalWorkouts === 0 && weightData.length > 0 && (
-        <EmptyState
-          icon={Activity}
-          title="Sem treinos completos ainda"
-          description="Finalize alguns treinos para ver a evolução do seu volume aqui."
-        />
+        <Card variant="default">
+          <EmptyState
+            icon={Activity}
+            title="Sem treinos completos ainda"
+            description="Finalize alguns treinos para ver a evolução do seu volume aqui."
+          />
+        </Card>
       )}
     </div>
   );

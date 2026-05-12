@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/Button";
 import { formatDuration } from "@/lib/utils";
 
 export function RestTimerOverlay({
@@ -17,7 +16,6 @@ export function RestTimerOverlay({
 
   React.useEffect(() => {
     if (remaining <= 0) {
-      // Notifica fim do descanso (local notification, não push)
       if (
         typeof window !== "undefined" &&
         "Notification" in window &&
@@ -30,8 +28,11 @@ export function RestTimerOverlay({
             tag: "auge-rest-end",
           });
         } catch {
-          // ignora
+          // ignore
         }
+      }
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([60, 30, 60]);
       }
       onComplete();
       return;
@@ -44,24 +45,33 @@ export function RestTimerOverlay({
     <div
       role="dialog"
       aria-modal
-      className="fixed inset-0 z-50 bg-bg-base/95 backdrop-blur-md flex flex-col items-center justify-center px-6 animate-fade-in"
+      className="fixed inset-0 z-[70] flex flex-col items-center justify-center px-6 animate-fade-in"
     >
-      <p className="text-micro uppercase tracking-[0.08em] text-text-secondary">
-        Descanso
-      </p>
-      <p
-        className="mt-4 text-[96px] sm:text-[120px] leading-none font-bold text-accent tnum"
-        aria-live="polite"
-      >
-        {formatDuration(remaining)}
-      </p>
-      <p className="mt-2 text-body-lg text-text-secondary">
-        Respire. A próxima série já vem.
-      </p>
-      <div className="mt-10 w-full max-w-xs">
-        <Button variant="primary" size="cta" fullWidth onClick={onSkip}>
+      {/* Heavy backdrop blur — content behind is recognizable but muted. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-bg-base/40 backdrop-blur-3xl"
+      />
+
+      <div className="relative z-10 flex flex-col items-center text-center">
+        <p className="text-stat-label uppercase text-text-muted">Descanso</p>
+        <p
+          className="mt-4 text-[120px] sm:text-[140px] leading-none italic font-extrabold text-accent font-mono-num"
+          aria-live="polite"
+        >
+          {formatDuration(remaining)}
+        </p>
+        <p className="mt-3 text-body-lg text-text-secondary max-w-sm">
+          Respire. A próxima série já vem.
+        </p>
+
+        <button
+          type="button"
+          onClick={onSkip}
+          className="mt-12 glass-medium rounded-pill px-8 py-3 text-training-cta text-text-primary font-bold hover:bg-bg-hover transition"
+        >
           Pular descanso
-        </Button>
+        </button>
       </div>
     </div>
   );

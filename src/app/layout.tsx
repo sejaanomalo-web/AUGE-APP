@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -72,7 +73,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <body className="font-sans bg-bg-base text-text-primary min-h-screen antialiased">
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

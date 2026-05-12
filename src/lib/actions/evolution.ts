@@ -36,11 +36,22 @@ export async function getMyEvolution() {
     weeklyVolume.set(weekKey, (weeklyVolume.get(weekKey) ?? 0) + volume);
   }
 
+  // Per-day workout summary for the frequency heatmap.
+  const dailyWorkouts = completedLogs.map((log) => {
+    const volume = log.exerciseLogs.reduce(
+      (sum, el) =>
+        sum + (el.completed && el.weight && el.reps ? el.weight * el.reps : 0),
+      0,
+    );
+    return { date: log.startedAt, volume };
+  });
+
   return {
     metrics,
     weeklyVolume: Array.from(weeklyVolume.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([week, volume]) => ({ week, volume })),
+    dailyWorkouts,
     totalWorkouts: completedLogs.length,
     avgPerWeek: completedLogs.length / 12,
   };
