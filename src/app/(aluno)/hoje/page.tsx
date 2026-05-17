@@ -70,21 +70,73 @@ function getBrazilNow(): {
   };
 }
 
-/** Copy for the rest-day hero, picked from context. */
-function pickRestCopy(today: Date, tomorrowHasSession: boolean, tomorrowName?: string) {
+/**
+ * Look ahead up to `maxDays` and return the next session prescribed in the
+ * plan, or `null` if none in the window. Strictly plan-driven — no
+ * heuristics — so any "amanhã tem treino" copy can only fire when there's
+ * actually a session on `dayOfWeek == tomorrow` in the schedule.
+ */
+type PlanSession = { name: string; dayOfWeek: number | null };
+type UpcomingHit = {
+  daysAhead: number; // 1..7
+  dow: number; // 0=Sun..6=Sat (the weekday of the hit)
+  name: string;
+};
+
+function findNextSession(
+  sessions: PlanSession[] | undefined,
+  today: Date,
+  maxDays = 7,
+): UpcomingHit | null {
+  if (!sessions || sessions.length === 0) return null;
+  for (let i = 1; i <= maxDays; i++) {
+    const dow = (today.getDay() + i) % 7;
+    const match = sessions.find((s) => s.dayOfWeek === dow);
+    if (match) return { daysAhead: i, dow, name: match.name };
+  }
+  return null;
+}
+
+/** "amanhã" / "depois de amanhã" / weekday name for further out. */
+function relativeDayLabel(hit: UpcomingHit): string {
+  if (hit.daysAhead === 1) return "amanhã";
+  if (hit.daysAhead === 2) return "depois de amanhã";
+  return `${WEEKDAY_LABELS_PT[hit.dow]}-feira`.replace(
+    "domingo-feira",
+    "domingo",
+  ).replace("sábado-feira", "sábado");
+}
+
+/** Copy for the rest-day hero, anchored on the actual next session. */
+function pickRestCopy(today: Date, next: UpcomingHit | null) {
   const dow = today.getDay();
   const isWeekend = dow === 0 || dow === 6;
 
-  if (tomorrowHasSession) {
+  if (next) {
+    const when = relativeDayLabel(next);
+    // "Hoje é off" only when a real session is coming up in the next 7 days.
+    if (next.daysAhead === 1) {
+      return {
+        badge: { label: "Hoje é off", variant: "new" as const },
+        title: "Recarregue para amanhã.",
+        body: `Amanhã: ${next.name}. Hoje hidrate bem, durma cedo e chegue inteiro.`,
+      };
+    }
+    if (next.daysAhead === 2) {
+      return {
+        badge: { label: "Recuperação", variant: "info" as const },
+        title: "Mais um dia para descansar.",
+        body: `Depois de amanhã: ${next.name}. Use o tempo para se recuperar e voltar mais forte.`,
+      };
+    }
     return {
-      badge: { label: "Hoje é off", variant: "new" as const },
-      title: "Recarregue para amanhã.",
-      body: tomorrowName
-        ? `Amanhã: ${tomorrowName}. Hoje hidrate bem, durma cedo e chegue inteiro.`
-        : "Amanhã tem treino. Hoje hidrate bem, durma cedo e chegue inteiro.",
+      badge: { label: "Recuperação", variant: "info" as const },
+      title: "Janela de recuperação.",
+      body: `Próximo treino ${when}: ${next.name}. Aproveite para descansar e cuidar do corpo.`,
     };
   }
 
+  // No session in the next 7 days — true rest week.
   if (isWeekend) {
     return {
       badge: { label: "Final de semana", variant: "info" as const },
@@ -92,7 +144,6 @@ function pickRestCopy(today: Date, tomorrowHasSession: boolean, tomorrowName?: s
       body: "Fim de semana sem treino prescrito. Aproveite para sair, comer bem e recarregar.",
     };
   }
-
   return {
     badge: { label: "Recuperação", variant: "info" as const },
     title: "Hoje é dia de recuperar.",
@@ -100,16 +151,16 @@ function pickRestCopy(today: Date, tomorrowHasSession: boolean, tomorrowName?: s
   };
 }
 
-/** Subtitle next to the greeting - varies by day-of-week + time. */
+/** Subtitle next to the greeting. Plan-aware: only mentions training when
+ * a session actually exists at the referenced offset. */
 function pickGreetingSubtitle(args: {
   today: Date;
   hasSession: boolean;
   isCompleted: boolean;
   inProgress: boolean;
-  tomorrowHasSession: boolean;
+  next: UpcomingHit | null;
 }) {
-  const { today, hasSession, isCompleted, inProgress, tomorrowHasSession } =
-    args;
+  const { today, hasSession, isCompleted, inProgress, next } = args;
   if (isCompleted) return "Missão concluída. Evolução registrada.";
   if (inProgress) return "Treino em andamento. Continue forte.";
 
@@ -124,8 +175,13 @@ function pickGreetingSubtitle(args: {
     return "Seu treino está pronto. Bora pro próximo PR.";
   }
 
-  if (tomorrowHasSession) return "Hoje é descanso - amanhã tem treino.";
-  return "Sem missão ativa para hoje.";
+  if (next) {
+    if (next.daysAhead === 1) return "Hoje é descanso. Amanhã tem treino.";
+    if (next.daysAhead === 2)
+      return "Hoje é descanso. Depois de amanhã tem treino.";
+    return `Próximo treino ${relativeDayLabel(next)}.`;
+  }
+  return "Sem treino prescrito nesta semana.";
 }
 
 export default async function HojePage() {
@@ -141,11 +197,10 @@ export default async function HojePage() {
   const brNow = getBrazilNow();
   const today = brNow.date;
   const todayDow = today.getDay();
-  const tomorrowDow = (todayDow + 1) % 7;
   const session = plan?.sessions.find((s) => s.dayOfWeek === todayDow);
-  const tomorrowSession = plan?.sessions.find(
-    (s) => s.dayOfWeek === tomorrowDow,
-  );
+  // Plan-driven lookahead: the next real scheduled session in the next 7
+  // days. Powers every rest-day copy decision below.
+  const nextSessionHit = findNextSession(plan?.sessions ?? [], today, 7);
   const isRest = !session;
   const inProgressLog = session
     ? await prisma.workoutLog.findFirst({
@@ -219,13 +274,13 @@ export default async function HojePage() {
 
   // Pre-compute the context-aware copy on the server so it lands in the
   // first paint (no client flash when the day or message changes).
-  const restCopy = pickRestCopy(today, !!tomorrowSession, tomorrowSession?.name);
+  const restCopy = pickRestCopy(today, nextSessionHit);
   const greetingSubtitle = pickGreetingSubtitle({
     today,
     hasSession: !!session,
     isCompleted: !!todayCompleted,
     inProgress: !!inProgressLog,
-    tomorrowHasSession: !!tomorrowSession,
+    next: nextSessionHit,
   });
 
   return (
@@ -270,11 +325,16 @@ export default async function HojePage() {
           <p className="text-body-lg text-text-secondary max-w-md">
             {restCopy.body}
           </p>
-          {tomorrowSession && (
+          {nextSessionHit && (
             <p className="text-caption text-text-muted">
-              Próximo treino -{" "}
+              {nextSessionHit.daysAhead === 1
+                ? "Amanhã"
+                : nextSessionHit.daysAhead === 2
+                  ? "Depois de amanhã"
+                  : `Em ${nextSessionHit.daysAhead} dias`}{" "}
+              ·{" "}
               <span className="text-text-secondary font-semibold">
-                {capitalize(WEEKDAY_LABELS_PT[tomorrowDow])}
+                {nextSessionHit.name}
               </span>
             </p>
           )}
