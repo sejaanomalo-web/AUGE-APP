@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { LogOut, User as UserIcon, ChevronDown } from "lucide-react";
@@ -24,15 +25,32 @@ export function AppHeader({
 }) {
   const { user } = useUser();
   const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement | null>(null);
+  const [mounted, setMounted] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const menuRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => setMounted(true), []);
+
+  // Outside click handler — both trigger and (portaled) menu count as "inside".
+  React.useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
 
   React.useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
     }
-    if (open) document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
   const name =
@@ -62,9 +80,10 @@ export function AppHeader({
         {rightSlot && <div className="ml-auto">{rightSlot}</div>}
       </div>
 
-      <div className="flex items-center gap-1" ref={ref}>
+      <div className="flex items-center gap-1">
         <NotificationBell />
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 rounded-pill pl-1 pr-2 py-1 border border-transparent hover:bg-bg-elevated hover:border-border-subtle transition-colors"
@@ -81,15 +100,24 @@ export function AppHeader({
             aria-hidden
           />
         </button>
+      </div>
 
-        {open && (
+      {/* Dropdown portaled to <body> so the header's transformed glass
+       * ancestor doesn't trap it as a containing block (which was clipping
+       * it off-screen). Position uses fixed viewport coordinates so the
+       * header itself never shifts when the menu opens. */}
+      {mounted &&
+        open &&
+        createPortal(
           <div
+            ref={menuRef}
             role="menu"
             className={[
-              // Mobile: anchored full-width drawer below the header.
-              "fixed left-3 right-3 top-[calc(56px+env(safe-area-inset-top)+6px)] z-50",
-              // Desktop: anchored under the avatar button.
-              "sm:absolute sm:left-auto sm:right-4 sm:top-[calc(100%+4px)] sm:w-56",
+              "fixed z-[70]",
+              // Mobile: under the header, 12px from each edge — always inside the screen.
+              "left-3 right-3 top-[calc(env(safe-area-inset-top)+62px)]",
+              // Desktop: anchored to the right gutter, fixed 240px width.
+              "sm:left-auto sm:right-4 sm:top-[calc(env(safe-area-inset-top)+62px)] sm:w-60",
               "bg-bg-elevated border border-border-subtle rounded-xl shadow-xl p-2 animate-fade-in pulse-line",
             ].join(" ")}
           >
@@ -116,9 +144,9 @@ export function AppHeader({
                 <LogOut size={16} aria-hidden /> Sair
               </button>
             </SignOutButton>
-          </div>
+          </div>,
+          document.body,
         )}
-      </div>
     </header>
   );
 }

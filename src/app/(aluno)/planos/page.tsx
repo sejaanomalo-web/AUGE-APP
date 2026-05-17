@@ -83,35 +83,26 @@ export default async function PlanosPage() {
         <div className="flex flex-col gap-6">
           {projected.length > 0 && <TreinosByPeriod projected={projected} />}
 
-          {activePlan && (
-            <section>
-              <h2 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
-                Ativo
-              </h2>
-              <PlanCard
-                plan={activePlan}
-                createdByTrainerName={trainer?.name}
-                nowIso={nowIso}
-                featured
-              />
-            </section>
-          )}
-
-          {otherPlans.length > 0 && (
-            <section>
-              <h2 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
-                Outros planos
-              </h2>
-              <div className="flex flex-col gap-2">
-                {otherPlans.map((p) => (
-                  <PlanCard
-                    key={p.id}
-                    plan={p}
-                    createdByTrainerName={trainer?.name}
-                    nowIso={nowIso}
-                  />
-                ))}
-              </div>
+          {/* Plans list — active first (featured ring), others below. No
+           * "Ativo" label or badge; the visual treatment alone marks it. */}
+          {(activePlan || otherPlans.length > 0) && (
+            <section className="flex flex-col gap-2">
+              {activePlan && (
+                <PlanCard
+                  plan={activePlan}
+                  createdByTrainerName={trainer?.name}
+                  nowIso={nowIso}
+                  featured
+                />
+              )}
+              {otherPlans.map((p) => (
+                <PlanCard
+                  key={p.id}
+                  plan={p}
+                  createdByTrainerName={trainer?.name}
+                  nowIso={nowIso}
+                />
+              ))}
             </section>
           )}
         </div>
@@ -175,7 +166,6 @@ function PlanCard({
               </p>
             )}
           </div>
-          {plan.isActive && <Badge variant="concluido">Ativo</Badge>}
         </div>
 
         <p className="text-caption text-text-muted tnum">
