@@ -192,65 +192,32 @@ function SwipeRow({
   onTap: () => void;
   onDelete: () => void;
 }) {
-  const [offset, setOffset] = React.useState(0);
-  const [removing, setRemoving] = React.useState(false);
-  const startX = React.useRef<number | null>(null);
-  const startY = React.useRef<number | null>(null);
-  const dragging = React.useRef(false);
-  const moved = React.useRef(false);
+  // True while the user is actively dragging horizontally — used to swallow
+  // the tap that would otherwise fire on pointer-up.
+  const draggedRef = React.useRef(false);
 
-  function onPointerDown(e: React.PointerEvent) {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    startX.current = e.clientX;
-    startY.current = e.clientY;
-    dragging.current = true;
-    moved.current = false;
-  }
-
-  function onPointerMove(e: React.PointerEvent) {
-    if (!dragging.current || startX.current === null || startY.current === null)
-      return;
-    const dx = e.clientX - startX.current;
-    const dy = e.clientY - startY.current;
-    // Only engage horizontal drag when the gesture is clearly horizontal —
-    // otherwise the user is scrolling.
-    if (!moved.current) {
-      if (Math.abs(dy) > Math.abs(dx)) {
-        dragging.current = false;
-        return;
-      }
-      if (Math.abs(dx) > 6) {
-        moved.current = true;
-        (e.target as Element).setPointerCapture?.(e.pointerId);
-      } else {
-        return;
-      }
-    }
-    // Left-swipe only. Clamp to [-MAX_SWIPE, 0].
-    const next = Math.max(-MAX_SWIPE, Math.min(0, dx));
-    setOffset(next);
-  }
-
-  function onPointerUp() {
-    if (!dragging.current) return;
-    dragging.current = false;
-    if (offset <= -SWIPE_THRESHOLD) {
-      // Pin the row to the fully-swiped position and trigger removal;
-      // AnimatePresence on the parent <ul> animates the exit.
-      setRemoving(true);
-      setOffset(-MAX_SWIPE);
+  function handleDragEnd(
+    _: PointerEvent | MouseEvent | TouchEvent,
+    info: { offset: { x: number } },
+  ) {
+    if (info.offset.x < -SWIPE_THRESHOLD) {
+      // Crossing the threshold removes the row from the parent's list;
+      // AnimatePresence's exit prop below handles the slide-out.
       onDelete();
-    } else {
-      setOffset(0);
     }
+    // Brief delay so the click event that follows pointer-up is ignored.
+    window.setTimeout(() => {
+      draggedRef.current = false;
+    }, 50);
   }
 
-  function handleClick() {
-    // Avoid firing tap when the gesture was actually a swipe.
-    if (moved.current) {
-      moved.current = false;
-      return;
-    }
+  function handleTrashClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    onDelete();
+  }
+
+  function handleTap() {
+    if (draggedRef.current) return;
     onTap();
   }
 
@@ -259,60 +226,73 @@ function SwipeRow({
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={cn(
-        "relative bg-bg-surface border border-border-subtle rounded-xl overflow-hidden pulse-line",
-        removing && "pointer-events-none",
-      )}
+      exit={{
+        // Slide all the way off-screen to the right + collapse the slot.
+        // Same animation whether the user swiped or tapped the trash icon.
+        x: "120%",
+        opacity: 0,
+        height: 0,
+        marginTop: 0,
+        marginBottom: 0,
+        paddingTop: 0,
+        paddingBottom: 0,
+        transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] },
+      }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      className="relative overflow-hidden"
     >
-      {/* Underlay revealed by swipe — solid red with trash icon */}
+      {/* Underlay revealed while the user drags left. Subtle so the row
+       * itself stays the focus during the drag. */}
       <div
         aria-hidden
-        className="absolute inset-y-0 right-0 flex items-center justify-end bg-error pr-6"
+        className="absolute inset-y-0 right-0 flex items-center justify-end bg-error/70 pr-5"
         style={{ width: MAX_SWIPE }}
       >
-        <Trash2 size={22} className="text-white" />
+        <Trash2 size={18} className="text-white" />
       </div>
 
-      <button
-        type="button"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        onClick={handleClick}
-        className={cn(
-          "relative w-full text-left p-4 hover:bg-bg-elevated transition-colors",
-          !notif.read && "bg-accent/5",
-        )}
-        style={{
-          transform: `translateX(${offset}px)`,
-          transition: dragging.current
-            ? "none"
-            : "transform 200ms cubic-bezier(0.4, 0, 0.2, 1)",
-          touchAction: "pan-y",
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -MAX_SWIPE, right: 0 }}
+        dragElastic={0.12}
+        dragMomentum={false}
+        dragSnapToOrigin
+        onDragStart={() => {
+          draggedRef.current = true;
         }}
+        onDragEnd={handleDragEnd}
+        style={{ touchAction: "pan-y" }}
+        className={cn(
+          "relative flex items-stretch rounded-xl border bg-bg-surface border-border-subtle pulse-line",
+          !notif.read && "bg-accent/[0.04]",
+        )}
       >
-        <div className="flex items-start gap-3">
+        {/* Tap surface — opens the notification.
+         * grid gives exact, non-overlapping columns:
+         *   icon(40) · flexible body(min-w-0) · — (trash sits as sibling) */}
+        <button
+          type="button"
+          onClick={handleTap}
+          className="flex-1 min-w-0 grid grid-cols-[40px_minmax(0,1fr)] items-start gap-3 p-4 text-left hover:bg-bg-elevated/60 transition-colors rounded-l-xl"
+        >
           <span
             className={cn(
-              "mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border shrink-0",
+              "mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-full border shrink-0",
               notificationTone(notif.type),
             )}
           >
             <Bell size={16} aria-hidden />
           </span>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 pr-1">
             <div className="flex items-center gap-2">
               {!notif.read && (
                 <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
               )}
-              <div className="font-semibold text-body text-text-primary">
+              <div className="font-semibold text-body text-text-primary truncate">
                 {notif.title}
               </div>
             </div>
-            <div className="text-body text-text-secondary mt-1">
+            <div className="text-body text-text-secondary mt-1 line-clamp-2">
               {notif.body}
             </div>
             <div className="text-caption text-text-muted mt-1.5">
@@ -322,8 +302,19 @@ function SwipeRow({
               })}
             </div>
           </div>
-        </div>
-      </button>
+        </button>
+
+        {/* Explicit trash button — small, fixed 44px column on the right.
+         * Keeps Apple's 44pt minimum tap target without crowding the copy. */}
+        <button
+          type="button"
+          onClick={handleTrashClick}
+          aria-label="Excluir notificação"
+          className="shrink-0 w-11 flex items-center justify-center text-text-muted hover:text-error hover:bg-error/10 transition-colors rounded-r-xl"
+        >
+          <Trash2 size={15} aria-hidden />
+        </button>
+      </motion.div>
     </motion.li>
   );
 }
