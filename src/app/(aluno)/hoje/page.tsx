@@ -12,6 +12,122 @@ import { prisma } from "@/lib/prisma";
 import { getActivePlanForStudent } from "@/lib/actions/workout-plans";
 import { getAlunoWeeklyStats } from "@/lib/aluno-stats";
 
+const WEEKDAY_LABELS_PT = [
+  "domingo",
+  "segunda",
+  "terça",
+  "quarta",
+  "quinta",
+  "sexta",
+  "sábado",
+];
+
+/**
+ * Computes "now" in São Paulo time and returns a triple that's useful
+ * regardless of the server's TZ:
+ *
+ *   - date            : a Date whose local getters (getDay, getHours, …)
+ *                       return BR-local values.
+ *   - isoDate         : "YYYY-MM-DD" of today in BR.
+ *   - startOfDayUtc   : Date pointing at 00:00 BR translated to UTC
+ *                       (BR is UTC-3 year-round since 2019). Used as the
+ *                       lower bound for "logs from today" queries.
+ *
+ * Vercel runs in UTC, which made `new Date().getDay()` flip to tomorrow
+ * after ~21h BRT and trip the rest-day branch on real training days.
+ */
+function getBrazilNow(): {
+  date: Date;
+  isoDate: string;
+  startOfDayUtc: Date;
+} {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  const y = get("year");
+  const m = get("month");
+  const d = get("day");
+  const local = new Date(
+    Number(y),
+    Number(m) - 1,
+    Number(d),
+    Number(get("hour")),
+    Number(get("minute")),
+    Number(get("second")),
+  );
+  return {
+    date: local,
+    isoDate: `${y}-${m}-${d}`,
+    startOfDayUtc: new Date(`${y}-${m}-${d}T03:00:00.000Z`),
+  };
+}
+
+/** Copy for the rest-day hero, picked from context. */
+function pickRestCopy(today: Date, tomorrowHasSession: boolean, tomorrowName?: string) {
+  const dow = today.getDay();
+  const isWeekend = dow === 0 || dow === 6;
+
+  if (tomorrowHasSession) {
+    return {
+      badge: { label: "Pré-treino", variant: "new" as const },
+      title: "Recarregue para amanhã.",
+      body: tomorrowName
+        ? `Amanhã: ${tomorrowName}. Hoje hidrate bem, durma cedo e chegue inteiro.`
+        : "Amanhã tem treino. Hoje hidrate bem, durma cedo e chegue inteiro.",
+    };
+  }
+
+  if (isWeekend) {
+    return {
+      badge: { label: "Final de semana", variant: "info" as const },
+      title: "Pausa estratégica.",
+      body: "Fim de semana sem treino prescrito. Aproveite para sair, comer bem e recarregar.",
+    };
+  }
+
+  return {
+    badge: { label: "Recuperação", variant: "info" as const },
+    title: "Hoje é dia de recuperar.",
+    body: "Sem treino prescrito. Use o dia para sono, hidratação e mobilidade leve.",
+  };
+}
+
+/** Subtitle next to the greeting — varies by day-of-week + time. */
+function pickGreetingSubtitle(args: {
+  today: Date;
+  hasSession: boolean;
+  isCompleted: boolean;
+  inProgress: boolean;
+  tomorrowHasSession: boolean;
+}) {
+  const { today, hasSession, isCompleted, inProgress, tomorrowHasSession } =
+    args;
+  if (isCompleted) return "Missão concluída. Evolução registrada.";
+  if (inProgress) return "Treino em andamento. Continue forte.";
+
+  if (hasSession) {
+    const hour = today.getHours();
+    const dow = today.getDay();
+    if (dow === 1) return "Segunda-feira: dê o tom da semana.";
+    if (dow === 5) return "Sexta-feira: feche a semana forte.";
+    if (hour < 10) return "Treino logo cedo. Abre o dia com força.";
+    if (hour >= 18)
+      return "Treino do fim do dia. Quebra o estresse antes de descansar.";
+    return "Seu treino está pronto. Bora pro próximo PR.";
+  }
+
+  if (tomorrowHasSession) return "Hoje é descanso — amanhã tem treino.";
+  return "Sem missão ativa para hoje.";
+}
+
 export default async function HojePage() {
   const user = await requireRole("ALUNO");
   const plan = await getActivePlanForStudent(user.id);
@@ -22,9 +138,14 @@ export default async function HojePage() {
     take: 4,
   });
 
-  const today = new Date();
+  const brNow = getBrazilNow();
+  const today = brNow.date;
   const todayDow = today.getDay();
+  const tomorrowDow = (todayDow + 1) % 7;
   const session = plan?.sessions.find((s) => s.dayOfWeek === todayDow);
+  const tomorrowSession = plan?.sessions.find(
+    (s) => s.dayOfWeek === tomorrowDow,
+  );
   const isRest = !session;
   const inProgressLog = session
     ? await prisma.workoutLog.findFirst({
@@ -41,9 +162,8 @@ export default async function HojePage() {
           sessionId: session.id,
           studentId: user.id,
           status: "COMPLETED",
-          startedAt: {
-            gte: new Date(today.toISOString().slice(0, 10) + "T00:00:00"),
-          },
+          // Today defined as BR-local midnight, converted to UTC.
+          startedAt: { gte: brNow.startOfDayUtc },
         },
       })
     : null;
@@ -97,22 +217,27 @@ export default async function HojePage() {
       ? "Retomar treino"
       : "Iniciar treino";
 
+  // Pre-compute the context-aware copy on the server so it lands in the
+  // first paint (no client flash when the day or message changes).
+  const restCopy = pickRestCopy(today, !!tomorrowSession, tomorrowSession?.name);
+  const greetingSubtitle = pickGreetingSubtitle({
+    today,
+    hasSession: !!session,
+    isCompleted: !!todayCompleted,
+    inProgress: !!inProgressLog,
+    tomorrowHasSession: !!tomorrowSession,
+  });
+
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8">
       <section className="flex flex-col gap-1">
         <div className="text-stat-label text-text-muted uppercase">
-          {capitalize(formatDayMonth(today.toISOString().slice(0, 10)))}
+          {capitalize(formatDayMonth(brNow.isoDate))}
         </div>
         <h1 className="text-hero-name text-text-primary">
           {greeting}, {firstName}
         </h1>
-        <p className="text-body-lg text-text-secondary">
-          {session && !todayCompleted
-            ? "Seu treino está pronto."
-            : todayCompleted
-              ? "Missão concluída. Evolução registrada."
-              : "Sem missão ativa para hoje."}
-        </p>
+        <p className="text-body-lg text-text-secondary">{greetingSubtitle}</p>
       </section>
 
       {!plan ? (
@@ -136,16 +261,23 @@ export default async function HojePage() {
           intensity="strong"
           className="min-h-[280px] sm:min-h-[320px] p-6 sm:p-8 flex flex-col justify-center gap-4"
         >
-          <Badge variant="info" className="self-start">
-            Recuperação
+          <Badge variant={restCopy.badge.variant} className="self-start">
+            {restCopy.badge.label}
           </Badge>
           <h2 className="text-hero-name text-text-primary max-w-md">
-            Hoje é dia de recuperar.
+            {restCopy.title}
           </h2>
           <p className="text-body-lg text-text-secondary max-w-md">
-            Sem treino prescrito para hoje. Use o dia para sono, hidratação e
-            mobilidade leve.
+            {restCopy.body}
           </p>
+          {tomorrowSession && (
+            <p className="text-caption text-text-muted">
+              Próximo treino —{" "}
+              <span className="text-text-secondary font-semibold">
+                {capitalize(WEEKDAY_LABELS_PT[tomorrowDow])}
+              </span>
+            </p>
+          )}
         </HeroCard>
       ) : (
         <HeroCard
