@@ -59,6 +59,17 @@ enum NotificationType {
   STUDENT_INVITE_ACCEPTED
 }
 
+enum GoalMetric {
+  WORKOUT_COUNT    // # de treinos concluídos no período
+  DISTANCE_KM      // soma de quilômetros corridos no período
+}
+
+enum GoalPeriod {
+  WEEK
+  MONTH
+  YEAR
+}
+
 model User {
   id              String    @id
   email           String    @unique
@@ -86,6 +97,7 @@ model User {
   customExercises Exercise[]       @relation("ExerciseCreator")
   invitesCreated  InviteCode[]     @relation("InviteCreator")
   planMetricLogs  PlanMetricLog[]
+  goals           Goal[]
 
   notifications        Notification[]
   pushSubscriptions    PushSubscription[]
@@ -369,4 +381,24 @@ model NotificationSettings {
   eveningReminderHour Int     @default(20)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// User-defined goal — e.g. "5 treinos de Musculação por semana"
+/// or "20 km de Corrida por mês". Progress is computed at read-time from
+/// WorkoutLog (WORKOUT_COUNT) or RunningSession (DISTANCE_KM) over the
+/// active window of `period`.
+model Goal {
+  id        String     @id @default(cuid())
+  studentId String
+  sport     String     // mirrors User.sportsPracticed ("Musculação", "Corrida", …)
+  metric    GoalMetric
+  target    Float
+  period    GoalPeriod
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
 }

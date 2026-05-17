@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, Target, TrendingUp, User } from "lucide-react";
+import {
+  ClipboardList,
+  Crosshair,
+  Target,
+  TrendingUp,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Ordered intentionally so "Hoje" sits dead center (position 3 of 5).
 const items = [
-  { href: "/hoje", label: "Hoje", icon: Target },
   { href: "/planos", label: "Treinos", icon: ClipboardList },
+  { href: "/objetivos", label: "Objetivos", icon: Crosshair },
+  { href: "/hoje", label: "Hoje", icon: Target },
   { href: "/evolucao", label: "Evolução", icon: TrendingUp },
   { href: "/perfil", label: "Perfil", icon: User },
 ];
