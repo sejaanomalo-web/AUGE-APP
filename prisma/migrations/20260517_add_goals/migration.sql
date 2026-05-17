@@ -24,3 +24,7 @@ CREATE INDEX "Goal_studentId_idx" ON "Goal"("studentId");
 
 -- AddForeignKey
 ALTER TABLE "Goal" ADD CONSTRAINT "Goal_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- RLS — sem policies = bloqueado pra anon/authenticated. Só service_role
+-- acessa, que é exatamente o que o Prisma usa via DATABASE_URL.
+ALTER TABLE "Goal" ENABLE ROW LEVEL SECURITY;
