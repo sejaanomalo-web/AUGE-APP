@@ -49,7 +49,7 @@ export function TabsList({
     <div
       role="tablist"
       className={cn(
-        "inline-flex items-center gap-1 p-1 bg-bg-elevated rounded-md",
+        "inline-flex items-center gap-1 p-1 bg-bg-elevated border border-border-subtle rounded-pill",
         className,
       )}
     >
@@ -77,9 +77,9 @@ export function TabsTrigger({
       aria-selected={active}
       onClick={() => ctx.setValue(value)}
       className={cn(
-        "px-3 py-2 text-body font-semibold rounded transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "px-3 py-2 text-body font-semibold rounded-pill transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         active
-          ? "bg-bg-surface text-text-primary"
+          ? "bg-accent text-text-on-accent shadow-accent"
           : "text-text-secondary hover:text-text-primary",
         className,
       )}

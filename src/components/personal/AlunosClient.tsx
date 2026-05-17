@@ -97,7 +97,7 @@ export function AlunosClient({
             aria-hidden
           />
           <Input
-            placeholder="Buscar por nome..."
+            placeholder="Buscar aluno"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-10 rounded-pill"
@@ -108,7 +108,7 @@ export function AlunosClient({
           onChange={(e) => setStatusFilter(e.target.value)}
           className="sm:max-w-[200px]"
         >
-          <option value="todos">Todos</option>
+          <option value="todos">Todos os status</option>
           <option value="ACTIVE">Ativos</option>
           <option value="PAUSED">Pausados</option>
         </Select>
@@ -121,14 +121,14 @@ export function AlunosClient({
             setInviteOpen(true);
           }}
         >
-          <Plus size={18} aria-hidden /> Convite
+          <Plus size={18} aria-hidden /> Novo convite
         </Button>
       </div>
 
       {activeInvites.length > 0 && (
         <Card variant="default" className="mb-6">
           <h3 className="text-h3 text-text-primary mb-3">
-            Convites ativos ({activeInvites.length})
+            Convites ativos
           </h3>
           <ul className="flex flex-col gap-2">
             {activeInvites.map((inv) => (
@@ -137,7 +137,7 @@ export function AlunosClient({
                 className="flex items-center justify-between gap-3 py-2"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <code className="text-h3 font-bold tnum tracking-[0.25em] text-accent">
+                  <code className="text-h3 font-bold tnum tracking-normal text-accent">
                     {inv.code}
                   </code>
                   <span className="text-caption text-text-muted">
@@ -185,7 +185,7 @@ export function AlunosClient({
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           {filtered.map((s) => (
             <Link key={s.id} href={`/alunos/${s.id}`} className="block">
-              <Card variant="interactive">
+              <Card variant="interactive" className="min-h-[150px]">
                 <div className="flex items-start gap-3 mb-3">
                   <Avatar
                     src={s.avatarUrl ?? undefined}
@@ -196,10 +196,10 @@ export function AlunosClient({
                     <p className="text-body-lg text-text-primary font-semibold truncate">
                       {s.name}
                     </p>
-                    <p className="text-caption text-text-muted truncate">
-                      {s.activePlanName ?? "Sem plano ativo"}
-                    </p>
-                  </div>
+                  <p className="text-caption text-text-secondary truncate">
+                    {s.activePlanName ?? "Sem plano ativo"}
+                  </p>
+                </div>
                   <Badge
                     variant={s.status === "ACTIVE" ? "concluido" : "pulado"}
                   >
@@ -207,7 +207,7 @@ export function AlunosClient({
                   </Badge>
                 </div>
                 <p className="text-caption text-text-muted">
-                  Vinculado desde {formatLongDate(s.startedAt)}
+                  Acompanhamento desde {formatLongDate(s.startedAt)}
                 </p>
               </Card>
             </Link>
@@ -226,7 +226,7 @@ export function AlunosClient({
       >
         {generated ? (
           <div className="flex flex-col items-center gap-4 py-2">
-            <code className="text-display tnum font-bold tracking-[0.25em] text-accent">
+            <code className="text-display tnum font-bold tracking-normal text-accent">
               {generated}
             </code>
             <Button variant="secondary" size="md" onClick={copyCode}>

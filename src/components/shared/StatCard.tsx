@@ -16,13 +16,13 @@ export function StatCard({
   delta?: { value: string; positive?: boolean };
   icon?: LucideIcon;
   className?: string;
-  /** Solid gold tone — use sparingly for a single hero stat. */
+  /** Solid action tone. Use sparingly for a single hero stat. */
   accent?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "rounded-md p-4 flex flex-col gap-2 min-w-0 border",
+        "rounded-xl p-4 flex flex-col gap-2 min-w-0 border pulse-line",
         accent
           ? "bg-accent text-text-on-accent border-accent shadow-accent"
           : "bg-bg-surface border-border-subtle shadow-sm",
@@ -46,7 +46,7 @@ export function StatCard({
       </div>
       <div
         className={cn(
-          "text-h1 tnum truncate",
+          "text-h1 tnum truncate font-mono-num",
           accent ? "text-text-on-accent font-bold" : "text-text-primary",
         )}
       >

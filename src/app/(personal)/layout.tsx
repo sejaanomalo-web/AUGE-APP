@@ -3,7 +3,7 @@
 import {
   LayoutDashboard,
   Users,
-  Dumbbell,
+  ClipboardList,
   Library,
   User,
 } from "lucide-react";
@@ -13,9 +13,9 @@ import { AppHeader } from "@/components/shared/AppHeader";
 import { PageTransition } from "@/components/shared/PageTransition";
 
 const items = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
   { href: "/alunos", label: "Alunos", icon: Users },
-  { href: "/treinos", label: "Treinos", icon: Dumbbell },
+  { href: "/treinos", label: "Treinos", icon: ClipboardList },
   { href: "/exercicios", label: "Exercícios", icon: Library },
   { href: "/conta", label: "Perfil", icon: User },
 ];

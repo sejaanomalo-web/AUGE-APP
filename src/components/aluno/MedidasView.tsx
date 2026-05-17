@@ -99,7 +99,7 @@ export function MedidasView({
       setUploadOpen(false);
       window.location.reload();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Erro inesperado");
+      setUploadError(err instanceof Error ? err.message : "Não conseguimos enviar agora.");
     } finally {
       setUploading(false);
     }
@@ -229,7 +229,7 @@ export function MedidasView({
               <div className="overflow-x-auto">
                 <table className="w-full text-body tnum">
                   <thead>
-                    <tr className="text-caption text-text-muted uppercase tracking-[0.08em] border-b border-border-subtle">
+                    <tr className="text-caption text-text-muted uppercase tracking-normal border-b border-border-subtle">
                       <th className="text-left p-3 font-medium">Data</th>
                       <th className="text-right p-3 font-medium">Peso</th>
                       <th className="text-right p-3 font-medium">% Gord.</th>

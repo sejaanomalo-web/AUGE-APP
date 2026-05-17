@@ -439,7 +439,7 @@ export function WorkoutBuilder({
     <div className="flex flex-col gap-6">
       <section>
         <h2 className="text-h3 text-text-primary mb-3">
-          1. Informações do plano
+          Dados do plano
         </h2>
         <Card variant="default">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -527,12 +527,12 @@ export function WorkoutBuilder({
 
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-h3 text-text-primary">2. Sessões de treino</h2>
+          <h2 className="text-h3 text-text-primary">Sessões de treino</h2>
         </div>
 
         <Tabs defaultValue="plan">
           <TabsList>
-            <TabsTrigger value="plan">Treinos do plano</TabsTrigger>
+            <TabsTrigger value="plan">Exercícios</TabsTrigger>
             <TabsTrigger value="schedule">Cronograma semanal</TabsTrigger>
           </TabsList>
 
@@ -540,8 +540,6 @@ export function WorkoutBuilder({
             <div className="flex flex-col gap-3">
               {sessions.map((s, sIdx) => (
                 <Card key={s.id} variant="default">
-                  {/* Header: Badge + nome do treino + ações.
-                   * Sem DayPicker — os dias são definidos na aba "Cronograma semanal". */}
                   <div className="flex items-center gap-2 mb-4 flex-nowrap">
                     <Badge className="shrink-0">Treino {s.letter}</Badge>
                     <Input
@@ -579,10 +577,10 @@ export function WorkoutBuilder({
                   {s.expanded && (
                     <div className="flex flex-col gap-2">
                       {/* Header das colunas */}
-                      <div className="hidden sm:grid grid-cols-[minmax(0,2.5fr)_70px_90px_90px_90px_44px] gap-2 items-center px-3 text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold">
+                      <div className="hidden sm:grid grid-cols-[minmax(0,2.5fr)_70px_90px_90px_90px_44px] gap-2 items-center px-3 text-[11px] uppercase tracking-normal text-text-muted font-semibold">
                         <span>Exercício</span>
                         <span className="text-center">Séries</span>
-                        <span className="text-center">Reps</span>
+                        <span className="text-center">Repetições</span>
                         <span className="text-center">Descanso (s)</span>
                         <span className="text-center">Peso (kg)</span>
                         <span />
@@ -594,7 +592,7 @@ export function WorkoutBuilder({
                           className="grid grid-cols-1 sm:grid-cols-[minmax(0,2.5fr)_70px_90px_90px_90px_44px] gap-2 items-start sm:items-center p-3 bg-bg-elevated rounded-md"
                         >
                           <div className="min-w-0">
-                            <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                            <span className="sm:hidden block text-[11px] uppercase tracking-normal text-text-muted font-semibold mb-1">
                               Exercício
                             </span>
                             <ExerciseSelector
@@ -605,13 +603,9 @@ export function WorkoutBuilder({
                               }
                             />
                           </div>
-                          {/* Mobile: 2x2 grid for the 4 numeric inputs.
-                           * Desktop (sm+): wrapper dissolves (contents) so each
-                           * input becomes a direct child of the parent grid,
-                           * keeping the 70/90/90/90 column layout. */}
                           <div className="grid grid-cols-2 gap-2 sm:contents">
                             <label className="min-w-0 block sm:contents">
-                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-normal text-text-muted font-semibold mb-1">
                                 Séries
                               </span>
                               <Input
@@ -628,11 +622,11 @@ export function WorkoutBuilder({
                               />
                             </label>
                             <label className="min-w-0 block sm:contents">
-                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
-                                Reps
+                              <span className="sm:hidden block text-[11px] uppercase tracking-normal text-text-muted font-semibold mb-1">
+                                Repetições
                               </span>
                               <Input
-                                aria-label="Reps"
+                                aria-label="Repetições"
                                 value={ex.reps}
                                 onChange={(e) =>
                                   updateExercise(sIdx, exIdx, {
@@ -644,7 +638,7 @@ export function WorkoutBuilder({
                               />
                             </label>
                             <label className="min-w-0 block sm:contents">
-                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-normal text-text-muted font-semibold mb-1">
                                 Descanso (s)
                               </span>
                               <Input
@@ -661,7 +655,7 @@ export function WorkoutBuilder({
                               />
                             </label>
                             <label className="min-w-0 block sm:contents">
-                              <span className="sm:hidden block text-[11px] uppercase tracking-[0.06em] text-text-muted font-semibold mb-1">
+                              <span className="sm:hidden block text-[11px] uppercase tracking-normal text-text-muted font-semibold mb-1">
                                 Peso (kg)
                               </span>
                               <Input

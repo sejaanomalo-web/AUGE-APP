@@ -167,7 +167,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
         <div className="flex flex-col gap-8">
           {sortedGroups.map(([group, items]) => (
             <section key={group}>
-              <h2 className="text-caption uppercase tracking-[0.08em] text-text-muted mb-3">
+              <h2 className="text-caption uppercase tracking-normal text-text-muted mb-3">
                 {group}
               </h2>
               <div className="flex flex-col gap-2">

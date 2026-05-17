@@ -7,15 +7,23 @@ export type BadgeVariant =
   | "concluido"
   | "pulado"
   | "erro"
-  | "info";
+  | "info"
+  | "warning"
+  | "intensity"
+  | "coach"
+  | "new";
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: "bg-accent-glow text-accent",
-  in_progress: "bg-warning/15 text-warning",
-  concluido: "bg-success/15 text-success",
-  pulado: "bg-text-muted/15 text-text-muted",
-  erro: "bg-error/15 text-error",
-  info: "bg-info/15 text-info",
+  default: "bg-accent/10 text-accent border-accent/25",
+  in_progress: "bg-warning/10 text-warning border-warning/30",
+  concluido: "bg-success/10 text-success border-success/30",
+  pulado: "bg-text-muted/10 text-text-secondary border-border-subtle",
+  erro: "bg-error/10 text-error border-error/30",
+  info: "bg-info/10 text-info border-info/30",
+  warning: "bg-warning/10 text-warning border-warning/30",
+  intensity: "bg-intensity/10 text-intensity border-intensity/30",
+  coach: "bg-coach/15 text-white border-coach/35",
+  new: "bg-accent text-text-on-accent border-accent",
 };
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -28,7 +36,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={cn(
-          "inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-semibold rounded-sm px-2 py-1 leading-none",
+          "inline-flex items-center gap-1 text-[11px] uppercase tracking-normal font-bold rounded-pill border px-2.5 py-1.5 leading-none",
           variantClasses[variant],
           className,
         )}

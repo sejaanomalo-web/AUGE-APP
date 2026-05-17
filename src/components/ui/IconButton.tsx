@@ -15,8 +15,8 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ref={ref}
         type={type}
         className={cn(
-          "inline-flex items-center justify-center w-10 h-10 rounded-full text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 disabled:cursor-not-allowed",
-          filled && "bg-bg-elevated",
+          "inline-flex items-center justify-center w-10 h-10 rounded-full text-text-secondary border border-transparent hover:text-text-primary hover:bg-bg-hover hover:border-border-subtle transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 disabled:cursor-not-allowed",
+          filled && "bg-bg-elevated border-border-subtle",
           className,
         )}
         {...props}

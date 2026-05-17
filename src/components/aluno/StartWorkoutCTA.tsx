@@ -31,14 +31,14 @@ export function StartWorkoutCTA({ sessionId }: { sessionId: string }) {
       <Dialog
         open={open}
         onOpenChange={(o) => !submitting && setOpen(o)}
-        title="Como você quer treinar?"
-        description="Escolha o modo da sessão. Você pode trocar depois."
+        title="Iniciar missão"
+        description="Escolha como deseja registrar esta sessão."
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ModeCard
             icon={<ListChecks size={28} className="text-accent" aria-hidden />}
             title="Treino guiado"
-            description="Eu te conduzo exercício por exercício. Marco séries, timer de descanso automático."
+            description="Exercício por exercício, séries claras e descanso automático."
             recommended
             onClick={() => pick("GUIDED")}
             disabled={submitting}
@@ -46,7 +46,7 @@ export function StartWorkoutCTA({ sessionId }: { sessionId: string }) {
           <ModeCard
             icon={<Clock size={28} className="text-accent" aria-hidden />}
             title="Treino livre"
-            description="Só conto o tempo total. Você executa do seu jeito e marca o que fez no final."
+            description="Controle o tempo total e marque o que foi feito no final."
             onClick={() => pick("FREE")}
             disabled={submitting}
           />
@@ -88,14 +88,14 @@ function ModeCard({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group bg-bg-elevated rounded-md p-5 text-left transition duration-150",
-        "hover:bg-bg-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "group bg-bg-elevated border border-border-subtle rounded-xl p-5 text-left transition duration-150 pulse-line",
+        "hover:bg-bg-hover hover:shadow-md hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         "disabled:opacity-50 disabled:pointer-events-none relative",
         recommended && "ring-1 ring-accent/40",
       )}
     >
       {recommended && (
-        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-pill bg-accent-glow text-accent text-[10px] uppercase tracking-[0.06em] font-semibold">
+        <span className="absolute top-3 right-3 px-2 py-0.5 rounded-pill bg-accent/10 text-accent text-[10px] uppercase tracking-normal font-bold">
           Recomendado
         </span>
       )}

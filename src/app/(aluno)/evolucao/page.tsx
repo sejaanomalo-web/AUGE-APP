@@ -1,4 +1,4 @@
-import { Activity, Flame, Sparkles, TrendingUp } from "lucide-react";
+import { Activity, BarChart3, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -64,7 +64,6 @@ export default async function EvolucaoPage() {
         subtitle="O que mudou nas últimas semanas"
       />
 
-      {/* Hero stat: volume do último mês */}
       {totalMonthVolume > 0 && (
         <HeroCard intensity="medium" className="p-6 sm:p-8">
           <StatHero
@@ -82,12 +81,11 @@ export default async function EvolucaoPage() {
         </HeroCard>
       )}
 
-      {/* Stats row */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <HeroCard className="p-5">
           <StatHero
             value={`${stats.completedWorkouts}`}
-            label="Treinos / semana"
+            label="Treinos na semana"
             size="sm"
           />
         </HeroCard>
@@ -96,17 +94,15 @@ export default async function EvolucaoPage() {
             value={
               <span className="inline-flex items-center gap-2">
                 {stats.streakDays}
-                {stats.streakDays > 0 && (
-                  <Flame
-                    size={26}
-                    strokeWidth={2.5}
-                    className="text-accent"
-                    aria-hidden
-                  />
-                )}
+                <Activity
+                  size={24}
+                  strokeWidth={2.5}
+                  className="text-accent"
+                  aria-hidden
+                />
               </span>
             }
-            label="Streak"
+            label="Sequência"
             size="sm"
           />
         </HeroCard>
@@ -136,7 +132,6 @@ export default async function EvolucaoPage() {
         </HeroCard>
       </section>
 
-      {/* Frequency heatmap (90 dias) */}
       {evolution.totalWorkouts > 0 && (
         <section>
           <h2 className="text-h2 text-text-primary mb-4">
@@ -148,7 +143,6 @@ export default async function EvolucaoPage() {
         </section>
       )}
 
-      {/* Charts */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {weightData.length >= 2 && (
           <HeroCard className="p-5">
@@ -171,16 +165,15 @@ export default async function EvolucaoPage() {
         )}
       </section>
 
-      {/* IA insight */}
       {evolution.totalWorkouts > 4 && (
         <HeroCard intensity="medium" className="p-5">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent-glow flex items-center justify-center shrink-0">
-              <Sparkles size={20} className="text-accent" aria-hidden />
+            <div className="w-10 h-10 rounded-full bg-coach/15 border border-coach/30 flex items-center justify-center shrink-0">
+              <BarChart3 size={20} className="text-coach" aria-hidden />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-stat-label uppercase text-accent">
-                Análise inteligente
+              <p className="text-stat-label uppercase text-coach">
+                Central de performance
               </p>
               <h2 className="mt-2 text-h2 text-text-primary">
                 Resumo da jornada

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Dumbbell, LineChart, Target } from "lucide-react";
+import { Activity, LineChart, Target } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { LinkButton } from "@/components/ui/LinkButton";
 
@@ -21,11 +21,11 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-8 pb-12 sm:pt-12">
-        <h1 className="text-[40px] sm:text-[48px] leading-[1.05] font-bold text-text-primary tracking-[-0.03em] max-w-[640px]">
-          Atinja seu <span className="text-accent">auge</span>.
+        <h1 className="text-[40px] sm:text-[48px] leading-[1.05] font-extrabold text-text-primary tracking-normal max-w-[680px]">
+          Obsidian Performance
         </h1>
         <p className="mt-5 max-w-[560px] text-body-lg text-text-secondary">
-          App de treino para personal trainers e alunos sérios sobre evolução.
+          Um cockpit de evolução física guiado pelo personal.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
           <LinkButton href="/cadastro" variant="primary" size="cta">
@@ -39,9 +39,9 @@ export default function LandingPage() {
         <ul className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl w-full">
           {[
             {
-              icon: Dumbbell,
-              title: "Treinos prescritos",
-              desc: "Receba o treino do seu personal e siga sem esforço.",
+              icon: Activity,
+              title: "Missão de hoje",
+              desc: "Treino claro, status em tempo real e execução guiada.",
             },
             {
               icon: LineChart,
@@ -50,13 +50,13 @@ export default function LandingPage() {
             },
             {
               icon: Target,
-              title: "Análise inteligente",
-              desc: "Insights semanais sobre seu progresso.",
+              title: "Acompanhamento profissional",
+              desc: "Personal com visão de aderência, ajustes e feedbacks.",
             },
           ].map((f) => (
             <li
               key={f.title}
-              className="bg-bg-surface rounded-md p-5 text-left flex flex-col gap-2 shadow-md hover:bg-bg-card transition-colors"
+              className="bg-bg-surface border border-border-subtle rounded-xl p-5 text-left flex flex-col gap-2 shadow-md hover:bg-bg-card transition-colors pulse-line"
             >
               <f.icon className="text-accent" size={28} aria-hidden />
               <p className="text-h3 text-text-primary">{f.title}</p>

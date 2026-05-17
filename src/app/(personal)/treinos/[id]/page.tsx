@@ -83,7 +83,7 @@ export default async function TreinoPlanDetailPage({
             href={`/alunos/${student.id}`}
             className="text-caption text-accent hover:underline"
           >
-            Ver aluno →
+            Ver aluno
           </Link>
         </Card>
       )}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, Dumbbell } from "lucide-react";
+import { AlertTriangle, Target } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -48,6 +48,11 @@ export default async function DashboardPersonalPage() {
       l.status === "IN_PROGRESS" &&
       l.startedAt.toISOString().slice(0, 10) === todayIso,
   ).length;
+  const activeThisWeekIds = new Set(logsThisWeek.map((l) => l.studentId));
+  const inactiveThisWeek = Math.max(
+    0,
+    studentLinks.length - activeThisWeekIds.size,
+  );
 
   // Adherence: prescribed sessions in last 4 weeks vs completed
   const fourWeeksAgo = subDays(new Date(), 28);
@@ -69,13 +74,6 @@ export default async function DashboardPersonalPage() {
     const adherence = expected > 0 ? Math.min(100, (done / expected) * 100) : 0;
     adherenceByStudent.push({ studentId: link.studentId, adherence });
   }
-  const avgAdherence =
-    adherenceByStudent.length > 0
-      ? Math.round(
-          adherenceByStudent.reduce((a, s) => a + s.adherence, 0) /
-            adherenceByStudent.length,
-        )
-      : 0;
   const lowAdherence = adherenceByStudent
     .filter((s) => s.adherence < 70)
     .map((s) => {
@@ -98,8 +96,11 @@ export default async function DashboardPersonalPage() {
           {capitalize(formatDayMonth(todayIso))}
         </div>
         <h1 className="text-hero-name text-text-primary">
-          Olá, {personal.name.split(" ")[0]}
+          Painel do Personal
         </h1>
+        <p className="text-body-lg text-text-secondary">
+          Controle de alunos, aderência e ajustes de treino.
+        </p>
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -113,37 +114,22 @@ export default async function DashboardPersonalPage() {
         <HeroCard className="p-5">
           <StatHero
             value={finishedToday + startedToday}
-            label="Treinos hoje"
+            label="Treinaram hoje"
             size="sm"
           />
         </HeroCard>
         <HeroCard className="p-5">
           <StatHero
-            value={
-              logsThisWeek.filter((l) => l.status === "COMPLETED").length
-            }
-            label="Concluídos · semana"
+            value={lowAdherence.length}
+            label="Precisam de ajuste"
             size="sm"
           />
         </HeroCard>
         <HeroCard className="p-5">
           <StatHero
-            value={studentLinks.length > 0 ? `${avgAdherence}%` : "—"}
-            label="Aderência média"
+            value={inactiveThisWeek}
+            label="Sem atividade"
             size="sm"
-            variation={
-              studentLinks.length > 0
-                ? {
-                    value: avgAdherence,
-                    type:
-                      avgAdherence >= 80
-                        ? "positive"
-                        : avgAdherence >= 60
-                          ? "neutral"
-                          : "negative",
-                  }
-                : undefined
-            }
           />
         </HeroCard>
       </section>
@@ -151,13 +137,13 @@ export default async function DashboardPersonalPage() {
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card variant="default" className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-h2 text-text-primary">Atividade recente</h2>
+            <h2 className="text-h2 text-text-primary">Status dos alunos</h2>
             {logsThisWeek.length > 0 && <Badge>{logsThisWeek.length}</Badge>}
           </div>
           {logsThisWeek.length === 0 ? (
             <p className="text-body text-text-secondary">
-              Nenhuma atividade esta semana. Seus alunos verão aqui quando
-              começarem a treinar.
+              Nenhuma atividade esta semana. Quando um aluno iniciar ou
+              concluir um treino, o status aparece aqui.
             </p>
           ) : (
             <ul className="flex flex-col">
@@ -211,7 +197,7 @@ export default async function DashboardPersonalPage() {
                   className="text-warning"
                   aria-hidden
                 />
-                <h3 className="text-h3 text-text-primary">Baixa aderência</h3>
+                <h3 className="text-h3 text-text-primary">Precisam de ajuste</h3>
               </div>
               <ul className="flex flex-col gap-2">
                 {lowAdherence.map((s) => (
@@ -242,14 +228,14 @@ export default async function DashboardPersonalPage() {
                 href="/alunos"
                 className="mt-3"
               >
-                Ver detalhes →
+                Ver alunos
               </LinkButton>
             </Card>
           )}
 
           {plans.length > 0 ? (
             <Card variant="default">
-              <h3 className="text-h3 text-text-primary mb-3">Planos ativos</h3>
+              <h3 className="text-h3 text-text-primary mb-3">Treinos ativos</h3>
               <ul className="flex flex-col gap-2">
                 {plans.map((p) => {
                   const link = studentLinks.find(
@@ -279,15 +265,15 @@ export default async function DashboardPersonalPage() {
                 href="/treinos"
                 className="mt-3"
               >
-                Ver tudo →
+                Ver treinos
               </LinkButton>
             </Card>
           ) : (
             <Card variant="default">
               <EmptyState
-                icon={Dumbbell}
+                icon={Target}
                 title="Sem planos ativos"
-                description="Crie um plano de treino para um aluno."
+                description="Crie um plano para iniciar o acompanhamento."
                 action={
                   <LinkButton href="/treinos/novo" variant="primary" size="md">
                     Criar plano

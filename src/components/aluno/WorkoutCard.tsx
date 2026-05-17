@@ -20,17 +20,17 @@ export function WorkoutCard({ log }: { log: WorkoutCardData }) {
   return (
     <Link href={`/historico/${log.id}`} className="block">
       <Card variant="interactive" className="flex items-center gap-4">
-        <div className="flex flex-col items-center justify-center w-12 h-12 rounded-md bg-bg-elevated shrink-0">
+        <div className="flex flex-col items-center justify-center w-12 h-12 rounded-xl bg-bg-elevated border border-border-subtle shrink-0">
           <span className="text-caption text-text-muted leading-none">
             {formatShortDate(log.date).split(" ")[0]}
           </span>
-          <span className="text-micro text-text-secondary uppercase tracking-[0.08em] leading-none mt-0.5">
+          <span className="text-micro text-text-secondary uppercase tracking-normal leading-none mt-0.5">
             {formatShortDate(log.date).split(" ")[1]}
           </span>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Badge>Treino {log.sessionLetter}</Badge>
+            <Badge variant="info">Treino {log.sessionLetter}</Badge>
             <StatusBadge status={log.status} />
           </div>
           <p className="text-body-lg text-text-primary font-semibold truncate">

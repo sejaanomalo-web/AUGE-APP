@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {
-  Dumbbell,
+  Activity,
   HeartPulse,
   Pencil,
   Plus,
@@ -83,7 +83,7 @@ export function ExerciciosClient({ exercises }: { exercises: ExerciseRow[] }) {
           aria-hidden
         />
         <Input
-          placeholder="Buscar exercício..."
+          placeholder="Buscar exercício"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="pl-10 rounded-pill"
@@ -163,7 +163,7 @@ function ExerciseCard({
       >
         <div
           aria-hidden
-          className="aspect-[4/3] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle mb-3 flex items-center justify-center overflow-hidden"
+          className="aspect-[4/3] rounded-xl bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle mb-3 flex items-center justify-center overflow-hidden pulse-line"
         >
           {ex.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -179,7 +179,7 @@ function ExerciseCard({
               className="text-accent/40"
             />
           ) : (
-            <Dumbbell
+            <Activity
               size={48}
               strokeWidth={1.5}
               className="text-accent/40"
@@ -188,7 +188,7 @@ function ExerciseCard({
         </div>
         <div className="flex items-center gap-2">
           <Badge>{ex.muscleGroup}</Badge>
-          {ex.isCustom && <Badge variant="info">Custom</Badge>}
+          {ex.isCustom && <Badge variant="info">Personalizado</Badge>}
         </div>
         <p className="mt-2 text-body-lg font-semibold text-text-primary truncate">
           {ex.name}
@@ -227,7 +227,7 @@ function ExerciseViewDialog({
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <Badge>{exercise.muscleGroup}</Badge>
-          {exercise.isCustom && <Badge variant="info">Custom</Badge>}
+          {exercise.isCustom && <Badge variant="info">Personalizado</Badge>}
         </div>
 
         {exercise.imageUrl && (
@@ -235,12 +235,12 @@ function ExerciseViewDialog({
           <img
             src={exercise.imageUrl}
             alt={exercise.name}
-            className="w-full rounded-md aspect-[4/3] object-cover"
+            className="w-full rounded-xl aspect-[4/3] object-cover border border-border-subtle"
           />
         )}
 
         {youtubeId && (
-          <div className="aspect-video rounded-md overflow-hidden bg-bg-elevated">
+          <div className="aspect-video rounded-xl overflow-hidden bg-bg-elevated border border-border-subtle">
             <iframe
               src={`https://www.youtube.com/embed/${youtubeId}`}
               title={exercise.name}
@@ -258,13 +258,13 @@ function ExerciseViewDialog({
             rel="noopener noreferrer"
             className="text-accent hover:underline text-body"
           >
-            Ver vídeo de demonstração →
+            Ver vídeo de demonstração
           </a>
         )}
 
         {exercise.instructions ? (
           <div>
-            <h3 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
+            <h3 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
               Instruções
             </h3>
             <p className="text-body text-text-primary whitespace-pre-line">

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronLeft, Dumbbell, Loader2, Users } from "lucide-react";
+import { Activity, Check, ChevronLeft, Loader2, Users } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Input";
@@ -86,7 +86,7 @@ export default function OnboardingPage() {
       });
       router.push(role === "PERSONAL" ? "/dashboard" : "/hoje");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro inesperado");
+      setError(err instanceof Error ? err.message : "Não conseguimos concluir agora.");
       setSubmitting(false);
     }
   }
@@ -111,9 +111,9 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => pickRole("ALUNO")}
-                className="group bg-bg-surface rounded-md p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="group bg-bg-surface border border-border-subtle rounded-xl p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent pulse-line"
               >
-                <Dumbbell
+                <Activity
                   size={40}
                   className="text-accent group-hover:scale-110 transition-transform"
                   aria-hidden
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => pickRole("PERSONAL")}
-                className="group bg-bg-surface rounded-md p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="group bg-bg-surface border border-border-subtle rounded-xl p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent pulse-line"
               >
                 <Users
                   size={40}
@@ -182,7 +182,7 @@ export default function OnboardingPage() {
                             .slice(0, 6),
                         )
                       }
-                      className="font-bold tracking-[0.25em] text-center text-[24px] tnum"
+                      className="font-bold tracking-normal text-center text-[24px] tnum"
                       autoFocus
                       autoComplete="off"
                     />

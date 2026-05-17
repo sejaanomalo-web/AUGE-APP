@@ -47,9 +47,6 @@ export function AppHeader({
   return (
     <header
       className={cn(
-        // pt-[env(safe-area-inset-top)] empurra o conteúdo do header pra baixo
-        // da status bar / dynamic island quando o app roda como PWA no iOS.
-        // Glass-nav: navigation layer — translucent over the content layer.
         "sticky top-0 z-20 flex items-center justify-between gap-3 h-14 lg:h-16 px-4 lg:px-8 glass-nav border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content",
         className,
       )}
@@ -70,7 +67,7 @@ export function AppHeader({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="flex items-center gap-2 rounded-pill pl-1 pr-2 py-1 hover:bg-bg-elevated transition-colors"
+          className="flex items-center gap-2 rounded-pill pl-1 pr-2 py-1 border border-transparent hover:bg-bg-elevated hover:border-border-subtle transition-colors"
           aria-haspopup="menu"
           aria-expanded={open}
         >
@@ -93,7 +90,7 @@ export function AppHeader({
               "fixed left-3 right-3 top-[calc(56px+env(safe-area-inset-top)+6px)] z-50",
               // Desktop: anchored under the avatar button.
               "sm:absolute sm:left-auto sm:right-4 sm:top-[calc(100%+4px)] sm:w-56",
-              "bg-bg-elevated border border-border-subtle rounded-lg shadow-xl p-2 animate-fade-in",
+              "bg-bg-elevated border border-border-subtle rounded-xl shadow-xl p-2 animate-fade-in pulse-line",
             ].join(" ")}
           >
             <div className="px-3 py-2 mb-1">
@@ -106,7 +103,7 @@ export function AppHeader({
               href={perfilHref}
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 rounded-md text-body text-text-primary hover:bg-bg-hover"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-body text-text-primary hover:bg-bg-hover"
             >
               <UserIcon size={16} aria-hidden /> Perfil
             </Link>
@@ -114,7 +111,7 @@ export function AppHeader({
               <button
                 type="button"
                 role="menuitem"
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-body text-error hover:bg-error/10"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-body text-error hover:bg-error/10"
               >
                 <LogOut size={16} aria-hidden /> Sair
               </button>

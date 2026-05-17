@@ -62,12 +62,12 @@ export default async function AlunoDetailPage({
         <div className="flex-1 min-w-0">
           <h1 className="text-h1 text-text-primary truncate">{student.name}</h1>
           <p className="text-caption text-text-muted truncate">
-            {activePlan?.name ?? "Sem plano ativo"}
+            Perfil de performance · {activePlan?.name ?? "Sem plano ativo"}
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-2">
           <Button variant="secondary" size="sm" disabled>
-            <Pencil size={14} aria-hidden /> Editar
+            <Pencil size={14} aria-hidden /> Editar treino
           </Button>
           <Button variant="secondary" size="sm" disabled>
             <Pause size={14} aria-hidden /> Pausar
@@ -89,12 +89,12 @@ export default async function AlunoDetailPage({
         <TabsContent value="overview">
           <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <StatCard
-              label="Treinos esta sem"
+              label="Treinos na semana"
               value={stats.completedWorkouts.toString()}
             />
-            <StatCard label="Streak" value={`${stats.streakDays} dias`} />
+            <StatCard label="Sequência" value={`${stats.streakDays} dias`} />
             <StatCard
-              label="Volume sem"
+              label="Volume semanal"
               value={
                 stats.volume > 0
                   ? `${stats.volume.toLocaleString("pt-BR")} kg`
@@ -108,7 +108,7 @@ export default async function AlunoDetailPage({
           </section>
 
           <Card variant="default" className="mb-6">
-            <h3 className="text-h3 text-text-primary mb-3">Plano ativo</h3>
+            <h3 className="text-h3 text-text-primary mb-3">Treino atual</h3>
             {activePlan ? (
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div>
@@ -126,7 +126,7 @@ export default async function AlunoDetailPage({
               </div>
             ) : (
               <p className="text-body text-text-secondary">
-                Sem plano ativo. Crie um para este aluno em /treinos/novo.
+                Sem plano ativo. Crie um treino para iniciar o acompanhamento.
               </p>
             )}
           </Card>
@@ -179,7 +179,7 @@ export default async function AlunoDetailPage({
             <Card variant="default" className="p-0 overflow-hidden">
               <table className="w-full text-body tnum">
                 <thead>
-                  <tr className="text-caption text-text-muted uppercase tracking-[0.08em] border-b border-border-subtle">
+                  <tr className="text-caption text-text-muted uppercase tracking-normal border-b border-border-subtle">
                     <th className="text-left p-3 font-medium">Data</th>
                     <th className="text-right p-3 font-medium">Peso</th>
                     <th className="text-right p-3 font-medium">% Gord.</th>

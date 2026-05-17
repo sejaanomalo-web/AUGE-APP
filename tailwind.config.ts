@@ -19,8 +19,15 @@ const config: Config = {
           DEFAULT: "rgb(var(--accent) / <alpha-value>)",
           hover: "rgb(var(--accent-hover) / <alpha-value>)",
           muted: "rgb(var(--accent-muted) / <alpha-value>)",
-          // accent-glow has baked alpha — meant to be used as-is, no modifier.
           glow: "var(--accent-glow)",
+        },
+        intensity: {
+          DEFAULT: "rgb(var(--intensity) / <alpha-value>)",
+          glow: "var(--intensity-glow)",
+        },
+        coach: {
+          DEFAULT: "rgb(var(--coach) / <alpha-value>)",
+          glow: "var(--coach-glow)",
         },
         text: {
           primary: "rgb(var(--text-primary) / <alpha-value>)",
@@ -42,45 +49,39 @@ const config: Config = {
           border: "var(--glass-border)",
         },
         // Semantic colors are theme-agnostic.
-        error: "#f3727f",
-        warning: "#ffa42b",
-        success: "#1ed760",
-        info: "#539df5",
+        error: "#FF3B3B",
+        warning: "#FFB020",
+        success: "#39FF88",
+        info: "#1D4ED8",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
-        // Display family — Helvetica Bold (system font, no extra HTTP cost).
-        // Used for hero text and large numeric values for stronger contrast
-        // against the Inter body copy.
         display: [
-          "Helvetica Neue",
-          "Helvetica",
-          "Arial",
+          "var(--font-inter)",
           "ui-sans-serif",
           "system-ui",
           "sans-serif",
         ],
       },
       fontSize: {
-        micro: ["10px", { lineHeight: "1.3", letterSpacing: "0.08em", fontWeight: "600" }],
+        micro: ["10px", { lineHeight: "1.3", letterSpacing: "0", fontWeight: "700" }],
         caption: ["12px", { lineHeight: "1.4", fontWeight: "500" }],
         body: ["14px", { lineHeight: "1.5", fontWeight: "400" }],
         "body-lg": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
         h3: ["18px", { lineHeight: "1.3", fontWeight: "600" }],
-        h2: ["20px", { lineHeight: "1.25", letterSpacing: "-0.01em", fontWeight: "600" }],
-        h1: ["24px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
-        display: ["32px", { lineHeight: "1.1", letterSpacing: "-0.03em", fontWeight: "700" }],
-        // Disruptive stat scale (Caliber-inspired) — italic + tabular-nums applied at usage site.
-        "stat-hero": ["64px", { lineHeight: "0.95", letterSpacing: "-0.04em", fontWeight: "800" }],
-        "stat-large": ["48px", { lineHeight: "1", letterSpacing: "-0.03em", fontWeight: "800" }],
-        "stat-medium": ["36px", { lineHeight: "1", letterSpacing: "-0.02em", fontWeight: "700" }],
-        "stat-label": ["11px", { lineHeight: "1.2", letterSpacing: "0.12em", fontWeight: "600" }],
-        "hero-display": ["56px", { lineHeight: "1", letterSpacing: "-0.04em", fontWeight: "800" }],
-        "hero-name": ["42px", { lineHeight: "1.05", letterSpacing: "-0.03em", fontWeight: "800" }],
+        h2: ["20px", { lineHeight: "1.25", letterSpacing: "0", fontWeight: "700" }],
+        h1: ["24px", { lineHeight: "1.2", letterSpacing: "0", fontWeight: "800" }],
+        display: ["32px", { lineHeight: "1.1", letterSpacing: "0", fontWeight: "800" }],
+        "stat-hero": ["64px", { lineHeight: "0.95", letterSpacing: "0", fontWeight: "800" }],
+        "stat-large": ["48px", { lineHeight: "1", letterSpacing: "0", fontWeight: "800" }],
+        "stat-medium": ["36px", { lineHeight: "1", letterSpacing: "0", fontWeight: "800" }],
+        "stat-label": ["11px", { lineHeight: "1.2", letterSpacing: "0", fontWeight: "700" }],
+        "hero-display": ["56px", { lineHeight: "1", letterSpacing: "0", fontWeight: "800" }],
+        "hero-name": ["42px", { lineHeight: "1.05", letterSpacing: "0", fontWeight: "800" }],
         "training-label": ["16px", { lineHeight: "1.3", fontWeight: "500" }],
         "training-cta": ["18px", { lineHeight: "1.2", fontWeight: "700" }],
-        "training-exercise": ["26px", { lineHeight: "1.15", letterSpacing: "-0.02em", fontWeight: "700" }],
-        "training-value": ["44px", { lineHeight: "1", letterSpacing: "-0.02em", fontWeight: "800" }],
+        "training-exercise": ["26px", { lineHeight: "1.15", letterSpacing: "0", fontWeight: "800" }],
+        "training-value": ["44px", { lineHeight: "1", letterSpacing: "0", fontWeight: "800" }],
       },
       borderRadius: {
         sm: "4px",
@@ -96,15 +97,19 @@ const config: Config = {
         lg: "0 24px 50px -16px rgba(0,0,0,0.7)",
         xl: "0 40px 80px -24px rgba(0,0,0,0.85)",
         accent:
-          "0 10px 32px -8px rgba(201,149,58,0.45), 0 0 0 1px rgba(201,149,58,0.4) inset",
+          "0 14px 36px -14px rgba(183,255,42,0.55), 0 0 0 1px rgba(183,255,42,0.34) inset",
+        coach:
+          "0 14px 36px -14px rgba(29,78,216,0.58), 0 0 0 1px rgba(29,78,216,0.34) inset",
+        intensity:
+          "0 14px 36px -14px rgba(255,106,42,0.58), 0 0 0 1px rgba(255,106,42,0.34) inset",
         "glass-edge":
           "inset 0 1px 0 0 rgba(255,255,255,0.16), inset 0 -1px 0 0 rgba(0,0,0,0.4)",
         "glass-edge-strong":
           "inset 0 1px 0 0 rgba(255,255,255,0.24), inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 -1px 0 0 rgba(0,0,0,0.4)",
       },
       letterSpacing: {
-        btn: "0.06em",
-        "btn-tight": "0.03em",
+        btn: "0",
+        "btn-tight": "0",
       },
       spacing: {
         "safe-bottom": "env(safe-area-inset-bottom)",

@@ -106,12 +106,12 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="relative w-10 h-10 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
+        className="relative w-10 h-10 rounded-full flex items-center justify-center text-text-secondary border border-transparent hover:text-text-primary hover:bg-bg-hover hover:border-border-subtle transition-colors"
         aria-label="Notificações"
       >
         <Bell size={20} strokeWidth={1.75} aria-hidden />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 bg-accent text-text-on-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+          <span className="absolute top-1 right-1 bg-accent text-text-on-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none shadow-accent">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

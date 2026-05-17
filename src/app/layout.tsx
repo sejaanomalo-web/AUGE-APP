@@ -13,9 +13,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ꓥuge | Seja sua melhor versão",
+  title: "ꓥuge | Obsidian Performance",
   description:
-    "App de treino para personal trainers e alunos sérios sobre evolução.",
+    "Cockpit de evolução física para personal trainers e alunos em acompanhamento.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#C9953A",
+  themeColor: "#080A0D",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -45,20 +45,20 @@ export default function RootLayout({
       localization={ptBR}
       appearance={{
         variables: {
-          colorPrimary: "#C9953A",
-          colorBackground: "#181818",
-          colorInputBackground: "#1f1f1f",
-          colorInputText: "#ffffff",
-          colorText: "#ffffff",
-          colorTextSecondary: "#b3b3b3",
-          colorNeutral: "#ffffff",
-          borderRadius: "8px",
+          colorPrimary: "#B7FF2A",
+          colorBackground: "#080A0D",
+          colorInputBackground: "#12161C",
+          colorInputText: "#F7F8FA",
+          colorText: "#F7F8FA",
+          colorTextSecondary: "#8A929E",
+          colorNeutral: "#F7F8FA",
+          borderRadius: "20px",
           fontFamily: "Inter, sans-serif",
         },
         elements: {
           formButtonPrimary:
             "bg-accent hover:bg-accent-hover text-text-on-accent rounded-pill normal-case font-bold",
-          card: "bg-bg-surface border-border-subtle shadow-md",
+          card: "bg-bg-surface border-border-subtle shadow-lg pulse-line",
           headerTitle: "text-text-primary",
           headerSubtitle: "text-text-secondary",
           socialButtonsBlockButton: "border-border hover:bg-bg-hover",

@@ -13,17 +13,15 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#000000",
+          background: "#080A0D",
         }}
       >
-        {/* Closed triangle outline — peak top, sharp miter corners,
-         * matches the ꓥuge brand mark. Gold on pure black. */}
         <svg
           width="22"
           height="20"
           viewBox="0 0 22 20"
           fill="none"
-          stroke="#C9953A"
+          stroke="#B7FF2A"
           strokeWidth="2.4"
           strokeLinejoin="miter"
           strokeMiterlimit="10"

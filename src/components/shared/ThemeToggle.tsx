@@ -13,7 +13,7 @@ export function ThemeToggle() {
   const isDark = (theme ?? resolvedTheme) === "dark";
 
   return (
-    <div className="flex items-center justify-between p-4 bg-bg-surface border border-border-subtle rounded-lg">
+    <div className="flex items-center justify-between p-4 bg-bg-surface border border-border-subtle rounded-xl pulse-line">
       <div className="flex items-center gap-3 min-w-0">
         {isDark ? (
           <Moon className="w-5 h-5 text-accent shrink-0" aria-hidden />

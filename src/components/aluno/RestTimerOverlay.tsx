@@ -22,8 +22,8 @@ export function RestTimerOverlay({
         Notification.permission === "granted"
       ) {
         try {
-          new Notification("Descanso terminou ⏱️", {
-            body: "Próxima série!",
+          new Notification("Descanso concluído", {
+            body: "Próxima série pronta.",
             icon: "/icon-192.png",
             tag: "auge-rest-end",
           });
@@ -41,6 +41,12 @@ export function RestTimerOverlay({
     return () => clearTimeout(t);
   }, [remaining, onComplete]);
 
+  const progress =
+    durationSeconds > 0
+      ? Math.max(0, Math.min(1, remaining / durationSeconds))
+      : 0;
+  const urgent = remaining <= 10;
+
   return (
     <div
       role="dialog"
@@ -55,12 +61,23 @@ export function RestTimerOverlay({
 
       <div className="relative z-10 flex flex-col items-center text-center">
         <p className="text-stat-label uppercase text-text-muted">Descanso</p>
-        <p
-          className="mt-4 text-[120px] sm:text-[140px] leading-none italic font-extrabold text-accent font-mono-num"
-          aria-live="polite"
+        <div
+          className="mt-6 rounded-full p-2"
+          style={{
+            background: `conic-gradient(${urgent ? "#FF6A2A" : "#B7FF2A"} ${progress * 360}deg, #171C23 0deg)`,
+          }}
         >
-          {formatDuration(remaining)}
-        </p>
+          <div className="h-64 w-64 sm:h-72 sm:w-72 rounded-full bg-bg-base border border-border-subtle flex items-center justify-center shadow-xl">
+            <p
+              className={`text-[84px] sm:text-[96px] leading-none font-extrabold font-mono-num ${
+                urgent ? "text-intensity" : "text-accent"
+              }`}
+              aria-live="polite"
+            >
+              {formatDuration(remaining)}
+            </p>
+          </div>
+        </div>
         <p className="mt-3 text-body-lg text-text-secondary max-w-sm">
           Respire. A próxima série já vem.
         </p>
@@ -68,7 +85,7 @@ export function RestTimerOverlay({
         <button
           type="button"
           onClick={onSkip}
-          className="mt-12 glass-medium rounded-pill px-8 py-3 text-training-cta text-text-primary font-bold hover:bg-bg-hover transition"
+          className="mt-12 bg-bg-elevated border border-border-subtle rounded-pill px-8 py-3 text-training-cta text-text-primary font-bold hover:bg-bg-hover transition"
         >
           Pular descanso
         </button>

@@ -63,9 +63,9 @@ export function MobileDrawer({
                     href={item.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-md text-body font-medium transition-colors duration-200",
+                      "flex items-center gap-3 px-4 py-3 rounded-xl text-body font-semibold transition-colors duration-200",
                       active
-                        ? "bg-bg-elevated text-accent pl-[13px] border-l-[3px] border-accent"
+                        ? "bg-bg-elevated text-accent pulse-line"
                         : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary",
                     )}
                   >

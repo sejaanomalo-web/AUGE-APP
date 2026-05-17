@@ -3,33 +3,28 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  // Liquid-Glass-inspired base: smooth motion, refined focus ring,
-  // subtle press feedback. Pill geometry retained as the AUGE signature.
-  "relative inline-flex items-center justify-center gap-2 font-sans transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap rounded-pill active:scale-[0.97] select-none",
+  "relative inline-flex items-center justify-center gap-2 font-sans transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap rounded-pill active:scale-[0.98] select-none",
   {
     variants: {
       variant: {
-        // Primary: gold glass-prominent — solid accent with inner specular
-        // highlight + accent glow ring. Reads as "the action" on any layer.
         primary:
-          "bg-accent text-text-on-accent font-semibold shadow-accent hover:bg-accent-hover hover:shadow-[0_14px_40px_-10px_rgba(201,149,58,0.6),inset_0_0_0_1px_rgba(201,149,58,0.5)] active:bg-accent-muted",
-        // Secondary: liquid glass — translucent, blurred, inner top highlight.
-        // Navigation-layer feel. Falls back gracefully without backdrop-filter.
+          "bg-accent text-text-on-accent font-bold shadow-accent hover:bg-accent-hover hover:shadow-[0_18px_42px_-14px_rgba(183,255,42,0.68),inset_0_0_0_1px_rgba(183,255,42,0.44)] active:bg-accent-muted",
         secondary:
-          "glass-surface text-text-primary font-medium hover:bg-white/[0.08] hover:border-white/20",
-        // Tertiary: invisible until hover — for low-emphasis inline actions.
+          "bg-bg-elevated text-text-primary border border-border-subtle font-semibold shadow-sm hover:bg-bg-hover hover:border-border-strong",
         tertiary:
-          "bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04] font-medium",
-        // Destructive: outlined glass with red tint.
+          "bg-transparent text-text-secondary hover:text-text-primary hover:bg-bg-elevated font-semibold",
+        coach:
+          "bg-coach text-white font-bold shadow-coach hover:bg-coach/90",
+        intensity:
+          "bg-intensity text-white font-bold shadow-intensity hover:bg-intensity/90",
         destructive:
-          "bg-error/[0.08] text-error border border-error/40 backdrop-blur-md hover:bg-error/15 hover:border-error/60 font-medium",
+          "bg-error/[0.10] text-error border border-error/40 hover:bg-error/15 hover:border-error/60 font-semibold",
       },
       size: {
         sm: "h-9 px-4 text-[13px]",
         md: "h-11 px-5 text-[14px]",
         lg: "h-12 px-6 text-[15px]",
-        // CTA: signature uppercase + wide tracking. Slightly taller for presence.
-        cta: "min-h-[52px] px-8 py-3.5 text-[15px] tracking-btn uppercase font-bold",
+        cta: "min-h-[56px] px-8 py-4 text-[15px] tracking-btn uppercase font-bold",
       },
       fullWidth: {
         true: "w-full",
@@ -50,7 +45,11 @@ export interface ButtonProps
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, fullWidth, type = "button", children, ...props }, ref) => {
-    const isPrimary = variant === undefined || variant === "primary";
+    const isSolid =
+      variant === undefined ||
+      variant === "primary" ||
+      variant === "coach" ||
+      variant === "intensity";
     return (
       <button
         ref={ref}
@@ -58,9 +57,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, fullWidth }), className)}
         {...props}
       >
-        {/* Inner specular highlight — only on solid primary. Static
-         * gradient (no blend mode) keeps the GPU happy. */}
-        {isPrimary && (
+        {isSolid && (
           <span
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-pill bg-gradient-to-b from-white/20 to-transparent"

@@ -22,30 +22,28 @@ export function SetRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-xl border p-4 transition-colors duration-200",
+        "flex items-center gap-4 rounded-2xl border p-4 transition-colors duration-200 pulse-line",
         state.completed
-          ? "bg-success/10 border-success/30"
+          ? "bg-success/10 border-success/35 shadow-[0_0_28px_-18px_rgba(57,255,136,0.75)]"
           : "bg-bg-surface border-border-subtle",
       )}
     >
-      {/* Caliber-style numbered indicator */}
       <div
         aria-hidden
         className={cn(
-          "flex items-center justify-center w-10 h-10 rounded-full font-bold text-h3 shrink-0 tnum",
+          "flex items-center justify-center w-10 h-10 rounded-full font-bold text-h3 shrink-0 tnum border",
           state.completed
-            ? "bg-success text-bg-base"
-            : "bg-bg-elevated text-text-muted",
+            ? "bg-success text-bg-base border-success"
+            : "bg-bg-elevated text-text-muted border-border-subtle",
         )}
       >
         {state.setNumber}
       </div>
 
-      {/* Big italic inputs */}
       <div className="flex-1 grid grid-cols-2 gap-3 min-w-0">
         <label className="flex flex-col items-center gap-1 min-w-0">
           <span className="text-stat-label uppercase text-text-muted">
-            Reps
+            Repetições
           </span>
           <input
             type="number"
@@ -55,8 +53,8 @@ export function SetRow({
             onChange={(e) =>
               onChange({ ...state, reps: parseInt(e.target.value) || 0 })
             }
-            className="w-full bg-transparent text-training-value italic font-mono-num text-text-primary text-center focus:outline-none"
-            aria-label={`Reps da série ${state.setNumber}`}
+            className="w-full bg-transparent text-training-value font-mono-num text-text-primary text-center focus:outline-none"
+            aria-label={`Repetições da série ${state.setNumber}`}
           />
         </label>
         <label className="flex flex-col items-center gap-1 min-w-0">
@@ -72,7 +70,7 @@ export function SetRow({
             onChange={(e) =>
               onChange({ ...state, weightKg: parseFloat(e.target.value) || 0 })
             }
-            className="w-full bg-transparent text-training-value italic font-mono-num text-text-primary text-center focus:outline-none"
+            className="w-full bg-transparent text-training-value font-mono-num text-text-primary text-center focus:outline-none"
             aria-label={`Peso da série ${state.setNumber}`}
           />
         </label>

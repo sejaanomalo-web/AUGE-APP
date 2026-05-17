@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { Flame } from "lucide-react";
+import {
+  Activity,
+  CalendarClock,
+  MessageCircle,
+  Target,
+} from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { Progress } from "@/components/ui/Progress";
@@ -62,7 +67,25 @@ export default async function HojePage() {
 
   const firstName = user.name.split(" ")[0];
   const weeklyFreq = plan?.sessions.length ?? 0;
+  const consistencyPct =
+    weeklyFreq > 0
+      ? Math.min(100, Math.round((stats.completedWorkouts / weeklyFreq) * 100))
+      : 0;
   const estimatedMin = session ? Math.max(20, session.exercises.length * 4) : 0;
+  const nextSession = plan
+    ? plan.sessions
+        .map((s) => ({
+          ...s,
+          distance: (s.dayOfWeek - todayDow + 7) % 7 || 7,
+        }))
+        .sort((a, b) => a.distance - b.distance)[0]
+    : null;
+  const greeting =
+    today.getHours() < 12
+      ? "Bom dia"
+      : today.getHours() < 18
+        ? "Boa tarde"
+        : "Boa noite";
   const ctaHref = todayCompleted
     ? `/historico/${todayCompleted.id}`
     : inProgressLog
@@ -71,36 +94,43 @@ export default async function HojePage() {
         ? `/treino/${session.id}`
         : "#";
   const ctaLabel = todayCompleted
-    ? "Ver detalhes →"
+    ? "Ver resumo"
     : inProgressLog
-      ? "Retomar treino →"
-      : "Iniciar treino →";
+      ? "Retomar treino"
+      : "Iniciar treino";
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8">
-      {/* Saudação minimalista */}
       <section className="flex flex-col gap-1">
         <div className="text-stat-label text-text-muted uppercase">
           {capitalize(formatDayMonth(today.toISOString().slice(0, 10)))}
         </div>
-        <h1 className="text-hero-name text-text-primary">Olá, {firstName}</h1>
+        <h1 className="text-hero-name text-text-primary">
+          {greeting}, {firstName}
+        </h1>
+        <p className="text-body-lg text-text-secondary">
+          {session && !todayCompleted
+            ? "Seu treino está pronto."
+            : todayCompleted
+              ? "Missão concluída. Evolução registrada."
+              : "Sem missão ativa para hoje."}
+        </p>
       </section>
 
-      {/* Hero do treino — Netflix-style, sempre em dourado */}
       {!plan ? (
         <HeroCard
           intensity="strong"
           className="min-h-[280px] sm:min-h-[320px] p-6 sm:p-8 flex flex-col justify-center gap-4"
         >
-          <span className="inline-block self-start px-3 py-1 rounded-pill bg-accent/15 text-accent text-stat-label uppercase">
-            Sem plano
-          </span>
+          <Badge variant="warning" className="self-start">
+            Sem plano ativo
+          </Badge>
           <h2 className="text-hero-name text-text-primary max-w-md">
-            Você ainda não tem um plano ativo
+            Sem missão para hoje.
           </h2>
           <p className="text-body-lg text-text-secondary max-w-md">
-            Aguarde seu personal criar um plano de treino para você. Quando
-            estiver pronto, você verá o treino do dia aqui.
+            Seu personal ainda não atribuiu um treino ativo. Quando o plano
+            estiver pronto, a missão aparece aqui.
           </p>
         </HeroCard>
       ) : isRest ? (
@@ -108,14 +138,15 @@ export default async function HojePage() {
           intensity="strong"
           className="min-h-[280px] sm:min-h-[320px] p-6 sm:p-8 flex flex-col justify-center gap-4"
         >
-          <span className="inline-block self-start px-3 py-1 rounded-pill bg-accent/15 text-accent text-stat-label uppercase">
-            Descanso
-          </span>
+          <Badge variant="info" className="self-start">
+            Recuperação
+          </Badge>
           <h2 className="text-hero-name text-text-primary max-w-md">
-            Hoje é dia de descanso
+            Hoje é dia de recuperar.
           </h2>
           <p className="text-body-lg text-text-secondary max-w-md">
-            Aproveite para hidratar bem e dormir cedo. Amanhã tem treino.
+            Sem treino prescrito para hoje. Use o dia para sono, hidratação e
+            mobilidade leve.
           </p>
         </HeroCard>
       ) : (
@@ -125,13 +156,12 @@ export default async function HojePage() {
         >
           <div className="flex flex-col gap-5">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-block px-3 py-1 rounded-pill bg-accent/15 text-accent text-stat-label uppercase">
-                Treino · {stats.completedWorkouts}/{weeklyFreq}
-              </span>
+              <Badge variant="new">Missão de hoje</Badge>
               {inProgressLog && (
                 <Badge variant="in_progress">Em andamento</Badge>
               )}
               {todayCompleted && <Badge variant="concluido">Concluído</Badge>}
+              <Badge variant="intensity">Alta intensidade</Badge>
             </div>
             <h2 className="text-hero-name text-text-primary max-w-md">
               {session.name}
@@ -143,16 +173,16 @@ export default async function HojePage() {
               <span aria-hidden>·</span>
               <span className="tnum">~{estimatedMin} min</span>
               <span aria-hidden>·</span>
-              <span>plano {plan.name}</span>
+              <span>{plan.name}</span>
             </div>
 
             <div className="mt-2">
               <div className="flex items-center justify-between text-caption text-text-secondary mb-1.5">
                 <span className="text-stat-label uppercase text-text-muted">
-                  Esta semana
+                  Progresso semanal
                 </span>
                 <span className="tnum font-bold text-text-primary">
-                  {stats.completedWorkouts} / {weeklyFreq}
+                  {consistencyPct}%
                 </span>
               </div>
               <Progress
@@ -163,17 +193,17 @@ export default async function HojePage() {
           </div>
 
           <LinkButton variant="primary" size="cta" fullWidth href={ctaHref}>
+            <Target size={18} aria-hidden />
             {ctaLabel}
           </LinkButton>
         </HeroCard>
       )}
 
-      {/* Stats row — números gigantes */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <HeroCard className="p-5">
           <StatHero
-            value={`${stats.completedWorkouts}/${weeklyFreq || 0}`}
-            label="Treinos da semana"
+            value={`${consistencyPct}%`}
+            label="Consistência"
             size="sm"
           />
         </HeroCard>
@@ -185,17 +215,15 @@ export default async function HojePage() {
             value={
               <span className="inline-flex items-center gap-2">
                 {stats.streakDays}
-                {stats.streakDays > 0 && (
-                  <Flame
-                    size={26}
-                    strokeWidth={2.5}
-                    className="text-accent"
-                    aria-hidden
-                  />
-                )}
+                <Activity
+                  size={24}
+                  strokeWidth={2.5}
+                  className="text-accent"
+                  aria-hidden
+                />
               </span>
             }
-            label="Dias seguidos"
+            label="Sequência"
             size="sm"
           />
         </HeroCard>
@@ -206,18 +234,68 @@ export default async function HojePage() {
                 ? `${(stats.volume / 1000).toFixed(1)}k`
                 : "—"
             }
-            label="kg esta semana"
+            label="Carga semanal"
             size="sm"
           />
         </HeroCard>
         <HeroCard className="p-5">
           <StatHero
             value={stats.avgMinutes > 0 ? `${stats.avgMinutes}` : "—"}
-            label={stats.avgMinutes > 0 ? "Min médios" : "Tempo médio"}
+            label={stats.avgMinutes > 0 ? "Minutos médios" : "Tempo médio"}
             size="sm"
           />
         </HeroCard>
       </section>
+
+      {(plan?.description || nextSession) && (
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {plan?.description && (
+            <HeroCard intensity="subtle" className="p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-coach/15 border border-coach/30 flex items-center justify-center shrink-0">
+                  <MessageCircle size={18} className="text-coach" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-stat-label uppercase text-coach">
+                    Coach Note
+                  </p>
+                  <h2 className="mt-2 text-h3 text-text-primary">
+                    Orientação do personal
+                  </h2>
+                  <p className="mt-2 text-body text-text-secondary leading-relaxed">
+                    {plan.description}
+                  </p>
+                </div>
+              </div>
+            </HeroCard>
+          )}
+
+          {nextSession && (
+            <HeroCard bare className="p-5">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-full bg-accent/10 border border-accent/25 flex items-center justify-center shrink-0">
+                  <CalendarClock
+                    size={18}
+                    className="text-accent"
+                    aria-hidden
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-stat-label uppercase text-text-muted">
+                    Próxima sessão
+                  </p>
+                  <h2 className="mt-2 text-h3 text-text-primary truncate">
+                    {nextSession.name}
+                  </h2>
+                  <p className="mt-1 text-body text-text-secondary">
+                    {nextSession.exercises.length} exercícios no plano.
+                  </p>
+                </div>
+              </div>
+            </HeroCard>
+          )}
+        </section>
+      )}
 
       {/* Peso corporal */}
       {last4Weight.length >= 2 && (
@@ -257,7 +335,7 @@ export default async function HojePage() {
               href="/evolucao"
               className="text-caption text-accent hover:underline self-start"
             >
-              Ver evolução completa →
+              Ver evolução completa
             </Link>
           </HeroCard>
         </section>

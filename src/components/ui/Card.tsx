@@ -6,30 +6,30 @@ type CardVariant =
   | "elevated"
   | "interactive"
   | "highlight"
-  | "accent";
+  | "accent"
+  | "coach"
+  | "intensity";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
   asButton?: boolean;
 }
 
-// Cards are CONTENT-layer surfaces — solid darks, hairline borders, deep
-// shadows for elevation. We deliberately keep glass off content (per Apple
-// HIG: glass is for navigation/floating layers, not lists/cards/media).
 const variantClasses: Record<CardVariant, string> = {
   default:
-    "bg-bg-surface border border-border-subtle p-4 shadow-sm",
+    "bg-bg-surface border border-border-subtle p-4 shadow-sm pulse-line",
   elevated:
-    "bg-bg-elevated border border-border-subtle p-5 shadow-md",
+    "bg-bg-elevated border border-border-subtle p-5 shadow-md pulse-line",
   interactive:
-    "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition duration-150 hover:bg-bg-elevated hover:border-border hover:shadow-md hover:-translate-y-px active:translate-y-0",
+    "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition duration-150 hover:bg-bg-elevated hover:border-border-strong hover:shadow-md hover:-translate-y-px active:translate-y-0 pulse-line",
   highlight:
-    "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent",
-  // Solid gold block — matches the active nav chip language. Use sparingly
-  // for the single most important action on the screen. Children are
-  // expected to be dark (text-text-on-accent) for contrast.
+    "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent pulse-line",
   accent:
     "relative bg-accent text-text-on-accent border border-accent p-5 shadow-accent overflow-hidden",
+  coach:
+    "relative bg-gradient-to-br from-coach/20 via-bg-surface to-bg-elevated border border-coach/35 p-5 shadow-coach pulse-line",
+  intensity:
+    "relative bg-gradient-to-br from-intensity/20 via-bg-surface to-bg-elevated border border-intensity/35 p-5 shadow-intensity pulse-line",
 };
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -37,7 +37,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={cn("rounded-lg", variantClasses[variant], className)}
+        className={cn("rounded-xl", variantClasses[variant], className)}
         {...props}
       />
     );

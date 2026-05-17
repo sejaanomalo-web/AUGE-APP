@@ -19,7 +19,7 @@ export function StatHero({
   label,
   variation,
   size = "md",
-  italic = true,
+  italic = false,
   className,
 }: StatHeroProps) {
   const sizeClass = {
@@ -36,7 +36,7 @@ export function StatHero({
         className={cn(
           sizeClass,
           italic && "italic",
-          "text-text-primary font-mono-num tracking-tight",
+          "text-text-primary font-mono-num tracking-normal",
         )}
       >
         {value}

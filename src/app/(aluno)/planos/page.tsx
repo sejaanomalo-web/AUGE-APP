@@ -39,11 +39,11 @@ export default async function PlanosPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <PageHeader
-        title="Meus planos"
+        title="Treinos"
         subtitle={
           trainer
             ? `Planos prescritos pelo seu personal ${trainer.name.split(" ")[0]}.`
-            : "Seus planos de treino. Crie um pra começar."
+            : "Crie seus treinos e acompanhe a execução."
         }
         actions={
           trainer ? undefined : (
@@ -73,11 +73,9 @@ export default async function PlanosPage() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          {/* Próximos treinos — moved here from /hoje. Sits above the
-           * active plan so the student lands on actionable cards first. */}
           {upcoming.length > 0 && (
             <section>
-              <h2 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
+              <h2 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
                 Próximos treinos
               </h2>
               <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory">
@@ -129,7 +127,7 @@ export default async function PlanosPage() {
 
           {activePlan && (
             <section>
-              <h2 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
+              <h2 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
                 Ativo
               </h2>
               <PlanCard
@@ -143,7 +141,7 @@ export default async function PlanosPage() {
 
           {otherPlans.length > 0 && (
             <section>
-              <h2 className="text-caption uppercase tracking-[0.06em] text-text-muted font-semibold mb-2">
+              <h2 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
                 Outros planos
               </h2>
               <div className="flex flex-col gap-2">
@@ -183,7 +181,7 @@ function PlanCard({
   };
   createdByTrainerName?: string;
   nowIso: string;
-  /** Active/hero plan — gets a gold ring to read as the headline. */
+  /** Active plan gets the strongest Pulse Line treatment. */
   featured?: boolean;
 }) {
   const sessionsByDay = new Map<number, typeof plan.sessions>();

@@ -25,11 +25,11 @@ export function EmptyState({
         <Icon
           size={64}
           strokeWidth={1.5}
-          className="text-border mb-4"
+          className="text-accent/55 mb-4"
           aria-hidden
         />
       )}
-      <h3 className="text-h3 text-text-secondary">{title}</h3>
+      <h3 className="text-h3 text-text-primary">{title}</h3>
       {description && (
         <p className="mt-2 max-w-[320px] text-body text-text-muted">
           {description}

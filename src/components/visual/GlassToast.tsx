@@ -33,7 +33,7 @@ export function GlassToast({
       ? "text-success"
       : type === "error"
         ? "text-error"
-        : "text-accent";
+        : "text-coach";
 
   return (
     <AnimatePresence>
@@ -48,7 +48,7 @@ export function GlassToast({
           <GlassOverlay
             intensity="strong"
             rounded="2xl"
-            className="p-4 flex items-start gap-3"
+            className="p-4 flex items-start gap-3 pulse-line"
           >
             <Icon
               className={cn("w-5 h-5 flex-shrink-0 mt-0.5", iconColor)}

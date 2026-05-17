@@ -28,7 +28,6 @@ export function Sidebar({
   return (
     <aside
       className={cn(
-        // Desktop sidebar — navigation layer with subtle glass treatment.
         "fixed left-0 top-0 z-30 h-screen w-60 glass-nav border-r border-border-subtle py-6 px-3 flex-col gap-1 hidden lg:flex",
         className,
       )}
@@ -47,9 +46,9 @@ export function Sidebar({
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex items-center gap-3 px-4 py-3 rounded-md text-body font-medium transition-colors duration-200",
+                "relative flex items-center gap-3 px-4 py-3 rounded-xl text-body font-semibold transition-colors duration-200",
                 active
-                  ? "bg-bg-elevated text-accent pl-[13px] border-l-[3px] border-accent"
+                  ? "bg-bg-elevated text-accent shadow-sm pulse-line"
                   : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary",
               )}
             >

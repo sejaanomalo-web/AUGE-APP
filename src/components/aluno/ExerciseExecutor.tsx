@@ -4,9 +4,9 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  Activity,
   ChevronDown,
   ChevronUp,
-  Dumbbell,
   HeartPulse,
   MoreVertical,
   Pause,
@@ -258,9 +258,14 @@ export function ExerciseExecutor({
         >
           {paused ? <Play size={20} /> : <Pause size={20} />}
         </IconButton>
-        <p className="text-training-cta text-text-primary tnum font-bold">
-          {formatDuration(elapsed)}
-        </p>
+        <div className="text-center min-w-0">
+          <p className="text-caption text-text-muted truncate">
+            {sessionName}
+          </p>
+          <p className="text-training-cta text-text-primary tnum font-bold">
+            {formatDuration(elapsed)}
+          </p>
+        </div>
         <div className="relative">
           <IconButton
             aria-label="Mais opções"
@@ -271,7 +276,7 @@ export function ExerciseExecutor({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 w-52 glass-surface-strong rounded-md p-2 z-20 animate-fade-in"
+              className="absolute right-0 top-full mt-1 w-52 glass-surface-strong rounded-xl p-2 z-20 animate-fade-in pulse-line"
             >
               <button
                 type="button"
@@ -290,8 +295,8 @@ export function ExerciseExecutor({
       </header>
 
       <div className="px-4 lg:px-6 pt-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <p className="text-micro uppercase tracking-[0.08em] text-text-secondary">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-micro uppercase tracking-normal text-text-secondary">
             Exercício {currentIdx + 1} de {exercises.length}
           </p>
           <p className="text-caption text-text-muted tnum">
@@ -304,7 +309,7 @@ export function ExerciseExecutor({
       <div className="flex-1 px-4 lg:px-6 py-6 pb-44 lg:pb-24">
         <div className="max-w-2xl mx-auto flex flex-col gap-6">
           <section className="text-center flex flex-col items-center gap-3">
-            <Badge>{currentEx.muscleGroup}</Badge>
+            <Badge variant="info">{currentEx.muscleGroup}</Badge>
             <h1 className="text-training-exercise text-text-primary">
               {currentEx.exerciseName}
             </h1>
@@ -315,10 +320,10 @@ export function ExerciseExecutor({
               <img
                 src={currentEx.imageUrl}
                 alt={currentEx.exerciseName}
-                className="w-full max-w-[280px] aspect-[4/3] rounded-md object-cover shadow-md"
+                className="w-full max-w-[280px] aspect-[4/3] rounded-xl object-cover shadow-md border border-border-subtle"
               />
             ) : currentEx.videoUrl && extractYoutubeId(currentEx.videoUrl) ? (
-              <div className="w-full max-w-md aspect-video rounded-md overflow-hidden shadow-md bg-bg-elevated">
+              <div className="w-full max-w-md aspect-video rounded-xl overflow-hidden shadow-md bg-bg-elevated border border-border-subtle">
                 <iframe
                   src={`https://www.youtube.com/embed/${extractYoutubeId(currentEx.videoUrl)}`}
                   title={currentEx.exerciseName}
@@ -330,7 +335,7 @@ export function ExerciseExecutor({
             ) : (
               <div
                 aria-hidden
-                className="w-[200px] h-[200px] rounded-md bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md"
+                className="w-[200px] h-[200px] rounded-2xl bg-gradient-to-br from-bg-elevated to-bg-card border border-border-subtle flex items-center justify-center shadow-md pulse-line"
               >
                 {currentEx.muscleGroup === "Cardio" ? (
                   <HeartPulse
@@ -339,7 +344,7 @@ export function ExerciseExecutor({
                     className="text-accent/40"
                   />
                 ) : (
-                  <Dumbbell
+                  <Activity
                     size={92}
                     strokeWidth={1.5}
                     className="text-accent/40"
@@ -368,9 +373,9 @@ export function ExerciseExecutor({
                 <button
                   type="button"
                   onClick={() => setInstructionsOpen((v) => !v)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-2 rounded-md bg-bg-elevated text-text-primary hover:bg-bg-hover transition-colors text-body font-semibold"
+                  className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-bg-elevated border border-border-subtle text-text-primary hover:bg-bg-hover transition-colors text-body font-semibold"
                 >
-                  <span>Instruções</span>
+                  <span>Observação do personal</span>
                   {instructionsOpen ? (
                     <ChevronUp size={16} />
                   ) : (
@@ -378,7 +383,7 @@ export function ExerciseExecutor({
                   )}
                 </button>
                 {instructionsOpen && (
-                  <p className="mt-2 text-body text-text-secondary whitespace-pre-line text-left px-1">
+                  <p className="mt-2 text-body text-text-secondary whitespace-pre-line text-left px-4 py-3 rounded-xl bg-coach/10 border border-coach/25">
                     {currentEx.instructions}
                   </p>
                 )}
@@ -407,7 +412,7 @@ export function ExerciseExecutor({
             onClick={skipExercise}
             className="shrink-0"
           >
-            Pular exercício
+            Pular
           </Button>
           <Button
             variant="primary"
@@ -416,7 +421,7 @@ export function ExerciseExecutor({
             onClick={goNext}
             className="flex-1"
           >
-            {isLastExercise ? "Finalizar treino" : "Próximo exercício"}
+            {isLastExercise ? "Finalizar treino" : "Próximo"}
             {!isLastExercise && <ArrowRight size={18} aria-hidden />}
           </Button>
         </div>
@@ -462,7 +467,7 @@ export function ExerciseExecutor({
       <Dialog
         open={showFinish}
         onOpenChange={setShowFinish}
-        title="Treino finalizado"
+        title="Missão concluída"
         footer={
           <Button
             variant="primary"
@@ -471,24 +476,24 @@ export function ExerciseExecutor({
             fullWidth
             disabled={submitting}
           >
-            {submitting ? "Salvando..." : "Voltar para Hoje"}
+            {submitting ? "Salvando..." : "Ver painel de hoje"}
           </Button>
         }
       >
         <dl className="grid grid-cols-2 gap-3">
-          <div className="bg-bg-elevated rounded-md p-3">
+          <div className="bg-bg-elevated rounded-xl p-3 border border-border-subtle">
             <dt className="text-caption text-text-muted">Tempo total</dt>
             <dd className="text-h2 text-text-primary tnum">
               {formatDuration(elapsed)}
             </dd>
           </div>
-          <div className="bg-bg-elevated rounded-md p-3">
+          <div className="bg-bg-elevated rounded-xl p-3 border border-border-subtle">
             <dt className="text-caption text-text-muted">Volume total</dt>
             <dd className="text-h2 text-text-primary tnum">
               {Math.round(totalVolume).toLocaleString("pt-BR")} kg
             </dd>
           </div>
-          <div className="bg-bg-elevated rounded-md p-3 col-span-2">
+          <div className="bg-bg-elevated rounded-xl p-3 col-span-2 border border-border-subtle">
             <dt className="text-caption text-text-muted">Séries</dt>
             <dd className="text-h2 text-text-primary tnum">
               {completedSets} de {totalSets} concluídas
@@ -497,8 +502,6 @@ export function ExerciseExecutor({
         </dl>
       </Dialog>
 
-      {/* placeholder ref for sessionName, in case future header copy uses it */}
-      <span className="sr-only">{sessionName}</span>
     </div>
   );
 }

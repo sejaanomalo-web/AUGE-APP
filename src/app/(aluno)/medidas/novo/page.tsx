@@ -56,7 +56,7 @@ export default function NovaMedidaPage() {
       router.push("/medidas");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro inesperado");
+      setError(err instanceof Error ? err.message : "Não conseguimos salvar agora.");
       setSubmitting(false);
     }
   }

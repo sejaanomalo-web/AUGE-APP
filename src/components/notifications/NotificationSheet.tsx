@@ -19,7 +19,20 @@ export interface NotificationItem {
 
 const SWIPE_THRESHOLD = 80; // px the user must drag to commit the delete
 const MAX_SWIPE = 100; // px hard cap on the reveal area
-const DELETE_ANIMATION_MS = 220;
+
+function notificationTone(type: string) {
+  const normalized = type.toUpperCase();
+  if (normalized.includes("WORKOUT") || normalized.includes("PLAN")) {
+    return "text-accent bg-accent/10 border-accent/25";
+  }
+  if (normalized.includes("STREAK") || normalized.includes("MISSED")) {
+    return "text-intensity bg-intensity/10 border-intensity/25";
+  }
+  if (normalized.includes("TRAINER") || normalized.includes("COACH")) {
+    return "text-coach bg-coach/15 border-coach/30";
+  }
+  return "text-info bg-info/10 border-info/25";
+}
 
 export function NotificationSheet({
   open,
@@ -76,7 +89,7 @@ export function NotificationSheet({
           }}
           className="fixed inset-0 z-[60] bg-bg-base flex flex-col"
         >
-          <header className="flex items-center justify-between gap-3 px-4 lg:px-6 h-14 lg:h-16 border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content bg-bg-base">
+          <header className="flex items-center justify-between gap-3 px-4 lg:px-6 h-16 lg:h-18 border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content glass-nav">
             <button
               type="button"
               onClick={onClose}
@@ -121,7 +134,7 @@ export function NotificationSheet({
                 </div>
               </div>
             ) : (
-              <ul className="flex flex-col">
+              <ul className="flex flex-col gap-3 p-4">
                 <AnimatePresence initial={false}>
                   {notifications.map((notif) => (
                     <SwipeRow
@@ -220,7 +233,7 @@ function SwipeRow({
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
       className={cn(
-        "relative bg-bg-base border-b border-border-subtle overflow-hidden",
+        "relative bg-bg-surface border border-border-subtle rounded-xl overflow-hidden pulse-line",
         removing && "pointer-events-none",
       )}
     >
@@ -241,8 +254,8 @@ function SwipeRow({
         onPointerCancel={onPointerUp}
         onClick={handleClick}
         className={cn(
-          "relative w-full text-left p-4 hover:bg-bg-elevated",
-          !notif.read && "bg-accent-glow/40",
+          "relative w-full text-left p-4 hover:bg-bg-elevated transition-colors",
+          !notif.read && "bg-accent/5",
         )}
         style={{
           transform: `translateX(${offset}px)`,
@@ -252,15 +265,25 @@ function SwipeRow({
           touchAction: "pan-y",
         }}
       >
-        <div className="flex items-start gap-2">
-          {!notif.read && (
-            <div className="w-2 h-2 rounded-full bg-accent mt-2 shrink-0" />
-          )}
+        <div className="flex items-start gap-3">
+          <span
+            className={cn(
+              "mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border shrink-0",
+              notificationTone(notif.type),
+            )}
+          >
+            <Bell size={16} aria-hidden />
+          </span>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-body text-text-primary">
-              {notif.title}
+            <div className="flex items-center gap-2">
+              {!notif.read && (
+                <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
+              )}
+              <div className="font-semibold text-body text-text-primary">
+                {notif.title}
+              </div>
             </div>
-            <div className="text-body text-text-secondary mt-0.5">
+            <div className="text-body text-text-secondary mt-1">
               {notif.body}
             </div>
             <div className="text-caption text-text-muted mt-1.5">

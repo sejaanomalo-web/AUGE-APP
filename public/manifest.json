@@ -1,11 +1,11 @@
 {
   "name": "ꓥuge",
   "short_name": "ꓥuge",
-  "description": "Atinja seu auge — app de treino premium",
+  "description": "Cockpit de evolução física guiado pelo personal",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#C9953A",
+  "background_color": "#080A0D",
+  "theme_color": "#080A0D",
   "orientation": "portrait",
   "icons": [
     {

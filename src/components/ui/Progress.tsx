@@ -22,14 +22,14 @@ export function Progress({
       aria-valuemin={0}
       aria-valuemax={100}
       className={cn(
-        "w-full bg-bg-hover rounded-pill overflow-hidden",
+        "w-full bg-bg-hover/70 rounded-pill overflow-hidden border border-border-subtle/60",
         thin ? "h-1" : "h-1.5",
         className,
       )}
       {...props}
     >
       <div
-        className="h-full bg-accent transition-[width] duration-300 ease-out rounded-pill"
+        className="h-full bg-gradient-to-r from-coach via-accent to-accent transition-[width] duration-500 ease-out rounded-pill shadow-[0_0_18px_rgba(183,255,42,0.28)]"
         style={{ width: `${pct}%` }}
       />
     </div>

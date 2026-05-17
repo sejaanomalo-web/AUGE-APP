@@ -25,8 +25,8 @@ export async function GET(req: Request) {
       notifyUser({
         userId: session.plan.studentId,
         type: "WORKOUT_REMINDER_MORNING",
-        title: "Hoje é dia de treino 💪",
-        body: `${session.name} — vamos pro auge!`,
+        title: "Hoje é dia de treino",
+        body: `${session.name} — missão de hoje pronta.`,
         data: { sessionId: session.id },
         url: "/hoje",
       }),

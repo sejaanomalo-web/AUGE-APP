@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Dumbbell, Plus } from "lucide-react";
+import { Plus, Target } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -37,7 +37,7 @@ export default async function TreinosPage() {
 
       {plans.length === 0 ? (
         <EmptyState
-          icon={Dumbbell}
+          icon={Target}
           title="Nenhum plano criado"
           description="Crie seu primeiro plano de treino e prescreva exercícios para um aluno."
           action={

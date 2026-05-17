@@ -23,15 +23,15 @@ export default function EvolutionChartImpl({
   variant?: "line" | "bar";
 }) {
   const tooltipStyle = {
-    background: "#252525",
-    border: "1px solid #2a2a2a",
-    borderRadius: 8,
+    background: "#12161C",
+    border: "1px solid #252B33",
+    borderRadius: 12,
     fontSize: 12,
     padding: "6px 10px",
-    color: "#fff",
+    color: "#F7F8FA",
   };
   const axisProps = {
-    stroke: "#7c7c7c",
+    stroke: "#8A929E",
     fontSize: 11,
     tickLine: false,
     axisLine: false,
@@ -45,7 +45,7 @@ export default function EvolutionChartImpl({
             data={data}
             margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
           >
-            <CartesianGrid stroke="#2a2a2a" vertical={false} />
+            <CartesianGrid stroke="#252B33" vertical={false} />
             <XAxis dataKey="label" {...axisProps} />
             <YAxis
               {...axisProps}
@@ -53,7 +53,7 @@ export default function EvolutionChartImpl({
               width={40}
             />
             <Tooltip
-              cursor={{ stroke: "#2a2a2a" }}
+              cursor={{ stroke: "#252B33" }}
               contentStyle={tooltipStyle}
               formatter={(value: number) => [
                 `${value.toFixed(1)}${unit ? ` ${unit}` : ""}`,
@@ -63,10 +63,10 @@ export default function EvolutionChartImpl({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#C9953A"
+              stroke="#B7FF2A"
               strokeWidth={2.5}
-              dot={{ r: 3, fill: "#C9953A", stroke: "#121212" }}
-              activeDot={{ r: 5, fill: "#C9953A", stroke: "#121212" }}
+              dot={{ r: 3, fill: "#B7FF2A", stroke: "#12161C" }}
+              activeDot={{ r: 5, fill: "#B7FF2A", stroke: "#12161C" }}
               isAnimationActive={false}
             />
           </LineChart>
@@ -75,11 +75,11 @@ export default function EvolutionChartImpl({
             data={data}
             margin={{ top: 12, right: 12, left: 0, bottom: 0 }}
           >
-            <CartesianGrid stroke="#2a2a2a" vertical={false} />
+            <CartesianGrid stroke="#252B33" vertical={false} />
             <XAxis dataKey="label" {...axisProps} />
             <YAxis {...axisProps} width={56} />
             <Tooltip
-              cursor={{ fill: "#1f1f1f" }}
+              cursor={{ fill: "#171C23" }}
               contentStyle={tooltipStyle}
               formatter={(value: number) => [
                 `${value.toLocaleString("pt-BR")}${unit ? ` ${unit}` : ""}`,
@@ -88,7 +88,7 @@ export default function EvolutionChartImpl({
             />
             <Bar
               dataKey="value"
-              fill="#C9953A"
+              fill="#1D4ED8"
               radius={[6, 6, 0, 0]}
               isAnimationActive={false}
             />

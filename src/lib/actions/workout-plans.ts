@@ -310,7 +310,7 @@ export async function replacePlanContent(
     }
     return {
       ok: false,
-      error: err instanceof Error ? err.message : "Erro inesperado.",
+      error: err instanceof Error ? err.message : "Não conseguimos salvar o plano agora.",
     };
   }
 }

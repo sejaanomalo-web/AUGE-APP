@@ -18,12 +18,12 @@ export default function WeightSparklineImpl({ data }: { data: WeightPoint[] }) {
           <Tooltip
             cursor={false}
             contentStyle={{
-              background: "#252525",
-              border: "1px solid #2a2a2a",
-              borderRadius: 8,
+              background: "#12161C",
+              border: "1px solid #252B33",
+              borderRadius: 12,
               fontSize: 12,
               padding: "6px 10px",
-              color: "#fff",
+              color: "#F7F8FA",
             }}
             formatter={(value: number) => [`${value.toFixed(1)} kg`, "Peso"]}
             labelFormatter={() => ""}
@@ -31,10 +31,10 @@ export default function WeightSparklineImpl({ data }: { data: WeightPoint[] }) {
           <Line
             type="monotone"
             dataKey="weightKg"
-            stroke="#C9953A"
+            stroke="#B7FF2A"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 3, fill: "#C9953A", stroke: "#121212" }}
+            activeDot={{ r: 3, fill: "#B7FF2A", stroke: "#12161C" }}
             isAnimationActive={false}
           />
         </LineChart>

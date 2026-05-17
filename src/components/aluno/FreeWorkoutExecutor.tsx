@@ -67,8 +67,8 @@ export function FreeWorkoutExecutor({
     const interval = setInterval(
       () => {
         try {
-          new Notification("30 minutos de treino 💪", {
-            body: "Continue forte! Mantém o foco.",
+          new Notification("30 minutos de treino", {
+            body: "Sessão em andamento. Mantenha o foco.",
             icon: "/icon-192.png",
             tag: "auge-30min",
           });
@@ -147,9 +147,14 @@ export function FreeWorkoutExecutor({
         >
           {paused ? <Play size={20} /> : <Pause size={20} />}
         </IconButton>
-        <p className="text-training-cta text-text-primary tnum font-bold">
-          {formatDuration(elapsed)}
-        </p>
+        <div className="text-center min-w-0">
+          <p className="text-caption text-text-muted truncate">
+            {sessionName}
+          </p>
+          <p className="text-training-cta text-text-primary tnum font-bold">
+            {formatDuration(elapsed)}
+          </p>
+        </div>
         <div className="relative">
           <IconButton
             aria-label="Mais opções"
@@ -160,7 +165,7 @@ export function FreeWorkoutExecutor({
           {menuOpen && (
             <div
               role="menu"
-              className="absolute right-0 top-full mt-1 w-52 glass-surface-strong rounded-md p-2 z-20 animate-fade-in"
+              className="absolute right-0 top-full mt-1 w-52 glass-surface-strong rounded-xl p-2 z-20 animate-fade-in pulse-line"
             >
               <button
                 type="button"
@@ -179,19 +184,19 @@ export function FreeWorkoutExecutor({
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
-        <p className="text-micro uppercase tracking-[0.08em] text-text-secondary mb-4">
+        <p className="text-micro uppercase tracking-normal text-text-secondary mb-4">
           Modo livre · {sessionName}
         </p>
         <p
-          className="text-[96px] sm:text-[140px] leading-none font-bold text-accent tnum"
+          className="text-[96px] sm:text-[140px] leading-none font-extrabold text-accent tnum"
           aria-live="polite"
         >
           {formatDuration(elapsed)}
         </p>
         <p className="mt-4 text-body-lg text-text-secondary text-center max-w-sm">
           {paused
-            ? "Treino pausado. Toca play pra retomar."
-            : "Treinando agora. Encerra quando terminar pra registrar o que você fez."}
+            ? "Treino pausado. Retome quando estiver pronto."
+            : "Sessão em andamento. Finalize para registrar seu treino."}
         </p>
 
         <Button
@@ -222,7 +227,7 @@ export function FreeWorkoutExecutor({
 
           {exercises.length > 0 && (
             <div>
-              <p className="text-caption text-text-muted uppercase tracking-[0.06em] font-semibold mb-2">
+              <p className="text-caption text-text-muted uppercase tracking-normal font-semibold mb-2">
                 Exercícios prescritos
               </p>
               <ul className="flex flex-col gap-1.5 max-h-[260px] overflow-y-auto">
@@ -234,15 +239,15 @@ export function FreeWorkoutExecutor({
                         type="button"
                         onClick={() => toggleExercise(ex.exerciseId)}
                         className={cn(
-                          "w-full flex items-center gap-3 p-3 rounded-md text-left transition-colors",
+                          "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors border",
                           done
-                            ? "bg-success/10 ring-1 ring-success/30"
-                            : "bg-bg-elevated hover:bg-bg-hover",
+                            ? "bg-success/10 border-success/30"
+                            : "bg-bg-elevated border-border-subtle hover:bg-bg-hover",
                         )}
                       >
                         <div
                           className={cn(
-                            "w-6 h-6 rounded shrink-0 flex items-center justify-center",
+                            "w-6 h-6 rounded-md shrink-0 flex items-center justify-center",
                             done
                               ? "bg-success text-text-on-accent"
                               : "bg-bg-card border border-border",
@@ -276,7 +281,7 @@ export function FreeWorkoutExecutor({
           <div>
             <label
               htmlFor="free-notes"
-              className="block text-caption text-text-muted uppercase tracking-[0.06em] font-semibold mb-2"
+              className="block text-caption text-text-muted uppercase tracking-normal font-semibold mb-2"
             >
               Observações
             </label>

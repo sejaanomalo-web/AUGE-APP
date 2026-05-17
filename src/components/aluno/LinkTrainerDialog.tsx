@@ -103,7 +103,7 @@ export function LinkTrainerDialog() {
                       .slice(0, 6),
                   )
                 }
-                className="font-bold tracking-[0.25em] text-center text-[24px] tnum"
+                className="font-bold tracking-normal text-center text-[24px] tnum"
                 autoFocus
                 autoComplete="off"
               />
