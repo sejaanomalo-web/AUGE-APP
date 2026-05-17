@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import {
@@ -16,6 +17,23 @@ import type { GoalMetric, GoalPeriod } from "@prisma/client";
 export type GoalResult<T = void> =
   | (T extends void ? { ok: true } : { ok: true; data: T })
   | { ok: false; error: string };
+
+/**
+ * Prisma errors that mean "the Goal table isn't there yet" — i.e. the
+ * migration hasn't run against this database. We want the page to render
+ * a friendly state instead of crashing the whole server component.
+ *
+ *   P2021 - The table `Goal` does not exist
+ *   P2022 - The column does not exist (partial migration)
+ */
+const MISSING_TABLE_CODES = new Set(["P2021", "P2022"]);
+
+function isMissingGoalsTable(err: unknown): boolean {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    MISSING_TABLE_CODES.has(err.code)
+  );
+}
 
 export interface GoalWithProgress {
   id: string;
@@ -75,14 +93,32 @@ async function progressFor(
   return { current: total, start, end };
 }
 
-export async function listMyGoals(): Promise<GoalWithProgress[]> {
-  const { userId } = await auth();
-  if (!userId) return [];
+export interface ListGoalsResult {
+  goals: GoalWithProgress[];
+  /** True when the Goal table doesn't exist yet (migration pending). */
+  schemaMissing?: boolean;
+}
 
-  const goals = await prisma.goal.findMany({
-    where: { studentId: userId, isActive: true },
-    orderBy: { createdAt: "asc" },
-  });
+export async function listMyGoals(): Promise<ListGoalsResult> {
+  const { userId } = await auth();
+  if (!userId) return { goals: [] };
+
+  let goals: { id: string; sport: string; metric: GoalMetric; target: number; period: GoalPeriod; isActive: boolean }[];
+  try {
+    goals = await prisma.goal.findMany({
+      where: { studentId: userId, isActive: true },
+      orderBy: { createdAt: "asc" },
+    });
+  } catch (err) {
+    if (isMissingGoalsTable(err)) {
+      console.warn(
+        "[listMyGoals] Goal table missing — migration 20260517_add_goals not applied yet.",
+      );
+      return { goals: [], schemaMissing: true };
+    }
+    console.error("[listMyGoals] failed", err);
+    throw err;
+  }
 
   const withProgress: GoalWithProgress[] = [];
   for (const g of goals) {
@@ -101,7 +137,7 @@ export async function listMyGoals(): Promise<GoalWithProgress[]> {
       windowEnd: p.end.toISOString(),
     });
   }
-  return withProgress;
+  return { goals: withProgress };
 }
 
 export async function createGoal(data: {
@@ -158,6 +194,13 @@ export async function createGoal(data: {
     revalidatePath("/objetivos");
     return { ok: true, data: { id: goal.id } };
   } catch (err) {
+    if (isMissingGoalsTable(err)) {
+      return {
+        ok: false,
+        error:
+          "A tabela de objetivos ainda não foi criada no banco. Aplique a migration `20260517_add_goals` antes de continuar.",
+      };
+    }
     console.error("[createGoal] failed", err);
     return {
       ok: false,
