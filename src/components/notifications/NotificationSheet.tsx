@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Trash2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -49,6 +50,10 @@ export function NotificationSheet({
   onDelete: (id: string) => void;
   onClearAll: () => void;
 }) {
+  // SSR-safe portal mount target.
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
   // Lock body scroll while open
   React.useEffect(() => {
     if (!open) return;
@@ -69,26 +74,48 @@ export function NotificationSheet({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  return (
+  if (!mounted) return null;
+
+  // Portal to document.body so the sheet escapes any transformed ancestor
+  // (the AppHeader uses transform: translateZ(0) on its glass layer, which
+  // would otherwise contain `position: fixed` children to the header's box).
+  return createPortal(
     <AnimatePresence>
       {open && (
-        <motion.div
-          key="notif-sheet"
-          role="dialog"
-          aria-modal
-          aria-label="Notificações"
-          initial={{ opacity: 0, y: "100%" }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: "100%" }}
-          transition={{
-            // iOS-style spring slide-up
-            type: "spring",
-            damping: 32,
-            stiffness: 320,
-            mass: 0.9,
-          }}
-          className="fixed inset-0 z-[60] bg-bg-base flex flex-col"
-        >
+        <>
+          {/* Heavy backdrop blur over the rest of the screen — sells the
+           * iOS sheet-over-blur look the user asked for. */}
+          <motion.div
+            key="notif-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            onClick={onClose}
+            aria-hidden
+            className="fixed inset-0 z-[80] bg-black/55 backdrop-blur-xl"
+            style={{
+              WebkitBackdropFilter: "blur(24px) saturate(160%)",
+              backdropFilter: "blur(24px) saturate(160%)",
+            }}
+          />
+
+          <motion.div
+            key="notif-sheet"
+            role="dialog"
+            aria-modal
+            aria-label="Notificações"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{
+              type: "spring",
+              damping: 32,
+              stiffness: 320,
+              mass: 0.9,
+            }}
+            className="fixed inset-0 z-[81] bg-bg-base flex flex-col"
+          >
           <header className="flex items-center justify-between gap-3 px-4 lg:px-6 h-16 lg:h-18 border-b border-border-subtle pt-[env(safe-area-inset-top)] box-content glass-nav">
             <button
               type="button"
@@ -149,8 +176,10 @@ export function NotificationSheet({
             )}
           </div>
         </motion.div>
+        </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
 
