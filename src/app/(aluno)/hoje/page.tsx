@@ -77,7 +77,7 @@ function pickRestCopy(today: Date, tomorrowHasSession: boolean, tomorrowName?: s
 
   if (tomorrowHasSession) {
     return {
-      badge: { label: "Pré-treino", variant: "new" as const },
+      badge: { label: "Hoje é off", variant: "new" as const },
       title: "Recarregue para amanhã.",
       body: tomorrowName
         ? `Amanhã: ${tomorrowName}. Hoje hidrate bem, durma cedo e chegue inteiro.`
