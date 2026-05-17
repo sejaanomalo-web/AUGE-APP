@@ -123,6 +123,10 @@ const config: Config = {
         "pulse-strong": "pulseStrong 600ms ease-out",
         "slide-up": "slideUp 300ms cubic-bezier(0.4, 0, 0.2, 1)",
         "fade-in": "fadeIn 200ms cubic-bezier(0.4, 0, 0.2, 1)",
+        // Smooth rise + scale-in used by the landing hero. fill-mode: both
+        // so the element starts at opacity:0 before the animation fires
+        // (no FOUC flash) and stays visible after.
+        "hero-rise": "heroRise 720ms cubic-bezier(0.32, 0.72, 0, 1) both",
       },
       keyframes: {
         shimmer: {
@@ -144,6 +148,13 @@ const config: Config = {
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
+        },
+        heroRise: {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(14px) scale(0.94)",
+          },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
         },
       },
     },

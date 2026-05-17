@@ -1,72 +1,54 @@
-import Link from "next/link";
-import { Activity, LineChart, Target } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { LinkButton } from "@/components/ui/LinkButton";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-bg-base">
-      <header className="flex items-center justify-between px-6 lg:px-10 h-16 lg:h-20 pt-[calc(env(safe-area-inset-top)+0.5rem)] box-content">
-        <Link href="/" aria-label="Página inicial">
-          <Logo size="sm" />
-        </Link>
-        <nav className="flex items-center gap-2">
-          <LinkButton href="/login" variant="tertiary">
-            Entrar
-          </LinkButton>
-          <LinkButton href="/cadastro" variant="primary" size="md">
-            Criar conta
-          </LinkButton>
-        </nav>
-      </header>
+    <div className="min-h-[100dvh] flex flex-col bg-bg-base">
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
+        {/* Logo — rises in first, then settles dead-center on the screen. */}
+        <div
+          className="animate-hero-rise"
+          style={{ animationDelay: "0ms" }}
+        >
+          <Logo
+            size="lg"
+            className="text-[88px] sm:text-[112px] leading-none"
+          />
+        </div>
 
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 pt-8 pb-12 sm:pt-12">
-        <h1 className="text-[40px] sm:text-[48px] leading-[1.05] font-extrabold text-text-primary tracking-normal max-w-[680px]">
-          Obsidian Performance
-        </h1>
-        <p className="mt-5 max-w-[560px] text-body-lg text-text-secondary">
-          Um cockpit de evolução física guiado pelo personal.
+        {/* Brand line — fades up slightly after the logo. */}
+        <p
+          className="mt-6 max-w-[480px] text-body-lg sm:text-h3 text-text-secondary animate-hero-rise"
+          style={{ animationDelay: "220ms" }}
+        >
+          Seja a sua melhor versão.
         </p>
-        <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
-          <LinkButton href="/cadastro" variant="primary" size="cta">
+
+        {/* CTAs — last to appear so the eye lands on them naturally. */}
+        <div
+          className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full max-w-xs sm:max-w-none sm:w-auto animate-hero-rise"
+          style={{ animationDelay: "420ms" }}
+        >
+          <LinkButton
+            href="/cadastro"
+            variant="primary"
+            size="cta"
+            fullWidth
+          >
             Começar agora
           </LinkButton>
-          <LinkButton href="/login" variant="tertiary" size="md">
+          <LinkButton
+            href="/login"
+            variant="tertiary"
+            size="md"
+            fullWidth
+          >
             Já tenho conta
           </LinkButton>
         </div>
-
-        <ul className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl w-full">
-          {[
-            {
-              icon: Activity,
-              title: "Missão de hoje",
-              desc: "Treino claro, status em tempo real e execução guiada.",
-            },
-            {
-              icon: LineChart,
-              title: "Evolução em tempo real",
-              desc: "Acompanhe peso, volume e PRs em cada série.",
-            },
-            {
-              icon: Target,
-              title: "Acompanhamento profissional",
-              desc: "Personal com visão de aderência, ajustes e feedbacks.",
-            },
-          ].map((f) => (
-            <li
-              key={f.title}
-              className="bg-bg-surface border border-border-subtle rounded-xl p-5 text-left flex flex-col gap-2 shadow-md hover:bg-bg-card transition-colors pulse-line"
-            >
-              <f.icon className="text-accent" size={28} aria-hidden />
-              <p className="text-h3 text-text-primary">{f.title}</p>
-              <p className="text-body text-text-secondary">{f.desc}</p>
-            </li>
-          ))}
-        </ul>
       </main>
 
-      <footer className="px-6 lg:px-10 py-6 text-caption text-text-muted text-center">
+      <footer className="px-6 lg:px-10 py-6 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] text-caption text-text-muted text-center">
         © 2026 ꓥuge · Anômalo
       </footer>
     </div>
