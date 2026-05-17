@@ -74,11 +74,14 @@ export default async function HojePage() {
   const estimatedMin = session ? Math.max(20, session.exercises.length * 4) : 0;
   const nextSession = plan
     ? plan.sessions
+        .filter(
+          (s): s is typeof s & { dayOfWeek: number } => s.dayOfWeek != null,
+        )
         .map((s) => ({
           ...s,
           distance: (s.dayOfWeek - todayDow + 7) % 7 || 7,
         }))
-        .sort((a, b) => a.distance - b.distance)[0]
+        .sort((a, b) => a.distance - b.distance)[0] ?? null
     : null;
   const greeting =
     today.getHours() < 12
