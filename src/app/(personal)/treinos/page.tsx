@@ -65,10 +65,10 @@ export default async function TreinosPage() {
                         {p.name}
                       </p>
                       <p className="text-caption text-text-muted truncate">
-                        {student?.name ?? "—"} ·{" "}
+                        {student?.name ?? "-"} ·{" "}
                         {formatLongDate(p.startDate.toISOString())}
                         {p.endDate
-                          ? ` – ${formatLongDate(p.endDate.toISOString())}`
+                          ? ` - ${formatLongDate(p.endDate.toISOString())}`
                           : ""}
                       </p>
                     </div>

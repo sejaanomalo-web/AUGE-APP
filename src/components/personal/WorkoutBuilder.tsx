@@ -452,7 +452,7 @@ export function WorkoutBuilder({
                 id="plan-name"
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
-                placeholder="ex: Hipertrofia — Junho 2026"
+                placeholder="ex: Hipertrofia - Junho 2026"
                 required
               />
             </Field>
@@ -489,7 +489,7 @@ export function WorkoutBuilder({
                   value={
                     students.find((s) => s.id === studentId)?.name ??
                     students[0]?.name ??
-                    "—"
+                    "-"
                   }
                   readOnly
                 />
@@ -737,7 +737,7 @@ export function WorkoutBuilder({
                         {sessions.map((s) => (
                           <option key={s.id} value={s.id}>
                             Treino {s.letter}
-                            {s.name ? ` — ${s.name}` : ""}
+                            {s.name ? ` - ${s.name}` : ""}
                           </option>
                         ))}
                       </Select>

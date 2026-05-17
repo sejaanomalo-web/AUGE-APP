@@ -11,7 +11,7 @@ function ensureVapid() {
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
   if (!subject || !pub || !priv) {
-    // intentionally don't throw — keeps DB-side notify working even if push is misconfigured
+    // intentionally don't throw - keeps DB-side notify working even if push is misconfigured
     return;
   }
   webpush.setVapidDetails(subject, pub, priv);
@@ -28,7 +28,7 @@ export interface NotifyParams {
 }
 
 export async function notifyUser(params: NotifyParams) {
-  // 1. INSERT no DB — fonte da verdade. Sempre acontece.
+  // 1. INSERT no DB - fonte da verdade. Sempre acontece.
   const notification = await prisma.notification.create({
     data: {
       userId: params.userId,

@@ -39,7 +39,7 @@ export function EvolucaoClient({
   const now = React.useMemo(() => new Date(), []);
   const isCurrentYear = year === now.getFullYear();
 
-  // Month is client-only state — calendar swap doesn't need server refetch.
+  // Month is client-only state - calendar swap doesn't need server refetch.
   const [month, setMonth] = React.useState(
     isCurrentYear ? now.getMonth() : 0,
   );

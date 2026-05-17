@@ -98,12 +98,12 @@ export default async function AlunoDetailPage({
               value={
                 stats.volume > 0
                   ? `${stats.volume.toLocaleString("pt-BR")} kg`
-                  : "—"
+                  : "-"
               }
             />
             <StatCard
               label="Tempo médio"
-              value={stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "—"}
+              value={stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "-"}
             />
           </section>
 
@@ -118,7 +118,7 @@ export default async function AlunoDetailPage({
                   <p className="text-caption text-text-muted">
                     {formatLongDate(activePlan.startDate.toISOString())}
                     {activePlan.endDate
-                      ? ` – ${formatLongDate(activePlan.endDate.toISOString())}`
+                      ? ` - ${formatLongDate(activePlan.endDate.toISOString())}`
                       : ""}
                   </p>
                 </div>
@@ -195,13 +195,13 @@ export default async function AlunoDetailPage({
                           {formatShortDate(m.date.toISOString().slice(0, 10))}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.weight != null ? m.weight.toFixed(1) : "—"}
+                          {m.weight != null ? m.weight.toFixed(1) : "-"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.bodyFat != null ? `${m.bodyFat.toFixed(1)}%` : "—"}
+                          {m.bodyFat != null ? `${m.bodyFat.toFixed(1)}%` : "-"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {meas.waist != null ? `${meas.waist.toFixed(1)} cm` : "—"}
+                          {meas.waist != null ? `${meas.waist.toFixed(1)} cm` : "-"}
                         </td>
                       </tr>
                     );
@@ -216,7 +216,7 @@ export default async function AlunoDetailPage({
           {weight.length >= 2 ? (
             <Card variant="default">
               <h3 className="text-h3 text-text-primary mb-3">
-                Peso corporal — histórico
+                Peso corporal - histórico
               </h3>
               <EvolutionChart data={weight} unit="kg" variant="line" />
             </Card>

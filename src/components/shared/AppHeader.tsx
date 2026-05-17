@@ -74,7 +74,7 @@ export function AppHeader({
     return () => window.removeEventListener("resize", onResize);
   }, [open]);
 
-  // Outside-click — both trigger and the (portaled) menu count as inside.
+  // Outside-click - both trigger and the (portaled) menu count as inside.
   // Attached on pointerdown so it beats the click on the same tap cycle
   // and we avoid an immediate self-close.
   React.useEffect(() => {

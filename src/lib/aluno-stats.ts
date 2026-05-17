@@ -36,7 +36,7 @@ export async function getAlunoWeeklyStats(studentId: string) {
     0,
   );
 
-  // Treinos no mês — count of completed workouts in the current calendar month.
+  // Treinos no mês - count of completed workouts in the current calendar month.
   const monthCount = await prisma.workoutLog.count({
     where: {
       studentId,
@@ -45,7 +45,7 @@ export async function getAlunoWeeklyStats(studentId: string) {
     },
   });
 
-  // Tempo médio dos treinos — total duration / total count across ALL
+  // Tempo médio dos treinos - total duration / total count across ALL
   // completed workouts (lifetime average). Reads as "how long a typical
   // session lasts for me" rather than a weekly snapshot.
   const allCompleted = await prisma.workoutLog.findMany({
@@ -61,7 +61,7 @@ export async function getAlunoWeeklyStats(studentId: string) {
       ? Math.round(totalSecondsAll / 60 / allCompleted.length)
       : 0;
 
-  // Streak — consecutive days with at least 1 completed workout in last 90d
+  // Streak - consecutive days with at least 1 completed workout in last 90d
   const last90 = await prisma.workoutLog.findMany({
     where: {
       studentId,

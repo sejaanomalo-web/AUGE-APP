@@ -73,7 +73,7 @@ export function FreeWorkoutExecutor({
             tag: "auge-30min",
           });
         } catch {
-          // silenciosamente ignora — navegador pode bloquear
+          // silenciosamente ignora - navegador pode bloquear
         }
       },
       30 * 60 * 1000,

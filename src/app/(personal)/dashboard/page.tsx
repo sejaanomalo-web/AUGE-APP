@@ -251,7 +251,7 @@ export default async function DashboardPersonalPage() {
                           {p.name}
                         </p>
                         <p className="text-caption text-text-muted truncate">
-                          {link?.student.name ?? "—"}
+                          {link?.student.name ?? "-"}
                         </p>
                       </div>
                       <Badge>{p.sessions.length}x</Badge>

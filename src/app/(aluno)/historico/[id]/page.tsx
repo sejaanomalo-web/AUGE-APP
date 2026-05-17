@@ -101,7 +101,7 @@ export default async function HistoricoDetailPage({
         <div className="bg-bg-surface rounded-md p-3">
           <p className="text-caption text-text-muted">Tempo</p>
           <p className="text-h3 text-text-primary tnum">
-            {durationSeconds ? formatDuration(durationSeconds) : "—"}
+            {durationSeconds ? formatDuration(durationSeconds) : "-"}
           </p>
         </div>
         <div className="bg-bg-surface rounded-md p-3">
@@ -109,7 +109,7 @@ export default async function HistoricoDetailPage({
           <p className="text-h3 text-text-primary tnum">
             {totalVolume > 0
               ? `${Math.round(totalVolume).toLocaleString("pt-BR")} kg`
-              : "—"}
+              : "-"}
           </p>
           {volumeDeltaPct !== null && (
             <p

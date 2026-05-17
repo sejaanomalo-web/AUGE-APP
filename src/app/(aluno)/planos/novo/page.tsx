@@ -9,7 +9,7 @@ import { getMyTrainer } from "@/lib/actions/users";
 
 export default async function NovoPlanoAlunoPage() {
   const me = await requireRole("ALUNO");
-  // Students with a personal can't self-create plans — bounce back to /planos.
+  // Students with a personal can't self-create plans - bounce back to /planos.
   const trainer = await getMyTrainer();
   if (trainer) redirect("/planos");
   const exercises = await getExercises();

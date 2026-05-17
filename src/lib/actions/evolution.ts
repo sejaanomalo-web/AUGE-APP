@@ -28,7 +28,7 @@ export async function getEvolucaoYear(year: number) {
     select: { startedAt: true },
   });
 
-  // YYYY-MM-DD set — calendar lookup is O(1) per day cell.
+  // YYYY-MM-DD set - calendar lookup is O(1) per day cell.
   const trainedDates = new Set<string>();
   // 12-slot array indexed by month (0=Jan ... 11=Dez).
   const monthlyCounts: number[] = new Array(12).fill(0);
@@ -40,7 +40,7 @@ export async function getEvolucaoYear(year: number) {
     monthlyCounts[d.getMonth()] += 1;
   }
 
-  // Earliest year with data — drives the year dropdown.
+  // Earliest year with data - drives the year dropdown.
   const first = await prisma.workoutLog.findFirst({
     where: { studentId: userId, status: "COMPLETED" },
     orderBy: { startedAt: "asc" },

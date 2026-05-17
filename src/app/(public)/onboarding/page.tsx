@@ -161,7 +161,7 @@ export default function OnboardingPage() {
                     Você tem um personal?
                   </h1>
                   <p className="mt-2 text-body-lg text-text-secondary">
-                    Se sim, cole o código de 6 caracteres. Se não, pode pular —
+                    Se sim, cole o código de 6 caracteres. Se não, pode pular -
                     você cria seus próprios treinos e adiciona um personal
                     depois.
                   </p>
@@ -220,7 +220,7 @@ export default function OnboardingPage() {
                   {validation.state === "invalid" && validation.reason}
                   {validation.state === "checking" && "Validando código..."}
                   {validation.state === "idle" &&
-                    "Sem código? Sem problema — pula essa parte e vincule um personal depois pelo seu perfil."}
+                    "Sem código? Sem problema - pula essa parte e vincule um personal depois pelo seu perfil."}
                 </div>
               </>
             ) : (

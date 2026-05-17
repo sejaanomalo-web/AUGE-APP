@@ -35,7 +35,7 @@ async function canEditPlan(userId: string, planId: string): Promise<boolean> {
 }
 
 export async function createPlan(data: {
-  studentId?: string; // optional — defaults to self for solo aluno
+  studentId?: string; // optional - defaults to self for solo aluno
   name: string;
   description?: string;
   startDate: Date;
@@ -59,7 +59,7 @@ export async function createPlan(data: {
     trainerId = userId;
     studentId = data.studentId;
   } else {
-    // Aluno: a student with an active trainer cannot self-create plans —
+    // Aluno: a student with an active trainer cannot self-create plans -
     // their plans are owned by the personal trainer.
     const activeLink = await prisma.trainerStudent.findFirst({
       where: { studentId: userId, status: "ACTIVE" },
@@ -358,7 +358,7 @@ export async function getMyPlans() {
   if (me.role === "PERSONAL") {
     where = { trainerId: userId };
   } else {
-    // Aluno: when there's an active trainer, hide self-created solo plans —
+    // Aluno: when there's an active trainer, hide self-created solo plans -
     // only trainer-owned plans should appear.
     const activeLink = await prisma.trainerStudent.findFirst({
       where: { studentId: userId, status: "ACTIVE" },

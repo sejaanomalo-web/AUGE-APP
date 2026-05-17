@@ -74,7 +74,7 @@ export interface WorkoutSessionTemplate {
   id: string;
   letter: "A" | "B" | "C" | "D" | "E";
   name: string; // "Peito e Tríceps"
-  fullName: string; // "Treino A — Peito e Tríceps"
+  fullName: string; // "Treino A - Peito e Tríceps"
   dayOfWeek: DayOfWeek;
   estimatedMinutes: number;
   exercises: PrescribedExercise[];

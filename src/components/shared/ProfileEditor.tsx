@@ -347,7 +347,7 @@ function ReadField({
   return (
     <div>
       <dt className="text-caption text-text-muted">{label}</dt>
-      <dd className="text-body-lg text-text-primary">{value || "—"}</dd>
+      <dd className="text-body-lg text-text-primary">{value || "-"}</dd>
     </div>
   );
 }

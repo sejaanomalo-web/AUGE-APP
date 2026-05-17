@@ -53,7 +53,7 @@ export function RestTimerOverlay({
       aria-modal
       className="fixed inset-0 z-[70] flex flex-col items-center justify-center px-6 animate-fade-in"
     >
-      {/* Heavy backdrop blur — content behind is recognizable but muted. */}
+      {/* Heavy backdrop blur - content behind is recognizable but muted. */}
       <div
         aria-hidden
         className="absolute inset-0 bg-bg-base/40 backdrop-blur-3xl"

@@ -58,7 +58,7 @@ export default async function PlanoDetailAlunoPage({
           <p className="text-caption text-text-muted">
             {formatLongDate(plan.startDate.toISOString())}
             {plan.endDate
-              ? ` – ${formatLongDate(plan.endDate.toISOString())}`
+              ? ` - ${formatLongDate(plan.endDate.toISOString())}`
               : ""}
           </p>
         </div>

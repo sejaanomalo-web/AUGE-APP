@@ -100,7 +100,7 @@ function pickRestCopy(today: Date, tomorrowHasSession: boolean, tomorrowName?: s
   };
 }
 
-/** Subtitle next to the greeting — varies by day-of-week + time. */
+/** Subtitle next to the greeting - varies by day-of-week + time. */
 function pickGreetingSubtitle(args: {
   today: Date;
   hasSession: boolean;
@@ -124,7 +124,7 @@ function pickGreetingSubtitle(args: {
     return "Seu treino está pronto. Bora pro próximo PR.";
   }
 
-  if (tomorrowHasSession) return "Hoje é descanso — amanhã tem treino.";
+  if (tomorrowHasSession) return "Hoje é descanso - amanhã tem treino.";
   return "Sem missão ativa para hoje.";
 }
 
@@ -272,7 +272,7 @@ export default async function HojePage() {
           </p>
           {tomorrowSession && (
             <p className="text-caption text-text-muted">
-              Próximo treino —{" "}
+              Próximo treino -{" "}
               <span className="text-text-secondary font-semibold">
                 {capitalize(WEEKDAY_LABELS_PT[tomorrowDow])}
               </span>
@@ -354,7 +354,7 @@ export default async function HojePage() {
         <HeroCard className="p-5">
           <StatHero
             value={
-              stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "—"
+              stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "-"
             }
             label="Tempo médio dos treinos"
             size="sm"

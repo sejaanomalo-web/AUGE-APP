@@ -83,7 +83,7 @@ export function NotificationSheet({
     <AnimatePresence>
       {open && (
         <>
-          {/* Heavy backdrop blur over the rest of the screen — sells the
+          {/* Heavy backdrop blur over the rest of the screen - sells the
            * iOS sheet-over-blur look the user asked for. */}
           <motion.div
             key="notif-backdrop"
@@ -192,7 +192,7 @@ function SwipeRow({
   onTap: () => void;
   onDelete: () => void;
 }) {
-  // True while the user is actively dragging horizontally — used to swallow
+  // True while the user is actively dragging horizontally - used to swallow
   // the tap that would otherwise fire on pointer-up.
   const draggedRef = React.useRef(false);
 
@@ -267,9 +267,9 @@ function SwipeRow({
           !notif.read && "bg-accent/[0.04]",
         )}
       >
-        {/* Tap surface — opens the notification.
+        {/* Tap surface - opens the notification.
          * grid gives exact, non-overlapping columns:
-         *   icon(40) · flexible body(min-w-0) · — (trash sits as sibling) */}
+         *   icon(40) · flexible body(min-w-0) · - (trash sits as sibling) */}
         <button
           type="button"
           onClick={handleTap}
@@ -304,7 +304,7 @@ function SwipeRow({
           </div>
         </button>
 
-        {/* Explicit trash button — small, fixed 44px column on the right.
+        {/* Explicit trash button - small, fixed 44px column on the right.
          * Keeps Apple's 44pt minimum tap target without crowding the copy. */}
         <button
           type="button"

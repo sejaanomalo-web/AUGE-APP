@@ -252,19 +252,19 @@ export function MedidasView({
                           {formatShortDate(m.date)}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.weight != null ? m.weight.toFixed(1) : "—"}
+                          {m.weight != null ? m.weight.toFixed(1) : "-"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.bodyFat != null ? `${m.bodyFat.toFixed(1)}%` : "—"}
+                          {m.bodyFat != null ? `${m.bodyFat.toFixed(1)}%` : "-"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.waist != null ? m.waist.toFixed(1) : "—"}
+                          {m.waist != null ? m.waist.toFixed(1) : "-"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.arm != null ? m.arm.toFixed(1) : "—"}
+                          {m.arm != null ? m.arm.toFixed(1) : "-"}
                         </td>
                         <td className="p-3 text-right text-text-primary">
-                          {m.thigh != null ? m.thigh.toFixed(1) : "—"}
+                          {m.thigh != null ? m.thigh.toFixed(1) : "-"}
                         </td>
                       </tr>
                     ))}
@@ -304,7 +304,7 @@ export function MedidasView({
           <EmptyState
             icon={FileText}
             title="Nenhum exame anexado"
-            description="Anexe seu primeiro exame (PDF, JPG ou PNG) — só você e seu personal vinculado terão acesso."
+            description="Anexe seu primeiro exame (PDF, JPG ou PNG) - só você e seu personal vinculado terão acesso."
           />
         ) : filteredExams.length === 0 ? (
           <EmptyState

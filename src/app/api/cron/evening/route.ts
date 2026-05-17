@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     }
   }
 
-  // 2. Streak quebrado (3 dias sem treinar) — alunos vinculados a personal
+  // 2. Streak quebrado (3 dias sem treinar) - alunos vinculados a personal
   const threeDaysAgo = subDays(now, 3);
   const inactiveStudents = await prisma.user.findMany({
     where: {

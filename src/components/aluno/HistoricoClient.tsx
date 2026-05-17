@@ -72,7 +72,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
     [logs, filter],
   );
 
-  // Stats reflect the active filter — counted only on COMPLETED logs so
+  // Stats reflect the active filter - counted only on COMPLETED logs so
   // numbers stay meaningful (incomplete sessions don't pollute totals).
   const stats = React.useMemo(() => {
     const completed = filtered.filter((l) => l.status === "concluido");
@@ -106,7 +106,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Filter — pinned to the top so stats + chart + list all react to it */}
+      {/* Filter - pinned to the top so stats + chart + list all react to it */}
       {logs.length > 0 && (
         <div className="flex justify-start">
           <MonthYearFilter
@@ -117,7 +117,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
         </div>
       )}
 
-      {/* Period stats — synced with the filter */}
+      {/* Period stats - synced with the filter */}
       {logs.length > 0 && (
         <section className="grid grid-cols-3 gap-3">
           <HeroCard className="p-4">
@@ -128,7 +128,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
               value={
                 stats.totalVolume > 0
                   ? `${(stats.totalVolume / 1000).toFixed(0)}k`
-                  : "—"
+                  : "-"
               }
               label="kg totais"
               size="sm"
@@ -136,7 +136,7 @@ export function HistoricoClient({ logs }: { logs: HistoricoLog[] }) {
           </HeroCard>
           <HeroCard className="p-4">
             <StatHero
-              value={stats.avgMinutes > 0 ? `${stats.avgMinutes}` : "—"}
+              value={stats.avgMinutes > 0 ? `${stats.avgMinutes}` : "-"}
               label="min médios"
               size="sm"
             />
