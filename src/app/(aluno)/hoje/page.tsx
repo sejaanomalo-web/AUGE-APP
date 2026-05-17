@@ -1,10 +1,5 @@
 import Link from "next/link";
-import {
-  Activity,
-  CalendarClock,
-  MessageCircle,
-  Target,
-} from "lucide-react";
+import { CalendarClock, Target } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { Progress } from "@/components/ui/Progress";
@@ -210,93 +205,55 @@ export default async function HojePage() {
             size="sm"
           />
         </HeroCard>
-        <HeroCard
-          className="p-5"
-          bare={stats.streakDays === 0}
-        >
+        <HeroCard className="p-5">
           <StatHero
-            value={
-              <span className="inline-flex items-center gap-2">
-                {stats.streakDays}
-                <Activity
-                  size={24}
-                  strokeWidth={2.5}
-                  className="text-accent"
-                  aria-hidden
-                />
-              </span>
-            }
-            label="Sequência"
+            value={stats.monthCount}
+            label="Treinos no mês"
+            size="sm"
+          />
+        </HeroCard>
+        <HeroCard className="p-5">
+          <StatHero
+            value={stats.completedWorkouts}
+            label="Treinos totais da semana"
             size="sm"
           />
         </HeroCard>
         <HeroCard className="p-5">
           <StatHero
             value={
-              stats.volume > 0
-                ? `${(stats.volume / 1000).toFixed(1)}k`
-                : "—"
+              stats.avgMinutes > 0 ? `${stats.avgMinutes} min` : "—"
             }
-            label="Carga semanal"
-            size="sm"
-          />
-        </HeroCard>
-        <HeroCard className="p-5">
-          <StatHero
-            value={stats.avgMinutes > 0 ? `${stats.avgMinutes}` : "—"}
-            label={stats.avgMinutes > 0 ? "Minutos médios" : "Tempo médio"}
+            label="Tempo médio dos treinos"
             size="sm"
           />
         </HeroCard>
       </section>
 
-      {(plan?.description || nextSession) && (
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {plan?.description && (
-            <HeroCard intensity="subtle" className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-coach/15 border border-coach/30 flex items-center justify-center shrink-0">
-                  <MessageCircle size={18} className="text-coach" aria-hidden />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-stat-label uppercase text-coach">
-                    Coach Note
-                  </p>
-                  <h2 className="mt-2 text-h3 text-text-primary">
-                    Orientação do personal
-                  </h2>
-                  <p className="mt-2 text-body text-text-secondary leading-relaxed">
-                    {plan.description}
-                  </p>
-                </div>
+      {nextSession && (
+        <section>
+          <HeroCard bare className="p-5">
+            <div className="flex items-start gap-3">
+              <div className="h-10 w-10 rounded-full bg-accent/10 border border-accent/25 flex items-center justify-center shrink-0">
+                <CalendarClock
+                  size={18}
+                  className="text-accent"
+                  aria-hidden
+                />
               </div>
-            </HeroCard>
-          )}
-
-          {nextSession && (
-            <HeroCard bare className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-full bg-accent/10 border border-accent/25 flex items-center justify-center shrink-0">
-                  <CalendarClock
-                    size={18}
-                    className="text-accent"
-                    aria-hidden
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-stat-label uppercase text-text-muted">
-                    Próxima sessão
-                  </p>
-                  <h2 className="mt-2 text-h3 text-text-primary truncate">
-                    {nextSession.name}
-                  </h2>
-                  <p className="mt-1 text-body text-text-secondary">
-                    {nextSession.exercises.length} exercícios no plano.
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="text-stat-label uppercase text-text-muted">
+                  Próxima sessão
+                </p>
+                <h2 className="mt-2 text-h3 text-text-primary truncate">
+                  {nextSession.name}
+                </h2>
+                <p className="mt-1 text-body text-text-secondary">
+                  {nextSession.exercises.length} exercícios no plano.
+                </p>
               </div>
-            </HeroCard>
-          )}
+            </div>
+          </HeroCard>
         </section>
       )}
 

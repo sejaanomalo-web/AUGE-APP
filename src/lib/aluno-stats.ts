@@ -1,10 +1,19 @@
-import { startOfWeek, endOfWeek, differenceInDays, subDays } from "date-fns";
+import {
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  differenceInDays,
+  subDays,
+} from "date-fns";
 import { prisma } from "./prisma";
 
 export async function getAlunoWeeklyStats(studentId: string) {
   const now = new Date();
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+  const monthStart = startOfMonth(now);
+  const monthEnd = endOfMonth(now);
 
   const logsThisWeek = await prisma.workoutLog.findMany({
     where: {
@@ -27,15 +36,29 @@ export async function getAlunoWeeklyStats(studentId: string) {
     0,
   );
 
-  const durations = logsThisWeek
-    .filter((l) => l.finishedAt)
-    .map(
-      (l) =>
-        (l.finishedAt!.getTime() - l.startedAt.getTime()) / 1000 / 60,
-    );
+  // Treinos no mês — count of completed workouts in the current calendar month.
+  const monthCount = await prisma.workoutLog.count({
+    where: {
+      studentId,
+      status: "COMPLETED",
+      startedAt: { gte: monthStart, lte: monthEnd },
+    },
+  });
+
+  // Tempo médio dos treinos — total duration / total count across ALL
+  // completed workouts (lifetime average). Reads as "how long a typical
+  // session lasts for me" rather than a weekly snapshot.
+  const allCompleted = await prisma.workoutLog.findMany({
+    where: { studentId, status: "COMPLETED", finishedAt: { not: null } },
+    select: { startedAt: true, finishedAt: true },
+  });
+  const totalSecondsAll = allCompleted.reduce(
+    (a, l) => a + (l.finishedAt!.getTime() - l.startedAt.getTime()) / 1000,
+    0,
+  );
   const avgMinutes =
-    durations.length > 0
-      ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+    allCompleted.length > 0
+      ? Math.round(totalSecondsAll / 60 / allCompleted.length)
       : 0;
 
   // Streak — consecutive days with at least 1 completed workout in last 90d
@@ -67,6 +90,7 @@ export async function getAlunoWeeklyStats(studentId: string) {
 
   return {
     completedWorkouts,
+    monthCount,
     volume: Math.round(volume),
     avgMinutes,
     streakDays: streak,
@@ -87,6 +111,32 @@ export function daysUntilSession(dayOfWeek: number, from: Date): number {
   let delta = dayOfWeek - today;
   if (delta < 0) delta += 7;
   return delta;
+}
+
+/**
+ * Project the plan's weekly schedule across a date range. Returns one entry
+ * per session per matching weekday in the window. Used by /planos to render
+ * the user's workouts under arbitrary period filters (today / week / month /
+ * year). For the simple "next 5 upcoming", keep using nextUpcomingSessions.
+ */
+export function projectSessionsInRange<
+  T extends { dayOfWeek: number | null },
+>(sessions: T[], from: Date, days: number): { date: Date; session: T }[] {
+  const result: { date: Date; session: T }[] = [];
+  const sessionsWithDay = sessions.filter(
+    (s): s is T & { dayOfWeek: number } => s.dayOfWeek != null,
+  );
+  if (sessionsWithDay.length === 0) return result;
+  const cursor = new Date(from);
+  cursor.setHours(0, 0, 0, 0);
+  for (let i = 0; i <= days; i++) {
+    const dow = cursor.getDay();
+    for (const match of sessionsWithDay.filter((s) => s.dayOfWeek === dow)) {
+      result.push({ date: new Date(cursor), session: match });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return result;
 }
 
 export function nextUpcomingSessions<

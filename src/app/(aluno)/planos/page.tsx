@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/Badge";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { HeroCard } from "@/components/visual/HeroCard";
+import { TreinosByPeriod } from "@/components/aluno/TreinosByPeriod";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyPlans } from "@/lib/actions/workout-plans";
 import { getMyTrainer } from "@/lib/actions/users";
-import { capitalize, formatDayMonth, formatLongDate, formatRelativeFromNow } from "@/lib/date";
-import { nextUpcomingSessions } from "@/lib/aluno-stats";
+import { formatLongDate, formatRelativeFromNow } from "@/lib/date";
+import { projectSessionsInRange } from "@/lib/aluno-stats";
 import { cn } from "@/lib/utils";
 
 const DAY_NAMES = [
@@ -32,8 +33,15 @@ export default async function PlanosPage() {
 
   const activePlan = plans.find((p) => p.isActive);
   const otherPlans = plans.filter((p) => !p.isActive);
-  const upcoming = activePlan
-    ? nextUpcomingSessions(activePlan.sessions, new Date(), 5)
+  // Project a full year of the active plan's weekly schedule so the
+  // <TreinosByPeriod /> client can filter without going back to the server.
+  const projected = activePlan
+    ? projectSessionsInRange(activePlan.sessions, new Date(), 365).map((u) => ({
+        dateIso: u.date.toISOString(),
+        sessionId: u.session.id,
+        sessionName: u.session.name,
+        exerciseCount: u.session.exercises.length,
+      }))
     : [];
 
   return (
@@ -73,57 +81,7 @@ export default async function PlanosPage() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          {upcoming.length > 0 && (
-            <section>
-              <h2 className="text-caption uppercase tracking-normal text-text-muted font-semibold mb-2">
-                Próximos treinos
-              </h2>
-              <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory">
-                {upcoming.map((u, i) => {
-                  const isNext = i === 0;
-                  return (
-                    <Link
-                      key={`${u.session.id}-${i}`}
-                      href={`/treino/${u.session.id}`}
-                      className="snap-start shrink-0 w-[220px]"
-                    >
-                      <HeroCard
-                        intensity={isNext ? "strong" : "medium"}
-                        className={cn(
-                          "h-32 p-4 flex flex-col justify-between transition duration-150",
-                          "hover:-translate-y-px hover:border-border",
-                          isNext &&
-                            "ring-1 ring-accent/30 shadow-accent",
-                        )}
-                      >
-                        <div>
-                          <p
-                            className={`text-stat-label uppercase ${
-                              isNext ? "text-accent" : "text-text-muted"
-                            }`}
-                          >
-                            {isNext
-                              ? "Próximo"
-                              : capitalize(
-                                  formatDayMonth(
-                                    u.date.toISOString().slice(0, 10),
-                                  ).split(",")[0],
-                                )}
-                          </p>
-                          <p className="mt-2 text-h3 text-text-primary line-clamp-2">
-                            {u.session.name}
-                          </p>
-                        </div>
-                        <p className="text-caption text-text-muted">
-                          {u.session.exercises.length} exercícios
-                        </p>
-                      </HeroCard>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+          {projected.length > 0 && <TreinosByPeriod projected={projected} />}
 
           {activePlan && (
             <section>

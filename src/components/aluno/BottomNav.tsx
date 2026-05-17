@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardList, MessageCircle, Target, TrendingUp } from "lucide-react";
+import { ClipboardList, Target, TrendingUp, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/hoje", label: "Hoje", icon: Target },
   { href: "/planos", label: "Treinos", icon: ClipboardList },
   { href: "/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/perfil", label: "Coach", icon: MessageCircle },
+  { href: "/perfil", label: "Perfil", icon: User },
 ];
 
 export function BottomNav({ className }: { className?: string }) {
