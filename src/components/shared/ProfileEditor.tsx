@@ -72,21 +72,56 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
     setError(null);
     try {
       const heightNum = height === "" ? null : parseFloat(height);
-      const weightNum = currentWeight === "" ? null : parseFloat(currentWeight);
-      await updateProfile({
+      const weightNum =
+        currentWeight === "" ? null : parseFloat(currentWeight);
+
+      // Client-side guards so the user gets immediate feedback instead of
+      // waiting for the round-trip to surface the same complaint.
+      if (heightNum !== null && Number.isNaN(heightNum)) {
+        setError("Altura inválida.");
+        setSubmitting(false);
+        return;
+      }
+      if (weightNum !== null && Number.isNaN(weightNum)) {
+        setError("Peso inválido.");
+        setSubmitting(false);
+        return;
+      }
+      let parsedBirth: Date | null = null;
+      if (birthDate) {
+        const d = new Date(birthDate);
+        if (Number.isNaN(d.getTime())) {
+          setError("Data de nascimento inválida.");
+          setSubmitting(false);
+          return;
+        }
+        parsedBirth = d;
+      }
+
+      const result = await updateProfile({
         name: name.trim() || user.name,
         phone: phone.trim(),
-        birthDate: birthDate ? new Date(birthDate) : null,
+        birthDate: parsedBirth,
         height: heightNum,
         currentWeight: weightNum,
         goal: goal.trim(),
         cref: user.role === "PERSONAL" ? cref.trim() : undefined,
         sportsPracticed: sports,
       });
+      if (!result.ok) {
+        setError(result.error);
+        setSubmitting(false);
+        return;
+      }
       setEditing(false);
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar");
+      console.error("[ProfileEditor.save] unexpected", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro inesperado ao salvar. Tente novamente.",
+      );
       setSubmitting(false);
     }
   }
@@ -95,12 +130,39 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
     setUploading(true);
     setError(null);
     try {
+      // Client-side size guard mirrors the server (3MB). The Next.js
+      // server-action body limit is now 5MB, but we still reject larger
+      // images here so the user sees a clear message before upload.
+      const MAX_BYTES = 3 * 1024 * 1024;
+      if (file.size > MAX_BYTES) {
+        setError(
+          `Imagem muito grande (${(file.size / 1024 / 1024).toFixed(
+            1,
+          )} MB). Limite 3 MB.`,
+        );
+        setUploading(false);
+        return;
+      }
+      const ok = ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+      if (!ok) {
+        setError("Formato não permitido. Use JPG, PNG ou WebP.");
+        setUploading(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("file", file);
-      const url = await uploadAvatar(formData);
-      setAvatarUrl(url);
+      const result = await uploadAvatar(formData);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setAvatarUrl(result.data.url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao enviar foto");
+      console.error("[ProfileEditor.onPickAvatar] unexpected", err);
+      setError(
+        err instanceof Error ? err.message : "Erro ao enviar foto.",
+      );
     } finally {
       setUploading(false);
     }

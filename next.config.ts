@@ -22,6 +22,16 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
+  experimental: {
+    serverActions: {
+      // Default is 1MB. Avatar uploads (allowed up to 3MB on the client)
+      // tripped it: the request body was rejected before the action even
+      // ran, and the client saw "An unexpected response was received from
+      // the server". Bumped to 5MB to leave headroom for future media
+      // (exam uploads, exercise images, etc.).
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
 export default withPWA(nextConfig);
