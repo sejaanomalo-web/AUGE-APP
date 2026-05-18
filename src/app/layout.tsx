@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ꓥuge | Obsidian Performance",
+  title: "ꓥuge",
   description:
     "Cockpit de evolução física para personal trainers e alunos em acompanhamento.",
   manifest: "/manifest.json",
