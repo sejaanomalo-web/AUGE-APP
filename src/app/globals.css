@@ -56,9 +56,10 @@
   );
 
   /* Grid backdrop — barely-visible single-pixel lines on a 40px lattice.
-   * Dark theme: faint warm-white. Threshold tuned so the lines read as
-   * texture, not as a wireframe. */
-  --grid-line: rgba(255, 255, 255, 0.035);
+   * Lines dimmed to 40% of the original presence per user request
+   * (0.035 → 0.014) so the lattice reads as the lightest possible
+   * texture, not a wireframe. */
+  --grid-line: rgba(255, 255, 255, 0.014);
   --grid-size: 40px;
 }
 
@@ -102,8 +103,9 @@
     rgba(48, 128, 0, 0) 60%
   );
 
-  /* Grid lines need to be a faint dark on the white background. */
-  --grid-line: rgba(0, 0, 0, 0.05);
+  /* Grid lines need to be a faint dark on the white background — also
+   * dimmed to 40% of the original presence (0.05 → 0.020). */
+  --grid-line: rgba(0, 0, 0, 0.020);
   --grid-size: 40px;
 }
 
