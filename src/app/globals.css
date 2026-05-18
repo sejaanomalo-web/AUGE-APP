@@ -54,6 +54,12 @@
     rgba(183, 255, 42, 0.06) 0%,
     rgba(8, 10, 13, 0) 64%
   );
+
+  /* Grid backdrop — barely-visible single-pixel lines on a 40px lattice.
+   * Dark theme: faint warm-white. Threshold tuned so the lines read as
+   * texture, not as a wireframe. */
+  --grid-line: rgba(255, 255, 255, 0.035);
+  --grid-size: 40px;
 }
 
 .light {
@@ -95,6 +101,10 @@
     rgba(48, 128, 0, 0.08) 0%,
     rgba(48, 128, 0, 0) 60%
   );
+
+  /* Grid lines need to be a faint dark on the white background. */
+  --grid-line: rgba(0, 0, 0, 0.05);
+  --grid-size: 40px;
 }
 
 @layer base {
@@ -102,6 +112,29 @@
     background-color: rgb(var(--bg-base));
     background-image: var(--hero-gradient);
     background-repeat: no-repeat;
+  }
+
+  /* Grid lattice — applied to every full-bleed `bg-bg-base` surface.
+   *
+   * Two crossed 1px line gradients on a 40px tile produce the lattice.
+   * `background-attachment: fixed` anchors the grid to the viewport so
+   * lines align across nested containers (no broken seams at div edges).
+   * Tailwind's `.bg-bg-base` utility still controls the underlying
+   * color — we're only adding the image layer on top. */
+  .bg-bg-base {
+    background-image:
+      linear-gradient(
+        to right,
+        var(--grid-line) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        var(--grid-line) 1px,
+        transparent 1px
+      );
+    background-size: var(--grid-size) var(--grid-size);
+    background-attachment: fixed;
   }
 
   html,
