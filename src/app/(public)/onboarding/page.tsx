@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Activity, Check, ChevronLeft, Loader2, Users } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
@@ -92,8 +93,20 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-3xl">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-12">
+      <div className="w-full max-w-3xl relative">
+        {/* Back to landing — present on the role step (where there's no
+         * other "Voltar" affordance) so the user is never trapped. */}
+        {step === "role" && (
+          <Link
+            href="/"
+            aria-label="Voltar para a tela inicial"
+            className="absolute left-0 top-0 inline-flex items-center gap-1 text-caption text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <ChevronLeft size={16} aria-hidden /> Voltar
+          </Link>
+        )}
+
         <div className="flex flex-col items-center text-center mb-10">
           <Logo size="md" />
         </div>
