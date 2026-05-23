@@ -239,18 +239,11 @@ function SwipeRow({
         transition: { duration: 0.32, ease: [0.32, 0.72, 0, 1] },
       }}
       transition={{ duration: 0.22, ease: "easeOut" }}
-      className="relative overflow-hidden"
     >
-      {/* Underlay revealed while the user drags left. Subtle so the row
-       * itself stays the focus during the drag. */}
-      <div
-        aria-hidden
-        className="absolute inset-y-0 right-0 flex items-center justify-end bg-error/70 pr-5"
-        style={{ width: MAX_SWIPE }}
-      >
-        <Trash2 size={18} className="text-white" />
-      </div>
-
+      {/* One single card surface — no underlay. The card itself follows
+       * the finger during a horizontal drag (dragSnapToOrigin springs it
+       * back if the user doesn't cross the threshold). The trash icon
+       * lives in the top-right corner of the card content. */}
       <motion.div
         drag="x"
         dragConstraints={{ left: -MAX_SWIPE, right: 0 }}
@@ -263,17 +256,29 @@ function SwipeRow({
         onDragEnd={handleDragEnd}
         style={{ touchAction: "pan-y" }}
         className={cn(
-          "relative flex items-stretch rounded-xl border bg-bg-surface border-border-subtle pulse-line",
+          "relative rounded-xl border bg-bg-surface border-border-subtle pulse-line overflow-hidden",
           !notif.read && "bg-accent/[0.04]",
         )}
       >
-        {/* Tap surface - opens the notification.
-         * grid gives exact, non-overlapping columns:
-         *   icon(40) · flexible body(min-w-0) · - (trash sits as sibling) */}
+        {/* Trash — anchored to the top-right corner of the card.
+         * z-10 keeps it above the tap surface so clicks land here when
+         * they overlap. stopPropagation prevents the parent tap. */}
+        <button
+          type="button"
+          onClick={handleTrashClick}
+          aria-label="Excluir notificação"
+          className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full flex items-center justify-center text-text-muted hover:text-error hover:bg-error/10 transition-colors"
+        >
+          <Trash2 size={14} aria-hidden />
+        </button>
+
+        {/* Tap surface — opens the notification. pr-10 reserves the
+         * top-right corner for the trash button so copy never collides
+         * with it on long titles. */}
         <button
           type="button"
           onClick={handleTap}
-          className="flex-1 min-w-0 grid grid-cols-[40px_minmax(0,1fr)] items-start gap-3 p-4 text-left hover:bg-bg-elevated/60 transition-colors rounded-l-xl"
+          className="w-full text-left grid grid-cols-[40px_minmax(0,1fr)] items-start gap-3 p-4 pr-10 hover:bg-bg-elevated/40 transition-colors"
         >
           <span
             className={cn(
@@ -283,7 +288,7 @@ function SwipeRow({
           >
             <Bell size={16} aria-hidden />
           </span>
-          <div className="min-w-0 pr-1">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               {!notif.read && (
                 <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
@@ -302,17 +307,6 @@ function SwipeRow({
               })}
             </div>
           </div>
-        </button>
-
-        {/* Explicit trash button - small, fixed 44px column on the right.
-         * Keeps Apple's 44pt minimum tap target without crowding the copy. */}
-        <button
-          type="button"
-          onClick={handleTrashClick}
-          aria-label="Excluir notificação"
-          className="shrink-0 w-11 flex items-center justify-center text-text-muted hover:text-error hover:bg-error/10 transition-colors rounded-r-xl"
-        >
-          <Trash2 size={15} aria-hidden />
         </button>
       </motion.div>
     </motion.li>
