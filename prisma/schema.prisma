@@ -259,6 +259,7 @@ model BodyMetric {
   bodyFat      Float?
   measurements Json?
   notes        String?
+  photoUrl     String?  // optional photo attached to the evaluation
   createdAt    DateTime @default(now())
 
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade)

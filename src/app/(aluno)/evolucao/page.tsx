@@ -1,7 +1,9 @@
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EvolucaoClient } from "@/components/aluno/EvolucaoClient";
+import { EvolucaoEvaluations } from "@/components/aluno/EvolucaoEvaluations";
 import { requireRole } from "@/lib/auth-helpers";
 import { getEvolucaoYear } from "@/lib/actions/evolution";
+import { listMyEvaluations } from "@/lib/actions/body-metrics";
 
 export default async function EvolucaoPage({
   searchParams,
@@ -16,7 +18,10 @@ export default async function EvolucaoPage({
       ? requestedYear
       : new Date().getFullYear();
 
-  const data = await getEvolucaoYear(year);
+  const [data, evaluations] = await Promise.all([
+    getEvolucaoYear(year),
+    listMyEvaluations(),
+  ]);
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col gap-6">
@@ -29,6 +34,10 @@ export default async function EvolucaoPage({
         trainedDates={data.trainedDates}
         monthlyCounts={data.monthlyCounts}
         firstYearWithData={data.firstYearWithData}
+      />
+      <EvolucaoEvaluations
+        initialEvaluations={evaluations.evaluations}
+        schemaMissing={evaluations.schemaMissing}
       />
     </div>
   );
