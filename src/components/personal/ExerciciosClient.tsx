@@ -385,18 +385,66 @@ function ExerciseFormDialog({
     window.location.reload();
   }
 
+  // The form lives inside the Dialog body but the action buttons live
+  // in the Dialog's sticky footer slot - connecting them via
+  // form="exercise-form" so Submit on a button outside the <form> still
+  // triggers onSubmit. Keeps the Save/Cancel/Excluir row pinned to the
+  // bottom of the modal even when the form is taller than the viewport.
+  const formId = "exercise-form";
+
   return (
     <Dialog
       open
-      onOpenChange={(o) => !o && onClose()}
+      onOpenChange={(o) => !submitting && !o && onClose()}
       title={mode === "create" ? "Adicionar exercício" : "Editar exercício"}
       description={
         mode === "create"
           ? "Crie um exercício novo na sua biblioteca. Você pode editar nome, imagem, vídeo e instruções a qualquer momento."
           : "Atualize qualquer campo. A imagem antiga é removida do armazenamento quando você troca por uma nova."
       }
+      footer={
+        <div className="flex flex-1 items-center justify-between gap-3">
+          {mode === "edit" && exercise ? (
+            <Button
+              type="button"
+              variant="destructive"
+              size="md"
+              onClick={onDelete}
+              disabled={submitting}
+            >
+              <Trash2 size={14} aria-hidden /> Excluir
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={onClose}
+              disabled={submitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              variant="primary"
+              size="md"
+              disabled={submitting || uploading}
+            >
+              {submitting
+                ? "Salvando..."
+                : mode === "create"
+                  ? "Criar"
+                  : "Salvar"}
+            </Button>
+          </div>
+        </div>
+      }
     >
-      <form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <form id={formId} onSubmit={onSubmit} className="flex flex-col gap-4">
         <Field label="Nome" htmlFor="ex-name">
           <Input
             id="ex-name"
@@ -499,45 +547,6 @@ function ExerciseFormDialog({
             {error}
           </p>
         )}
-
-        <div className="flex justify-between gap-3 mt-2">
-          {mode === "edit" && exercise ? (
-            <Button
-              type="button"
-              variant="destructive"
-              size="md"
-              onClick={onDelete}
-              disabled={submitting}
-            >
-              <Trash2 size={14} aria-hidden /> Excluir
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              disabled={submitting || uploading}
-            >
-              {submitting
-                ? "Salvando..."
-                : mode === "create"
-                  ? "Criar"
-                  : "Salvar"}
-            </Button>
-          </div>
-        </div>
       </form>
     </Dialog>
   );
