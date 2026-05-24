@@ -194,17 +194,15 @@ function ExerciseCard({
           {ex.name}
         </p>
       </button>
-      {ex.isCustom && (
-        <div className="flex justify-end gap-1 mt-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-          <IconButton
-            aria-label={`Editar ${ex.name}`}
-            onClick={onEdit}
-            className="w-8 h-8"
-          >
-            <Pencil size={14} />
-          </IconButton>
-        </div>
-      )}
+      <div className="flex justify-end gap-1 mt-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+        <IconButton
+          aria-label={`Editar ${ex.name}`}
+          onClick={onEdit}
+          className="w-8 h-8"
+        >
+          <Pencil size={14} />
+        </IconButton>
+      </div>
     </Card>
   );
 }
@@ -278,11 +276,9 @@ function ExerciseViewDialog({
         )}
 
         <div className="flex justify-end gap-2 mt-2">
-          {exercise.isCustom && (
-            <Button variant="secondary" size="md" onClick={onEdit}>
-              <Pencil size={14} aria-hidden /> Editar
-            </Button>
-          )}
+          <Button variant="secondary" size="md" onClick={onEdit}>
+            <Pencil size={14} aria-hidden /> Editar
+          </Button>
           <Button variant="primary" size="md" onClick={onClose}>
             Fechar
           </Button>
@@ -335,21 +331,31 @@ function ExerciseFormDialog({
     setError(null);
     try {
       if (mode === "create") {
-        await createCustomExercise({
+        const res = await createCustomExercise({
           name: name.trim(),
           muscleGroup,
           instructions: instructions.trim() || undefined,
           videoUrl: videoUrl.trim() || undefined,
           imageUrl: imageUrl || undefined,
         });
+        if (!res.ok) {
+          setError(res.error);
+          setSubmitting(false);
+          return;
+        }
       } else if (exercise) {
-        await updateExercise(exercise.id, {
+        const res = await updateExercise(exercise.id, {
           name: name.trim(),
           muscleGroup,
           instructions: instructions.trim(),
           videoUrl: videoUrl.trim(),
           imageUrl: imageUrl,
         });
+        if (!res.ok) {
+          setError(res.error);
+          setSubmitting(false);
+          return;
+        }
       }
       onClose();
       window.location.reload();
@@ -361,17 +367,22 @@ function ExerciseFormDialog({
 
   async function onDelete() {
     if (!exercise) return;
-    if (!confirm(`Excluir "${exercise.name}"? Esta ação é permanente.`)) return;
+    if (
+      !confirm(
+        `Excluir "${exercise.name}"? Esta ação é permanente. Se o exercício estiver em uso em algum treino ou histórico, a exclusão será bloqueada.`,
+      )
+    )
+      return;
     setSubmitting(true);
     setError(null);
-    try {
-      await deleteExercise(exercise.id);
-      onClose();
-      window.location.reload();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro");
+    const res = await deleteExercise(exercise.id);
+    if (!res.ok) {
+      setError(res.error);
       setSubmitting(false);
+      return;
     }
+    onClose();
+    window.location.reload();
   }
 
   return (
@@ -381,8 +392,8 @@ function ExerciseFormDialog({
       title={mode === "create" ? "Adicionar exercício" : "Editar exercício"}
       description={
         mode === "create"
-          ? "Crie um exercício customizado disponível apenas para você."
-          : undefined
+          ? "Crie um exercício novo na sua biblioteca. Você pode editar nome, imagem, vídeo e instruções a qualquer momento."
+          : "Atualize qualquer campo. A imagem antiga é removida do armazenamento quando você troca por uma nova."
       }
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -490,7 +501,7 @@ function ExerciseFormDialog({
         )}
 
         <div className="flex justify-between gap-3 mt-2">
-          {mode === "edit" && exercise?.isCustom ? (
+          {mode === "edit" && exercise ? (
             <Button
               type="button"
               variant="destructive"
