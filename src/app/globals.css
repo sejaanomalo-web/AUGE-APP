@@ -339,6 +339,32 @@
       0 10px 28px -12px rgba(0, 0, 0, 0.12);
   }
 
+  /* Soft uniform lift on hover - a flat low-alpha overlay that
+   * gently brightens the entire surface so the block the user is
+   * focusing on reads as "highlighted" without a flash or hotspot.
+   * Ramps in slowly so the tonal shift feels ambient. */
+  .surface-depth.surface-lift {
+    position: relative;
+  }
+  .surface-depth.surface-lift::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.022);
+    opacity: 0;
+    transition: opacity 420ms ease-out;
+  }
+  .surface-depth.surface-lift:hover::after {
+    opacity: 1;
+  }
+  .light .surface-depth.surface-lift::after {
+    /* In light theme a white overlay barely registers; use a
+     * faint accent tint so the highlight is still readable. */
+    background: rgb(var(--accent) / 0.035);
+  }
+
   .pulse-line::before {
     content: "";
     position: absolute;
