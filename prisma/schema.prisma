@@ -149,6 +149,10 @@ model WorkoutPlan {
   startDate   DateTime
   endDate     DateTime?
   isActive    Boolean   @default(true)
+  // When set, the plan is paused: still belongs to the student but
+  // shouldn't be considered "current". Distinct from isActive=false,
+  // which means the plan was retired/inactive permanently.
+  pausedAt    DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

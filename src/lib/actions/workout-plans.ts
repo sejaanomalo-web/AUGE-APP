@@ -344,6 +344,18 @@ export async function getActivePlanForStudent(studentId: string) {
   });
 }
 
+/**
+ * Detects the "column doesn't exist" Prisma errors we get when the
+ * pausedAt column hasn't been migrated yet. Lets us fall back to a
+ * query that omits the column so the page still renders.
+ */
+function isPausedAtColumnMissing(err: unknown): boolean {
+  return (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    (err.code === "P2022" || err.code === "P2021")
+  );
+}
+
 export async function getMyPlans() {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
@@ -368,11 +380,100 @@ export async function getMyPlans() {
       : { studentId: userId };
   }
 
-  return prisma.workoutPlan.findMany({
-    where,
-    include: { sessions: { include: { exercises: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    return await prisma.workoutPlan.findMany({
+      where,
+      include: { sessions: { include: { exercises: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    if (isPausedAtColumnMissing(err)) {
+      console.warn(
+        "[getMyPlans] WorkoutPlan.pausedAt missing — apply migration 20260524_workoutplan_paused.",
+      );
+      const rows = await prisma.workoutPlan.findMany({
+        where,
+        select: {
+          id: true,
+          trainerId: true,
+          studentId: true,
+          name: true,
+          description: true,
+          startDate: true,
+          endDate: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          sessions: { include: { exercises: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      // Cast back to the full WorkoutPlan shape with pausedAt=null so the
+      // rest of the app doesn't need to know about the missing column.
+      return rows.map((r) => ({ ...r, pausedAt: null as Date | null }));
+    }
+    throw err;
+  }
+}
+
+export type PlanStatus = "ACTIVE" | "PAUSED" | "INACTIVE";
+
+export type PlanStatusResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+/**
+ * Move a plan between the ACTIVE / PAUSED / INACTIVE states.
+ *
+ *   ACTIVE   - isActive = true,  pausedAt = null
+ *   PAUSED   - isActive = true,  pausedAt = now()
+ *   INACTIVE - isActive = false, pausedAt = null
+ *
+ * Only the owning trainer (or a solo aluno) can change a plan's status.
+ */
+export async function setPlanStatus(
+  planId: string,
+  status: PlanStatus,
+): Promise<PlanStatusResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false, error: "Não autenticado." };
+
+    if (!(await canEditPlan(userId, planId))) {
+      return { ok: false, error: "Sem permissão para alterar este plano." };
+    }
+
+    const data =
+      status === "ACTIVE"
+        ? { isActive: true, pausedAt: null }
+        : status === "PAUSED"
+          ? { isActive: true, pausedAt: new Date() }
+          : { isActive: false, pausedAt: null };
+
+    try {
+      await prisma.workoutPlan.update({ where: { id: planId }, data });
+    } catch (err) {
+      if (isPausedAtColumnMissing(err)) {
+        return {
+          ok: false,
+          error:
+            "Coluna pausedAt ainda não migrada. Aplique a migration 20260524_workoutplan_paused no banco para usar este recurso.",
+        };
+      }
+      throw err;
+    }
+
+    revalidatePath("/treinos");
+    revalidatePath(`/treinos/${planId}`);
+    revalidatePath("/planos");
+    return { ok: true };
+  } catch (err) {
+    console.error("[setPlanStatus] failed", { planId, status, err });
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Erro ao atualizar status.",
+    };
+  }
 }
 
 export async function getPlanById(id: string) {
