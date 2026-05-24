@@ -8,13 +8,18 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProfileEditor } from "@/components/shared/ProfileEditor";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { PasskeySettings } from "@/components/shared/PasskeySettings";
 import { LinkTrainerDialog } from "@/components/aluno/LinkTrainerDialog";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyTrainer } from "@/lib/actions/users";
+import { listMyPasskeys } from "@/lib/actions/passkeys";
 
 export default async function PerfilAlunoPage() {
   const user = await requireRole("ALUNO");
-  const trainer = await getMyTrainer();
+  const [trainer, passkeys] = await Promise.all([
+    getMyTrainer(),
+    listMyPasskeys(),
+  ]);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -78,6 +83,11 @@ export default async function PerfilAlunoPage() {
       <section className="mb-6">
         <h2 className="text-h3 text-text-primary mb-3">Aparência</h2>
         <ThemeToggle />
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-h3 text-text-primary mb-3">Segurança</h2>
+        <PasskeySettings initialPasskeys={passkeys} />
       </section>
 
       <section>

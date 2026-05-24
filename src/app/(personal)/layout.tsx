@@ -1,5 +1,3 @@
-"use client";
-
 import {
   LayoutDashboard,
   Users,
@@ -11,6 +9,8 @@ import { Sidebar } from "@/components/shared/Sidebar";
 import { MobileDrawer } from "@/components/shared/MobileDrawer";
 import { AppHeader } from "@/components/shared/AppHeader";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { AppLockGate } from "@/components/shared/AppLockGate";
+import { userHasPasskey } from "@/lib/actions/passkeys";
 
 const items = [
   { href: "/dashboard", label: "Painel", icon: LayoutDashboard },
@@ -20,24 +20,27 @@ const items = [
   { href: "/conta", label: "Perfil", icon: User },
 ];
 
-export default function PersonalLayout({
+export default async function PersonalLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const hasPasskey = await userHasPasskey();
   return (
-    <div className="min-h-screen bg-bg-base">
-      <Sidebar items={items} homeHref="/dashboard" />
-      <div className="lg:pl-60 flex flex-col min-h-screen">
-        <AppHeader
-          perfilHref="/conta"
-          homeHref="/dashboard"
-          mobileLeftSlot={<MobileDrawer items={items} homeHref="/dashboard" />}
-        />
-        <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
-          <PageTransition>{children}</PageTransition>
-        </main>
+    <AppLockGate hasPasskey={hasPasskey}>
+      <div className="min-h-screen bg-bg-base">
+        <Sidebar items={items} homeHref="/dashboard" />
+        <div className="lg:pl-60 flex flex-col min-h-screen">
+          <AppHeader
+            perfilHref="/conta"
+            homeHref="/dashboard"
+            mobileLeftSlot={<MobileDrawer items={items} homeHref="/dashboard" />}
+          />
+          <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8">
+            <PageTransition>{children}</PageTransition>
+          </main>
+        </div>
       </div>
-    </div>
+    </AppLockGate>
   );
 }

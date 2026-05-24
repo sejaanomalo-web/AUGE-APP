@@ -102,6 +102,7 @@ model User {
   notifications        Notification[]
   pushSubscriptions    PushSubscription[]
   notificationSettings NotificationSettings?
+  passkeys             PasskeyCredential[]
 
   @@index([email])
   @@index([role])
@@ -368,6 +369,37 @@ model PushSubscription {
   userAgent  String?
   createdAt  DateTime @default(now())
   lastUsedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// WebAuthn credential enrolled by the user (e.g. Face ID, Touch ID,
+/// Windows Hello, a hardware security key). When at least one row
+/// exists for a user, the in-app lock screen requires biometric
+/// verification on every fresh app launch.
+model PasskeyCredential {
+  id           String   @id @default(cuid())
+  userId       String
+  /// Raw credential ID (Uint8Array) encoded as base64url. Unique because
+  /// the WebAuthn spec guarantees no two credentials share an ID.
+  credentialId String   @unique
+  /// COSE-encoded public key, base64url. Used by the server to verify
+  /// assertion signatures.
+  publicKey    String
+  /// Signature counter (bigint). Per the spec, the authenticator
+  /// increments this with every assertion - a non-increasing counter
+  /// can indicate credential cloning.
+  counter      BigInt   @default(0)
+  /// Transports the browser reported (internal, hybrid, nfc, usb, ble).
+  /// Used to hint subsequent assertion ceremonies.
+  transports   String[]
+  /// Human-readable label shown in the manage-passkeys list. Optional;
+  /// defaults to the user-agent at enrollment time if omitted.
+  deviceLabel  String?
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
