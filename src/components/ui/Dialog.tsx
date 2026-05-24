@@ -88,12 +88,16 @@ export function Dialog({
             onClick={handleBackdropClick}
             className="fixed inset-0 z-[91] overflow-y-auto overscroll-contain"
           >
-            {/* min-h-full lets the flex centering pin a short dialog
-             * dead-center while a tall one (e.g. nova avaliação) can
-             * grow past the viewport and the outer wrapper scrolls. */}
+            {/* Grid place-items-center centres a short dialog and, when
+             * the panel is taller than the viewport (e.g. the nova
+             * avaliação form on phones), lets the panel push the grid
+             * container's height instead of overflowing both edges
+             * symmetrically the way flex items-center does. The outer
+             * wrapper then scrolls cleanly from the panel's top edge
+             * to its bottom. */}
             <div
               onClick={handleBackdropClick}
-              className="min-h-full flex items-center justify-center p-4"
+              className="min-h-full grid place-items-center p-4"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: 12 }}
