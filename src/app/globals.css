@@ -354,10 +354,11 @@
       0 0 0 1px rgb(var(--accent) / 0.16);
   }
 
-  /* Quiet sheen that drifts across a hovered surface - a single
-   * lazy diagonal light, kept very low alpha so it reads as
-   * material reaction, not a flashy effect. Only renders when
-   * the surface is also marked as a depth layer. */
+  /* Uniform tonal wash on hover - a single flat low-alpha overlay
+   * that lifts the entire surface to a slightly brighter version of
+   * its own colour, with no gradient hotspot or visible sweep. The
+   * eased opacity transition makes the tone dissipate evenly across
+   * the whole block instead of reading as a flash. */
   .surface-depth.surface-lift {
     position: relative;
   }
@@ -367,25 +368,17 @@
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: linear-gradient(
-      125deg,
-      transparent 35%,
-      rgba(255, 255, 255, 0.05) 50%,
-      transparent 65%
-    );
+    background: rgba(255, 255, 255, 0.028);
     opacity: 0;
-    transition: opacity 380ms ease-out;
+    transition: opacity 320ms ease-out;
   }
   .surface-depth.surface-lift:hover::after {
     opacity: 1;
   }
   .light .surface-depth.surface-lift::after {
-    background: linear-gradient(
-      125deg,
-      transparent 35%,
-      rgba(0, 0, 0, 0.025) 50%,
-      transparent 65%
-    );
+    /* Light theme is already near-white, so the lift comes from a
+     * faint accent-tinted wash rather than added brightness. */
+    background: rgb(var(--accent) / 0.04);
   }
 
   .pulse-line::before {
