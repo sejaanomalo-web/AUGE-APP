@@ -346,8 +346,10 @@ export async function getActivePlanForStudent(studentId: string) {
 
 /**
  * Detects the "column doesn't exist" Prisma errors we get when the
- * pausedAt column hasn't been migrated yet. Lets us fall back to a
- * query that omits the column so the page still renders.
+ * pausedAt column hasn't been migrated yet. setPlanStatus uses this
+ * to surface a clear message - getMyPlans intentionally lets the error
+ * bubble up, because faking the shape made the union return type drift
+ * and broke every caller's inference.
  */
 function isPausedAtColumnMissing(err: unknown): boolean {
   return (
@@ -380,40 +382,11 @@ export async function getMyPlans() {
       : { studentId: userId };
   }
 
-  try {
-    return await prisma.workoutPlan.findMany({
-      where,
-      include: { sessions: { include: { exercises: true } } },
-      orderBy: { createdAt: "desc" },
-    });
-  } catch (err) {
-    if (isPausedAtColumnMissing(err)) {
-      console.warn(
-        "[getMyPlans] WorkoutPlan.pausedAt missing — apply migration 20260524_workoutplan_paused.",
-      );
-      const rows = await prisma.workoutPlan.findMany({
-        where,
-        select: {
-          id: true,
-          trainerId: true,
-          studentId: true,
-          name: true,
-          description: true,
-          startDate: true,
-          endDate: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-          sessions: { include: { exercises: true } },
-        },
-        orderBy: { createdAt: "desc" },
-      });
-      // Cast back to the full WorkoutPlan shape with pausedAt=null so the
-      // rest of the app doesn't need to know about the missing column.
-      return rows.map((r) => ({ ...r, pausedAt: null as Date | null }));
-    }
-    throw err;
-  }
+  return prisma.workoutPlan.findMany({
+    where,
+    include: { sessions: { include: { exercises: true } } },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 export type PlanStatus = "ACTIVE" | "PAUSED" | "INACTIVE";

@@ -17,13 +17,16 @@ import type {
   RegistrationResponseJSON,
   AuthenticationResponseJSON,
   AuthenticatorTransportFuture,
-} from "@simplewebauthn/server/script/deps";
+} from "@simplewebauthn/types";
 import { prisma } from "@/lib/prisma";
 import { getPasskeyConfig } from "@/lib/passkeys/config";
 
-export type PasskeyActionResult<T = void> =
-  | (T extends void ? { ok: true } : { ok: true; data: T })
-  | { ok: false; error: string };
+// [T] is wrapped in a tuple to make the conditional non-distributive
+// across unions, so the result keeps a single, discriminable shape that
+// callers can narrow with `if (res.ok)`.
+export type PasskeyActionResult<T = void> = [T] extends [void]
+  ? { ok: true } | { ok: false; error: string }
+  : { ok: true; data: T } | { ok: false; error: string };
 
 export interface PasskeySummary {
   id: string;
