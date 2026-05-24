@@ -55,75 +55,90 @@ export function Dialog({
 
   if (!mounted) return null;
 
+  // Clicking anywhere outside the panel closes the dialog. Bound on the
+  // outer wrappers (not the panel) and gated by target === currentTarget
+  // so clicks on the panel itself don't bubble back up and close it.
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onOpenChange(false);
+  };
+
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div
-          role="dialog"
-          aria-modal
-          className="fixed inset-0 z-[90] flex items-center justify-center p-4"
-        >
-          <motion.button
-            type="button"
-            aria-label="Fechar"
-            onClick={() => onOpenChange(false)}
+        <>
+          {/* Backdrop sits in its own fixed layer so it always covers
+           * the viewport even while the user scrolls the dialog content
+           * below. Separate from the scroll wrapper so the wrapper can
+           * be a plain (non-transformed) element - putting overflow-y
+           * on a framer-motion transformed node breaks touch scrolling
+           * on iOS Safari, which was the bug on the long evaluation
+           * form. */}
+          <motion.div
+            key="dialog-backdrop"
+            aria-hidden
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute inset-0 bg-black/72 backdrop-blur-md"
+            className="fixed inset-0 z-[90] bg-black/72 backdrop-blur-md"
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{
-              type: "spring",
-              damping: 28,
-              stiffness: 320,
-              mass: 0.85,
-            }}
-            className={cn(
-              // Single scroll container: title + body + footer all live
-              // inside the same overflow-y-auto so the action buttons
-              // scroll naturally to the bottom of the content instead
-              // of sitting on a sticky bar - the user prefers them as
-              // the end of the form. max-h capped at 85dvh leaves
-              // breathing room above and below on mobile so the modal
-              // reads as a centred card, not a near-fullscreen sheet.
-              // overscroll-contain stops iOS bounce from leaking out
-              // to the (already-locked) body.
-              "relative w-full max-w-[480px] max-h-[85dvh] overflow-y-auto overscroll-contain bg-bg-elevated border border-border-subtle rounded-2xl shadow-xl pulse-line",
-              className,
-            )}
+          <div
+            role="dialog"
+            aria-modal
+            onClick={handleBackdropClick}
+            className="fixed inset-0 z-[91] overflow-y-auto overscroll-contain"
           >
-            <div className="p-6">
-              {title && (
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <h2 className="text-h2 text-text-primary">{title}</h2>
-                  <IconButton
-                    aria-label="Fechar"
-                    onClick={() => onOpenChange(false)}
-                    className="-mr-2 -mt-2"
-                  >
-                    <X size={20} />
-                  </IconButton>
+            {/* min-h-full lets the flex centering pin a short dialog
+             * dead-center while a tall one (e.g. nova avaliação) can
+             * grow past the viewport and the outer wrapper scrolls. */}
+            <div
+              onClick={handleBackdropClick}
+              className="min-h-full flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                transition={{
+                  type: "spring",
+                  damping: 28,
+                  stiffness: 320,
+                  mass: 0.85,
+                }}
+                className={cn(
+                  "relative w-full max-w-[480px] bg-bg-elevated border border-border-subtle rounded-2xl shadow-xl pulse-line my-4",
+                  className,
+                )}
+              >
+                <div className="p-6">
+                  {title && (
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h2 className="text-h2 text-text-primary">{title}</h2>
+                      <IconButton
+                        aria-label="Fechar"
+                        onClick={() => onOpenChange(false)}
+                        className="-mr-2 -mt-2"
+                      >
+                        <X size={20} />
+                      </IconButton>
+                    </div>
+                  )}
+                  {description && (
+                    <p className="text-body text-text-secondary mb-4">
+                      {description}
+                    </p>
+                  )}
+                  <div className="text-body text-text-primary">{children}</div>
+                  {footer && (
+                    <div className="mt-6 flex items-center justify-end gap-3 flex-wrap">
+                      {footer}
+                    </div>
+                  )}
                 </div>
-              )}
-              {description && (
-                <p className="text-body text-text-secondary mb-4">
-                  {description}
-                </p>
-              )}
-              <div className="text-body text-text-primary">{children}</div>
-              {footer && (
-                <div className="mt-6 flex items-center justify-end gap-3 flex-wrap">
-                  {footer}
-                </div>
-              )}
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </>
       )}
     </AnimatePresence>,
     document.body,
