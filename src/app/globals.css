@@ -324,12 +324,6 @@
 
   .surface-lift:hover {
     transform: translateY(-2px);
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.32),
-      0 2px 6px rgba(0, 0, 0, 0.42),
-      0 22px 42px -12px rgba(0, 0, 0, 0.62),
-      0 0 0 1px rgb(var(--accent) / 0.10);
   }
 
   .surface-press:active {
@@ -343,42 +337,6 @@
       inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
       0 1px 2px rgba(0, 0, 0, 0.04),
       0 10px 28px -12px rgba(0, 0, 0, 0.12);
-  }
-
-  .light .surface-lift:hover {
-    box-shadow:
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.84),
-      inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
-      0 2px 6px rgba(0, 0, 0, 0.05),
-      0 22px 42px -14px rgba(0, 0, 0, 0.18),
-      0 0 0 1px rgb(var(--accent) / 0.16);
-  }
-
-  /* Uniform tonal wash on hover - a single flat low-alpha overlay
-   * that lifts the entire surface to a slightly brighter version of
-   * its own colour, with no gradient hotspot or visible sweep. The
-   * eased opacity transition makes the tone dissipate evenly across
-   * the whole block instead of reading as a flash. */
-  .surface-depth.surface-lift {
-    position: relative;
-  }
-  .surface-depth.surface-lift::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.012);
-    opacity: 0;
-    transition: opacity 320ms ease-out;
-  }
-  .surface-depth.surface-lift:hover::after {
-    opacity: 1;
-  }
-  .light .surface-depth.surface-lift::after {
-    /* Light theme is already near-white, so the lift comes from a
-     * faint accent-tinted wash rather than added brightness. */
-    background: rgb(var(--accent) / 0.018);
   }
 
   .pulse-line::before {
