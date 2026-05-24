@@ -55,16 +55,22 @@ export function BottomNav({ className }: { className?: string }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1 transition-colors duration-150",
+                  "group relative h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1",
+                  "transition-[color,background-color,transform,box-shadow] duration-200 ease-out",
+                  "active:scale-[0.94]",
                   active
                     ? "bg-accent text-text-on-accent shadow-accent"
-                    : "text-text-secondary hover:text-text-primary",
+                    : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated/60",
                 )}
               >
                 <Icon
                   size={20}
                   strokeWidth={active ? 2.5 : 1.75}
                   aria-hidden
+                  className={cn(
+                    "transition-transform duration-200 ease-out",
+                    !active && "group-hover:-translate-y-px group-hover:scale-105",
+                  )}
                 />
                 <span className="text-[10px] font-semibold leading-none truncate max-w-full">
                   {item.label}

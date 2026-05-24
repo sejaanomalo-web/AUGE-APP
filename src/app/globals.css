@@ -285,6 +285,109 @@
     overflow: hidden;
   }
 
+  /* ─────────────────────────────────────────────────────────────
+   * Surface depth + interactive lift
+   *
+   * Three composable utilities that bring static surfaces to life:
+   *
+   *   .surface-depth   - always-on layered shadow (top highlight,
+   *                      ambient float, contact shadow) that gives
+   *                      the card visible depth even at rest.
+   *   .surface-lift    - smooth hover treatment: gentle Y lift,
+   *                      richer shadow, faint accent rim. Pairs
+   *                      with .surface-depth as the baseline.
+   *   .surface-press   - subtle scale-down on :active for tactile
+   *                      feedback. Add to clickable surfaces.
+   *
+   * The eased cubic-bezier and 280ms duration are tuned to feel
+   * like soft hardware rather than a snap, matching the iOS-ish
+   * tactility used by .glass-* and the spring modal transitions.
+   * Reduced-motion is honored via the global rule in @layer base.
+   * ───────────────────────────────────────────────────────────── */
+  .surface-depth {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.28),
+      0 1px 2px rgba(0, 0, 0, 0.32),
+      0 10px 28px -10px rgba(0, 0, 0, 0.48);
+    transition:
+      transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      border-color 220ms ease-out,
+      background-color 220ms ease-out;
+  }
+
+  .surface-lift {
+    /* No standalone visual - pairs with :hover below. Kept as its
+     * own class so a surface can opt into depth without lift. */
+  }
+
+  .surface-lift:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.32),
+      0 2px 6px rgba(0, 0, 0, 0.42),
+      0 22px 42px -12px rgba(0, 0, 0, 0.62),
+      0 0 0 1px rgb(var(--accent) / 0.10);
+  }
+
+  .surface-press:active {
+    transform: translateY(0) scale(0.992);
+    transition-duration: 120ms;
+  }
+
+  .light .surface-depth {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.72),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.04),
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 10px 28px -12px rgba(0, 0, 0, 0.12);
+  }
+
+  .light .surface-lift:hover {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.84),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.05),
+      0 2px 6px rgba(0, 0, 0, 0.05),
+      0 22px 42px -14px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgb(var(--accent) / 0.16);
+  }
+
+  /* Quiet sheen that drifts across a hovered surface - a single
+   * lazy diagonal light, kept very low alpha so it reads as
+   * material reaction, not a flashy effect. Only renders when
+   * the surface is also marked as a depth layer. */
+  .surface-depth.surface-lift {
+    position: relative;
+  }
+  .surface-depth.surface-lift::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      125deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 65%
+    );
+    opacity: 0;
+    transition: opacity 380ms ease-out;
+  }
+  .surface-depth.surface-lift:hover::after {
+    opacity: 1;
+  }
+  .light .surface-depth.surface-lift::after {
+    background: linear-gradient(
+      125deg,
+      transparent 35%,
+      rgba(0, 0, 0, 0.025) 50%,
+      transparent 65%
+    );
+  }
+
   .pulse-line::before {
     content: "";
     position: absolute;

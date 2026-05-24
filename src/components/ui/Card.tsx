@@ -17,19 +17,19 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    "bg-bg-surface border border-border-subtle p-4 shadow-sm pulse-line",
+    "bg-bg-surface border border-border-subtle p-4 pulse-line surface-depth surface-lift",
   elevated:
-    "bg-bg-elevated border border-border-subtle p-5 shadow-md pulse-line",
+    "bg-bg-elevated border border-border-subtle p-5 pulse-line surface-depth surface-lift",
   interactive:
-    "bg-bg-surface border border-border-subtle p-4 shadow-sm cursor-pointer transition duration-150 hover:bg-bg-elevated hover:border-border-strong hover:shadow-md hover:-translate-y-px active:translate-y-0 pulse-line",
+    "bg-bg-surface border border-border-subtle p-4 cursor-pointer hover:bg-bg-elevated hover:border-border-strong pulse-line surface-depth surface-lift surface-press",
   highlight:
-    "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent pulse-line",
+    "relative bg-gradient-to-br from-bg-elevated via-bg-card to-bg-elevated border border-accent/30 p-5 shadow-accent pulse-line surface-lift",
   accent:
-    "relative bg-accent text-text-on-accent border border-accent p-5 shadow-accent overflow-hidden",
+    "relative bg-accent text-text-on-accent border border-accent p-5 shadow-accent overflow-hidden surface-lift",
   coach:
-    "relative bg-gradient-to-br from-coach/20 via-bg-surface to-bg-elevated border border-coach/35 p-5 shadow-coach pulse-line",
+    "relative bg-gradient-to-br from-coach/20 via-bg-surface to-bg-elevated border border-coach/35 p-5 shadow-coach pulse-line surface-lift",
   intensity:
-    "relative bg-gradient-to-br from-intensity/20 via-bg-surface to-bg-elevated border border-intensity/35 p-5 shadow-intensity pulse-line",
+    "relative bg-gradient-to-br from-intensity/20 via-bg-surface to-bg-elevated border border-intensity/35 p-5 shadow-intensity pulse-line surface-lift",
 };
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(

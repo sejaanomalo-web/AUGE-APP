@@ -4,6 +4,8 @@ export interface HeroCardProps extends React.HTMLAttributes<HTMLDivElement> {
   intensity?: "subtle" | "medium" | "strong";
   /** When true, renders without the performance glow treatment. */
   bare?: boolean;
+  /** Disable the hover lift treatment (e.g. for cards that already animate). */
+  staticSurface?: boolean;
 }
 
 /**
@@ -12,6 +14,7 @@ export interface HeroCardProps extends React.HTMLAttributes<HTMLDivElement> {
 export function HeroCard({
   intensity = "medium",
   bare = false,
+  staticSurface = false,
   className,
   children,
   ...props
@@ -26,7 +29,8 @@ export function HeroCard({
   return (
     <div
       className={cn(
-        "relative rounded-2xl bg-bg-surface border border-border-subtle overflow-hidden shadow-lg pulse-line",
+        "relative rounded-2xl bg-bg-surface border border-border-subtle overflow-hidden pulse-line surface-depth",
+        !staticSurface && "surface-lift",
         !bare && gradientStyle,
         className,
       )}

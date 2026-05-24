@@ -22,10 +22,10 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl p-4 flex flex-col gap-2 min-w-0 border pulse-line",
+        "rounded-xl p-4 flex flex-col gap-2 min-w-0 border pulse-line surface-lift",
         accent
           ? "bg-accent text-text-on-accent border-accent shadow-accent"
-          : "bg-bg-surface border-border-subtle shadow-sm",
+          : "bg-bg-surface border-border-subtle surface-depth",
         className,
       )}
     >

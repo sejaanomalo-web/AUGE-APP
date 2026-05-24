@@ -14,7 +14,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         ref={ref}
         type={type}
         className={cn(
-          "w-full min-w-0 box-border bg-bg-surface text-text-primary placeholder:text-text-muted border border-border-subtle rounded-lg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)] transition duration-150 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow focus:bg-bg-elevated disabled:opacity-40 disabled:cursor-not-allowed",
+          "w-full min-w-0 box-border bg-bg-surface text-text-primary placeholder:text-text-muted border border-border-subtle rounded-lg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04),0_1px_2px_rgba(0,0,0,0.18)] transition-[background-color,border-color,box-shadow,color] duration-200 ease-out hover:border-border-strong hover:bg-bg-elevated/60 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow focus:bg-bg-elevated disabled:opacity-40 disabled:cursor-not-allowed",
           inputSize === "default" &&
             "min-h-[48px] px-3.5 py-3 text-body-lg",
           inputSize === "boost" &&
@@ -38,7 +38,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       <textarea
         ref={ref}
         className={cn(
-          "w-full min-h-[96px] bg-bg-surface text-text-primary placeholder:text-text-muted border border-border-subtle rounded-lg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)] px-3.5 py-3 text-body-lg transition duration-150 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow focus:bg-bg-elevated disabled:opacity-40 disabled:cursor-not-allowed resize-y",
+          "w-full min-h-[96px] bg-bg-surface text-text-primary placeholder:text-text-muted border border-border-subtle rounded-lg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04),0_1px_2px_rgba(0,0,0,0.18)] px-3.5 py-3 text-body-lg transition-[background-color,border-color,box-shadow,color] duration-200 ease-out hover:border-border-strong hover:bg-bg-elevated/60 focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent-glow focus:bg-bg-elevated disabled:opacity-40 disabled:cursor-not-allowed resize-y",
           className,
         )}
         {...props}
