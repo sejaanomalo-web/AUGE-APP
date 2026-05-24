@@ -84,59 +84,44 @@ export function Dialog({
               mass: 0.85,
             }}
             className={cn(
-              // Three-row stack: sticky header, scrollable body, sticky footer.
-              // max-h uses 100dvh (dynamic viewport height) so the panel
-              // shrinks with the mobile URL bar instead of bleeding behind
-              // it - that was making footers unreachable on small screens.
-              "relative w-full max-w-[480px] max-h-[calc(100dvh-2rem)] flex flex-col bg-bg-elevated border border-border-subtle rounded-2xl shadow-xl pulse-line overflow-hidden",
+              // Single scroll container: title + body + footer all live
+              // inside the same overflow-y-auto so the action buttons
+              // scroll naturally to the bottom of the content instead
+              // of sitting on a sticky bar - the user prefers them as
+              // the end of the form. max-h capped at 85dvh leaves
+              // breathing room above and below on mobile so the modal
+              // reads as a centred card, not a near-fullscreen sheet.
+              // overscroll-contain stops iOS bounce from leaking out
+              // to the (already-locked) body.
+              "relative w-full max-w-[480px] max-h-[85dvh] overflow-y-auto overscroll-contain bg-bg-elevated border border-border-subtle rounded-2xl shadow-xl pulse-line",
               className,
             )}
           >
-            {(title || description) && (
-              <div className="shrink-0 px-6 pt-6 pb-3">
-                {title && (
-                  <div className="flex items-start justify-between gap-3">
-                    <h2 className="text-h2 text-text-primary">{title}</h2>
-                    <IconButton
-                      aria-label="Fechar"
-                      onClick={() => onOpenChange(false)}
-                      className="-mr-2 -mt-2"
-                    >
-                      <X size={20} />
-                    </IconButton>
-                  </div>
-                )}
-                {description && (
-                  <p
-                    className={cn(
-                      "text-body text-text-secondary",
-                      title && "mt-2",
-                    )}
+            <div className="p-6">
+              {title && (
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h2 className="text-h2 text-text-primary">{title}</h2>
+                  <IconButton
+                    aria-label="Fechar"
+                    onClick={() => onOpenChange(false)}
+                    className="-mr-2 -mt-2"
                   >
-                    {description}
-                  </p>
-                )}
-              </div>
-            )}
-            <div
-              className={cn(
-                "flex-1 min-h-0 overflow-y-auto px-6 text-body text-text-primary",
-                // overscroll-contain stops the scroll chain from leaking
-                // out to the (already-locked) body on iOS.
-                "overscroll-contain",
-                !title && !description && "pt-6",
-                !footer && "pb-6",
+                    <X size={20} />
+                  </IconButton>
+                </div>
               )}
-            >
-              {children}
-            </div>
-            {footer && (
-              <div className="shrink-0 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] border-t border-border-subtle/60 bg-bg-elevated">
-                <div className="flex items-center justify-end gap-3">
+              {description && (
+                <p className="text-body text-text-secondary mb-4">
+                  {description}
+                </p>
+              )}
+              <div className="text-body text-text-primary">{children}</div>
+              {footer && (
+                <div className="mt-6 flex items-center justify-end gap-3 flex-wrap">
                   {footer}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </motion.div>
         </div>
       )}
