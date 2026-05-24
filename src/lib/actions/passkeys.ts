@@ -98,23 +98,6 @@ export async function listMyPasskeys(): Promise<PasskeySummary[]> {
 }
 
 /**
- * Server-side check the layout uses to decide whether to render the
- * AppLockGate at all. Returns false (no gate) when the table is
- * missing or the user has no enrolled credentials.
- */
-export async function userHasPasskey(): Promise<boolean> {
-  const { userId } = await auth();
-  if (!userId) return false;
-  try {
-    const count = await prisma.passkeyCredential.count({ where: { userId } });
-    return count > 0;
-  } catch (err) {
-    if (isPasskeyTableMissing(err)) return false;
-    throw err;
-  }
-}
-
-/**
  * Build a WebAuthn registration challenge bound to the current user.
  * Excludes credentials already enrolled by them so the browser warns
  * before duplicating. Challenge is stashed in an httpOnly cookie that
