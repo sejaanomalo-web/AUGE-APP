@@ -4,7 +4,7 @@ import * as React from "react";
 import { Bell } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { supabaseClient } from "@/lib/supabase/client";
+import { useSupabaseClient } from "@/lib/supabase/client";
 import {
   deleteAllNotifications,
   deleteNotification,
@@ -19,6 +19,7 @@ import {
 
 export function NotificationBell() {
   const { userId, isSignedIn } = useAuth();
+  const supabase = useSupabaseClient();
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [notifications, setNotifications] = React.useState<
@@ -39,7 +40,7 @@ export function NotificationBell() {
     if (!isSignedIn || !userId) return;
     refresh();
 
-    const channel = supabaseClient
+    const channel = supabase
       .channel(`notif-${userId}`)
       .on(
         "postgres_changes",
@@ -58,9 +59,9 @@ export function NotificationBell() {
       .subscribe();
 
     return () => {
-      supabaseClient.removeChannel(channel);
+      supabase.removeChannel(channel);
     };
-  }, [userId, isSignedIn, refresh]);
+  }, [userId, isSignedIn, refresh, supabase]);
 
   async function handleOpenNotification(notif: NotificationItem) {
     if (!notif.read) {
