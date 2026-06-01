@@ -22,6 +22,7 @@ export default async function ExerciciosPage() {
           imageUrl: e.imageUrl,
           videoUrl: e.videoUrl,
           instructions: e.instructions,
+          category: e.category,
         }))}
       />
     </div>

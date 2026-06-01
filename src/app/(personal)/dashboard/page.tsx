@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, Target } from "lucide-react";
+import { Target, Users } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LinkButton } from "@/components/ui/LinkButton";
+import { Progress } from "@/components/ui/Progress";
 import { HeroCard } from "@/components/visual/HeroCard";
 import { StatHero } from "@/components/visual/StatHero";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -74,12 +75,19 @@ export default async function DashboardPersonalPage() {
     const adherence = expected > 0 ? Math.min(100, (done / expected) * 100) : 0;
     adherenceByStudent.push({ studentId: link.studentId, adherence });
   }
-  const lowAdherence = adherenceByStudent
-    .filter((s) => s.adherence < 70)
+  // Lista completa de alunos com aproveitamento (pior primeiro)
+  const studentsAdherence = adherenceByStudent
     .map((s) => {
       const link = studentLinks.find((l) => l.studentId === s.studentId);
       return { user: link!.student, adherence: Math.round(s.adherence) };
-    });
+    })
+    .sort((a, b) => a.adherence - b.adherence);
+  const avgAdherence = studentsAdherence.length
+    ? Math.round(
+        studentsAdherence.reduce((acc, s) => acc + s.adherence, 0) /
+          studentsAdherence.length,
+      )
+    : 0;
 
   // Active plans summary
   const plans = await prisma.workoutPlan.findMany({
@@ -99,7 +107,7 @@ export default async function DashboardPersonalPage() {
           Painel do Personal
         </h1>
         <p className="text-body-lg text-text-secondary">
-          Controle de alunos, aderência e ajustes de treino.
+          Controle de alunos, aderência e aproveitamento dos alunos.
         </p>
       </section>
 
@@ -120,8 +128,8 @@ export default async function DashboardPersonalPage() {
         </HeroCard>
         <HeroCard className="p-5">
           <StatHero
-            value={lowAdherence.length}
-            label="Precisam de ajuste"
+            value={`${avgAdherence}%`}
+            label="Aproveitamento médio"
             size="sm"
           />
         </HeroCard>
@@ -189,49 +197,65 @@ export default async function DashboardPersonalPage() {
         </Card>
 
         <div className="flex flex-col gap-4">
-          {lowAdherence.length > 0 && (
-            <Card variant="default" className="border border-warning/30">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle
-                  size={18}
-                  className="text-warning"
-                  aria-hidden
-                />
-                <h3 className="text-h3 text-text-primary">Precisam de ajuste</h3>
-              </div>
-              <ul className="flex flex-col gap-2">
-                {lowAdherence.map((s) => (
-                  <li
-                    key={s.user.id}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <Link
-                      href={`/alunos/${s.user.id}`}
-                      className="flex items-center gap-2 min-w-0 hover:text-text-primary"
-                    >
-                      <Avatar
-                        name={s.user.name}
-                        src={s.user.avatarUrl ?? undefined}
-                        size={28}
-                      />
-                      <span className="text-body text-text-primary truncate">
-                        {s.user.name}
-                      </span>
-                    </Link>
-                    <Badge variant="erro">{s.adherence}%</Badge>
-                  </li>
-                ))}
-              </ul>
-              <LinkButton
-                variant="tertiary"
-                size="md"
-                href="/alunos"
-                className="mt-3"
-              >
-                Ver alunos
-              </LinkButton>
-            </Card>
-          )}
+          <Card variant="default">
+            <div className="mb-3">
+              <h3 className="text-h3 text-text-primary">
+                Aproveitamento dos alunos
+              </h3>
+              <p className="text-caption text-text-muted">
+                Treinos concluídos vs propostos nos últimos 28 dias
+              </p>
+            </div>
+            {studentsAdherence.length === 0 ? (
+              <EmptyState
+                icon={Users}
+                title="Sem alunos vinculados"
+                description="Vincule alunos para acompanhar o aproveitamento."
+              />
+            ) : (
+              <>
+                <ul className="flex flex-col gap-3">
+                  {studentsAdherence.map((s) => {
+                    const variant =
+                      s.adherence >= 80
+                        ? "concluido"
+                        : s.adherence >= 60
+                          ? "warning"
+                          : "erro";
+                    return (
+                      <li key={s.user.id} className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <Link
+                            href={`/alunos/${s.user.id}`}
+                            className="flex items-center gap-2 min-w-0 hover:text-text-primary"
+                          >
+                            <Avatar
+                              name={s.user.name}
+                              src={s.user.avatarUrl ?? undefined}
+                              size={28}
+                            />
+                            <span className="text-body text-text-primary truncate">
+                              {s.user.name}
+                            </span>
+                          </Link>
+                          <Badge variant={variant}>{s.adherence}%</Badge>
+                        </div>
+                        <Progress value={s.adherence} />
+                      </li>
+                    );
+                  })}
+                </ul>
+                <LinkButton
+                  variant="tertiary"
+                  size="md"
+                  href="/alunos"
+                  className="mt-3"
+                >
+                  Ver alunos
+                </LinkButton>
+              </>
+            )}
+          </Card>
 
           {plans.length > 0 ? (
             <Card variant="default">

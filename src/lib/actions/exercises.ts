@@ -61,6 +61,7 @@ async function removeExerciseImageObject(imageUrl: string): Promise<void> {
 export async function getExercises(filter?: {
   search?: string;
   muscleGroup?: string;
+  category?: "ACADEMIA" | "CORRIDA";
 }) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
@@ -70,6 +71,7 @@ export async function getExercises(filter?: {
       AND: [
         { OR: [{ isCustom: false }, { createdById: userId }] },
         filter?.muscleGroup ? { muscleGroup: filter.muscleGroup } : {},
+        filter?.category ? { category: filter.category } : {},
         filter?.search
           ? { name: { contains: filter.search, mode: "insensitive" } }
           : {},
@@ -85,6 +87,7 @@ export async function createCustomExercise(data: {
   instructions?: string;
   videoUrl?: string;
   imageUrl?: string;
+  category?: "ACADEMIA" | "CORRIDA";
 }): Promise<ExerciseActionResult<{ id: string }>> {
   try {
     const gate = await requirePersonal();
@@ -97,6 +100,8 @@ export async function createCustomExercise(data: {
       data: {
         ...data,
         name,
+        // Default ACADEMIA — maioria dos exercícios é de musculação.
+        category: data.category ?? "ACADEMIA",
         isCustom: true,
         createdById: gate.userId,
       },
@@ -128,6 +133,7 @@ export async function updateExercise(
     instructions: string;
     videoUrl: string;
     imageUrl: string;
+    category: "ACADEMIA" | "CORRIDA";
   }>,
 ): Promise<ExerciseActionResult> {
   try {

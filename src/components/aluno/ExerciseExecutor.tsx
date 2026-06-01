@@ -21,6 +21,7 @@ import { SetRow, type SetRowState } from "./SetRow";
 import { RestTimerOverlay } from "./RestTimerOverlay";
 import { useToast } from "@/components/providers/ToastProvider";
 import { formatDuration, formatKg } from "@/lib/utils";
+import { parseVideoUrl } from "@/lib/video-embed";
 import {
   abandonWorkout,
   finishWorkout,
@@ -39,13 +40,6 @@ export interface ExecutorExercise {
   imageUrl?: string | null;
   videoUrl?: string | null;
   instructions?: string | null;
-}
-
-function extractYoutubeId(url: string): string | null {
-  const re =
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
-  const m = url.match(re);
-  return m ? m[1] : null;
 }
 
 export interface ExecutorSeed {
@@ -314,7 +308,7 @@ export function ExerciseExecutor({
               {currentEx.exerciseName}
             </h1>
 
-            {/* Media: image, then YouTube embed if no image, else placeholder */}
+            {/* Media: image, then video embed (YouTube/Vimeo/IG/TikTok), else placeholder */}
             {currentEx.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -322,10 +316,10 @@ export function ExerciseExecutor({
                 alt={currentEx.exerciseName}
                 className="w-full max-w-[280px] aspect-[4/3] rounded-xl object-cover shadow-md border border-border-subtle"
               />
-            ) : currentEx.videoUrl && extractYoutubeId(currentEx.videoUrl) ? (
+            ) : currentEx.videoUrl && parseVideoUrl(currentEx.videoUrl) ? (
               <div className="w-full max-w-md aspect-video rounded-xl overflow-hidden shadow-md bg-bg-elevated border border-border-subtle">
                 <iframe
-                  src={`https://www.youtube.com/embed/${extractYoutubeId(currentEx.videoUrl)}`}
+                  src={parseVideoUrl(currentEx.videoUrl)!.embedUrl}
                   title={currentEx.exerciseName}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

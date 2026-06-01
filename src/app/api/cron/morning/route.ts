@@ -33,9 +33,53 @@ export async function GET(req: Request) {
     ),
   );
 
+  // === Birthday reminders ===
+  // Avisa o personal quando um aluno faz aniversário hoje (fuso SP).
+  const birthdayStudents = await prisma.$queryRaw<
+    Array<{ id: string; name: string; birthDate: Date }>
+  >`
+    SELECT id, name, "birthDate"
+    FROM "User"
+    WHERE "birthDate" IS NOT NULL
+      AND role = 'ALUNO'
+      AND to_char(("birthDate" AT TIME ZONE 'America/Sao_Paulo'), 'MM-DD') =
+          to_char((NOW() AT TIME ZONE 'America/Sao_Paulo'), 'MM-DD')
+  `;
+
+  const dedupeSince = new Date(today.getTime() - 20 * 60 * 60 * 1000);
+  let birthdayRemindersSent = 0;
+  for (const student of birthdayStudents) {
+    const ts = await prisma.trainerStudent.findFirst({
+      where: { studentId: student.id, status: "ACTIVE" },
+    });
+    if (!ts) continue;
+
+    // Anti-spam: dedupe 20h.
+    const recent = await prisma.notification.findFirst({
+      where: {
+        userId: ts.trainerId,
+        type: "STUDENT_BIRTHDAY",
+        createdAt: { gte: dedupeSince },
+        data: { path: ["studentId"], equals: student.id },
+      },
+    });
+    if (recent) continue;
+
+    await notifyUser({
+      userId: ts.trainerId,
+      type: "STUDENT_BIRTHDAY",
+      title: "Aniversário de aluno hoje",
+      body: `${student.name} faz aniversário hoje`,
+      data: { studentId: student.id },
+      url: `/alunos/${student.id}`,
+    });
+    birthdayRemindersSent++;
+  }
+
   return NextResponse.json({
     sent: results.filter((r) => r.status === "fulfilled").length,
     failed: results.filter((r) => r.status === "rejected").length,
     total: sessions.length,
+    birthdayRemindersSent,
   });
 }

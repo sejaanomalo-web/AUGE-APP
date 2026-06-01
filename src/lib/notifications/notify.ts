@@ -146,6 +146,13 @@ const TYPE_TO_PREF: Partial<Record<NotificationType, SettingsKey>> = {
   STUDENT_METRIC_ADDED: "studentActivity",
   STUDENT_EXAM_UPLOADED: "studentActivity",
   STUDENT_INVITE_ACCEPTED: "studentActivity",
+  STUDENT_INACTIVE: "studentActivity",
+  STUDENT_BIRTHDAY: "studentActivity",
+  // Round 3
+  FOLLOWUP_FORM_SENT: "trainerActivity",       // chega no aluno (atividade do personal dele)
+  FOLLOWUP_FORM_ANSWERED: "studentActivity",   // chega no personal (atividade do aluno)
+  EVENT_REMINDER_PERSONAL: "studentActivity",  // personal sendo lembrado de evento do aluno
+  EVENT_REMINDER_STUDENT: "trainerActivity",   // aluno sendo lembrado de evento do personal
 };
 
 function checkPreference(

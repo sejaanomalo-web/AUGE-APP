@@ -19,6 +19,7 @@ import { Input, Field, Textarea, Label } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { IconButton } from "@/components/ui/IconButton";
 import { cn } from "@/lib/utils";
+import { extractYoutubeId, parseVideoUrl } from "@/lib/video-embed";
 import {
   createCustomExercise,
   deleteExercise,
@@ -34,7 +35,16 @@ export interface ExerciseRow {
   imageUrl: string | null;
   videoUrl: string | null;
   instructions: string | null;
+  category: "ACADEMIA" | "CORRIDA";
 }
+
+type CategoryFilter = "TODOS" | "ACADEMIA" | "CORRIDA";
+
+const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
+  { value: "TODOS", label: "Todos" },
+  { value: "ACADEMIA", label: "Academia" },
+  { value: "CORRIDA", label: "Corrida" },
+];
 
 const MUSCLE_GROUPS = [
   "Peito",
@@ -56,12 +66,15 @@ type DialogState =
 export function ExerciciosClient({ exercises }: { exercises: ExerciseRow[] }) {
   const [q, setQ] = React.useState("");
   const [active, setActive] = React.useState<string>("Todos");
+  const [activeCategory, setActiveCategory] =
+    React.useState<CategoryFilter>("TODOS");
   const [dialog, setDialog] = React.useState<DialogState>({ mode: "closed" });
 
   const filtered = exercises.filter((e) => {
     const matchQ = q === "" || e.name.toLowerCase().includes(q.toLowerCase());
     const matchG = active === "Todos" || e.muscleGroup === active;
-    return matchQ && matchG;
+    const matchC = activeCategory === "TODOS" || e.category === activeCategory;
+    return matchQ && matchG && matchC;
   });
 
   return (
@@ -74,6 +87,26 @@ export function ExerciciosClient({ exercises }: { exercises: ExerciseRow[] }) {
         >
           <Plus size={18} aria-hidden /> Adicionar exercício
         </Button>
+      </div>
+
+      {/* Segmented control de categoria fica acima de tudo: define o universo
+          antes do filtro por grupo muscular. */}
+      <div className="flex gap-1 mb-4 p-1 bg-bg-elevated rounded-pill w-fit">
+        {CATEGORY_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => setActiveCategory(opt.value)}
+            className={cn(
+              "px-4 py-1.5 rounded-pill text-body font-semibold transition-colors",
+              activeCategory === opt.value
+                ? "bg-accent text-text-on-accent"
+                : "text-text-secondary hover:text-text-primary",
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       <div className="relative mb-4">
@@ -301,6 +334,9 @@ function ExerciseFormDialog({
   const [muscleGroup, setMuscleGroup] = React.useState(
     exercise?.muscleGroup ?? "Peito",
   );
+  const [category, setCategory] = React.useState<"ACADEMIA" | "CORRIDA">(
+    exercise?.category ?? "ACADEMIA",
+  );
   const [instructions, setInstructions] = React.useState(
     exercise?.instructions ?? "",
   );
@@ -334,6 +370,7 @@ function ExerciseFormDialog({
         const res = await createCustomExercise({
           name: name.trim(),
           muscleGroup,
+          category,
           instructions: instructions.trim() || undefined,
           videoUrl: videoUrl.trim() || undefined,
           imageUrl: imageUrl || undefined,
@@ -347,6 +384,7 @@ function ExerciseFormDialog({
         const res = await updateExercise(exercise.id, {
           name: name.trim(),
           muscleGroup,
+          category,
           instructions: instructions.trim(),
           videoUrl: videoUrl.trim(),
           imageUrl: imageUrl,
@@ -454,6 +492,19 @@ function ExerciseFormDialog({
             placeholder="ex: Supino articulado"
           />
         </Field>
+        <Field label="Categoria" htmlFor="ex-cat">
+          <Select
+            id="ex-cat"
+            value={category}
+            onChange={(e) =>
+              setCategory(e.target.value as "ACADEMIA" | "CORRIDA")
+            }
+            required
+          >
+            <option value="ACADEMIA">Academia</option>
+            <option value="CORRIDA">Corrida</option>
+          </Select>
+        </Field>
         <Field label="Grupo muscular" htmlFor="ex-mg">
           <Select
             id="ex-mg"
@@ -485,7 +536,7 @@ function ExerciseFormDialog({
         <Field
           label="Link do vídeo (opcional)"
           htmlFor="ex-video"
-          hint="YouTube ou Vimeo. O aluno verá embed direto no app."
+          hint="YouTube, Vimeo, Instagram ou TikTok. Cole a URL e veja a prévia."
         >
           <Input
             id="ex-video"
@@ -494,6 +545,7 @@ function ExerciseFormDialog({
             placeholder="https://youtube.com/watch?v=..."
             type="url"
           />
+          <VideoPreview url={videoUrl} />
         </Field>
 
         <div>
@@ -552,14 +604,49 @@ function ExerciseFormDialog({
   );
 }
 
-function extractYoutubeId(url: string): string | null {
-  // matches youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID, youtube.com/shorts/ID
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-  ];
-  for (const re of patterns) {
-    const m = url.match(re);
-    if (m) return m[1];
+// Preview do vídeo embaixo do Input — usa useDeferredValue pra evitar
+// re-render por keystroke enquanto o personal cola a URL.
+function VideoPreview({ url }: { url: string }) {
+  const deferred = React.useDeferredValue(url);
+  const trimmed = deferred.trim();
+  const parsed = React.useMemo(() => parseVideoUrl(trimmed), [trimmed]);
+
+  if (!trimmed) return null;
+
+  if (!parsed) {
+    return (
+      <p className="text-xs text-text-tertiary mt-2">
+        URL não reconhecida — o aluno verá apenas um link.
+      </p>
+    );
   }
-  return null;
+
+  const providerLabel: Record<typeof parsed.provider, string> = {
+    youtube: "YouTube",
+    vimeo: "Vimeo",
+    instagram: "Instagram",
+    tiktok: "TikTok",
+  };
+
+  return (
+    <div className="mt-2 flex flex-col gap-2">
+      {parsed.provider === "youtube" && parsed.thumbnailUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={parsed.thumbnailUrl}
+          alt="Prévia do vídeo"
+          className="rounded aspect-video object-cover w-full"
+        />
+      ) : (
+        <iframe
+          src={parsed.embedUrl}
+          title="Prévia do vídeo"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="rounded aspect-video w-full"
+        />
+      )}
+      <Badge>{providerLabel[parsed.provider]}</Badge>
+    </div>
+  );
 }

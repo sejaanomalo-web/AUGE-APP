@@ -57,6 +57,42 @@ enum NotificationType {
   STUDENT_METRIC_ADDED
   STUDENT_EXAM_UPLOADED
   STUDENT_INVITE_ACCEPTED
+  STUDENT_INACTIVE
+  STUDENT_BIRTHDAY
+
+  // Follow-up forms & eventos (round 3)
+  FOLLOWUP_FORM_SENT
+  FOLLOWUP_FORM_ANSWERED
+  EVENT_REMINDER_PERSONAL
+  EVENT_REMINDER_STUDENT
+}
+
+enum ExerciseCategory {
+  ACADEMIA
+  CORRIDA
+}
+
+enum FollowUpQuestionType {
+  TEXT
+  TEXTAREA
+  RATING_1_5
+  YES_NO
+  NUMBER
+}
+
+enum FollowUpFormStatus {
+  PENDING
+  ANSWERED
+  EXPIRED
+  REVOKED
+}
+
+enum EventType {
+  RUN_RACE
+  COMPETITION
+  ONE_OFF_SESSION
+  EVALUATION
+  OTHER
 }
 
 enum GoalMetric {
@@ -103,6 +139,19 @@ model User {
   pushSubscriptions    PushSubscription[]
   notificationSettings NotificationSettings?
   passkeys             PasskeyCredential[]
+
+  // Follow-up forms (round 3)
+  followUpTemplates        FollowUpFormTemplate[] @relation("FollowUpCreator")
+  followUpSendsAsTrainer   FollowUpFormSend[]     @relation("FollowUpTrainer")
+  followUpSendsAsStudent   FollowUpFormSend[]     @relation("FollowUpStudent")
+
+  // Eventos (round 3)
+  trainerEvents Event[] @relation("EventTrainer")
+  studentEvents Event[] @relation("EventStudent")
+
+  // Strava (round 3)
+  stravaAccount    StravaAccount?
+  stravaActivities StravaActivity[]
 
   @@index([email])
   @@index([role])
@@ -183,15 +232,17 @@ model WorkoutSession {
 }
 
 model Exercise {
-  id           String   @id @default(cuid())
+  id           String           @id @default(cuid())
   name         String
   muscleGroup  String
   videoUrl     String?
   imageUrl     String?
   instructions String?
-  isCustom     Boolean  @default(false)
+  isCustom     Boolean          @default(false)
   createdById  String?
-  createdAt    DateTime @default(now())
+  // Categoria: separa exercícios de academia dos de corrida na biblioteca
+  category     ExerciseCategory @default(ACADEMIA)
+  createdAt    DateTime         @default(now())
 
   creator          User?             @relation("ExerciseCreator", fields: [createdById], references: [id])
   sessionExercises SessionExercise[]
@@ -199,6 +250,7 @@ model Exercise {
 
   @@index([muscleGroup])
   @@index([createdById])
+  @@index([category])
 }
 
 model SessionExercise {
@@ -300,10 +352,15 @@ model RunningSession {
   caloriesBurned   Int?
   routeJson        Json?
   notes            String?
+  // Origem do registro: "manual" (aluno digitou) ou "strava" (sync)
+  source           String   @default("manual")
+  // Id externo (ex.: Strava activity id) usado pra dedup nos syncs
+  externalId       String?
   createdAt        DateTime @default(now())
 
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
+  @@unique([studentId, externalId])
   @@index([studentId])
   @@index([date])
 }
@@ -438,4 +495,147 @@ model Goal {
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
+}
+
+/// Round 3: Follow-up forms — personal envia formulário ao aluno e recebe respostas.
+model FollowUpFormTemplate {
+  id          String   @id @default(cuid())
+  trainerId   String
+  name        String
+  description String?
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trainer   User                   @relation("FollowUpCreator", fields: [trainerId], references: [id], onDelete: Cascade)
+  questions FollowUpFormQuestion[]
+  sends     FollowUpFormSend[]
+
+  @@index([trainerId])
+}
+
+model FollowUpFormQuestion {
+  id         String               @id @default(cuid())
+  templateId String
+  order      Int                  @default(0)
+  label      String
+  type       FollowUpQuestionType
+  required   Boolean              @default(true)
+
+  template FollowUpFormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  answers  FollowUpFormAnswer[]
+
+  @@index([templateId])
+}
+
+model FollowUpFormSend {
+  id          String             @id @default(cuid())
+  templateId  String
+  trainerId   String
+  studentId   String
+  token       String             @unique
+  status      FollowUpFormStatus @default(PENDING)
+  expiresAt   DateTime
+  sentAt      DateTime           @default(now())
+  answeredAt  DateTime?
+
+  template FollowUpFormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  trainer  User                 @relation("FollowUpTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  student  User                 @relation("FollowUpStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  answers  FollowUpFormAnswer[]
+
+  @@index([trainerId])
+  @@index([studentId])
+  @@index([token])
+}
+
+model FollowUpFormAnswer {
+  id          String   @id @default(cuid())
+  sendId      String
+  questionId  String
+  valueText   String?
+  valueNumber Float?
+  valueBool   Boolean?
+  createdAt   DateTime @default(now())
+
+  send     FollowUpFormSend     @relation(fields: [sendId], references: [id], onDelete: Cascade)
+  question FollowUpFormQuestion @relation(fields: [questionId], references: [id])
+
+  @@index([sendId])
+}
+
+/// Round 3: Eventos da agenda do personal (provas, sessões avulsas, avaliações).
+/// `remindersHours` define quantas horas antes do evento disparar push.
+/// `remindersFired` é mapa {offsetHours -> isoTimestamp} pra idempotência do cron.
+model Event {
+  id              String    @id @default(cuid())
+  trainerId       String
+  studentId       String?
+  title           String
+  type            EventType @default(OTHER)
+  startsAt        DateTime
+  durationMinutes Int?
+  location        String?
+  locationUrl     String?
+  notes           String?
+  remindersHours  Int[]     @default([24, 2])
+  remindersFired  Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  trainer User  @relation("EventTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  student User? @relation("EventStudent", fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([trainerId, startsAt])
+  @@index([studentId, startsAt])
+}
+
+/// Round 3: Strava OAuth account vinculada a um User do AUGE.
+/// Tokens accessToken/refreshToken CRIPTOGRAFADOS antes de salvar (AES-256-GCM via STRAVA_TOKEN_KEY).
+model StravaAccount {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  stravaAthleteId BigInt    @unique
+  accessToken     String
+  refreshToken    String
+  expiresAt       DateTime
+  scope           String
+  firstName       String?
+  lastName        String?
+  profileImageUrl String?
+  lastSyncAt      DateTime?
+  connectedAt     DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stravaAthleteId])
+}
+
+/// Round 3: Atividade sincronizada do Strava (cópia rica do payload Strava).
+/// Para type Run/TrailRun/VirtualRun é espelhada em RunningSession via source='strava' + externalId.
+model StravaActivity {
+  id                 String   @id @default(cuid())
+  studentId          String
+  stravaActivityId   BigInt   @unique
+  type               String
+  name               String
+  distanceMeters     Float
+  movingTimeSeconds  Int
+  elapsedTimeSeconds Int
+  startDate          DateTime
+  averageHeartrate   Float?
+  maxHeartrate       Float?
+  averageSpeed       Float?
+  totalElevationGain Float?
+  calories           Float?
+  polyline           String?
+  raw                Json
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, startDate])
+  @@index([type])
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Pause, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, Pause, Pencil, Plus, Trash2 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -9,13 +9,24 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { StatCard } from "@/components/shared/StatCard";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { UpcomingEventsCard } from "@/components/shared/UpcomingEventsCard";
 import { WorkoutCard } from "@/components/aluno/WorkoutCard";
 import { EvolutionChart } from "@/components/aluno/EvolutionChart";
+import {
+  FollowUpResponsesList,
+  type FollowUpSendView,
+} from "@/components/personal/FollowUpResponsesList";
 import { requireRole } from "@/lib/auth-helpers";
 import { getStudentById } from "@/lib/actions/students";
 import { getAlunoWeeklyStats } from "@/lib/aluno-stats";
+import {
+  listMyTemplates,
+  listSendsForStudent,
+} from "@/lib/actions/followup-forms";
+import { listMyEvents } from "@/lib/actions/events";
 import { prisma } from "@/lib/prisma";
 import { formatLongDate, formatShortDate } from "@/lib/date";
+import { SendFollowUpButton } from "./SendFollowUpButton";
 
 export default async function AlunoDetailPage({
   params,
@@ -36,6 +47,43 @@ export default async function AlunoDetailPage({
   const activePlan = await prisma.workoutPlan.findFirst({
     where: { studentId: id, isActive: true },
   });
+
+  // Acompanhamento + eventos do aluno (paralelo p/ não serializar I/O).
+  const [sendsRaw, templatesRaw, studentEvents] = await Promise.all([
+    listSendsForStudent(id),
+    listMyTemplates(),
+    listMyEvents({ studentId: id }),
+  ]);
+
+  const sends: FollowUpSendView[] = sendsRaw.map((s) => ({
+    id: s.id,
+    status: s.status,
+    sentAt: s.sentAt.toISOString(),
+    answeredAt: s.answeredAt ? s.answeredAt.toISOString() : null,
+    template: {
+      id: s.template.id,
+      name: s.template.name,
+      description: s.template.description,
+      questions: s.template.questions.map((q) => ({
+        id: q.id,
+        label: q.label,
+        type: q.type,
+        order: q.order,
+      })),
+    },
+    answers: s.answers.map((a) => ({
+      questionId: a.questionId,
+      valueText: a.valueText,
+      valueNumber: a.valueNumber,
+      valueBool: a.valueBool,
+    })),
+  }));
+
+  const templateOptions = templatesRaw.map((t) => ({
+    id: t.id,
+    name: t.name,
+    questionsCount: t.questions.length,
+  }));
 
   const weight = student.bodyMetrics
     .filter((m) => m.weight != null)
@@ -84,6 +132,8 @@ export default async function AlunoDetailPage({
           <TabsTrigger value="treinos">Treinos</TabsTrigger>
           <TabsTrigger value="medidas">Medidas</TabsTrigger>
           <TabsTrigger value="evolucao">Evolução</TabsTrigger>
+          <TabsTrigger value="acompanhamento">Acompanhamento</TabsTrigger>
+          <TabsTrigger value="eventos">Eventos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -227,6 +277,39 @@ export default async function AlunoDetailPage({
               </p>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="acompanhamento">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h3 className="text-h3 text-text-primary">Acompanhamento</h3>
+              <p className="text-caption text-text-muted">
+                Formulários enviados ao aluno e respostas recebidas.
+              </p>
+            </div>
+            <SendFollowUpButton
+              studentId={id}
+              templates={templateOptions}
+            />
+          </div>
+          <FollowUpResponsesList sends={sends} />
+        </TabsContent>
+
+        <TabsContent value="eventos">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <div>
+              <h3 className="text-h3 text-text-primary">Eventos</h3>
+              <p className="text-caption text-text-muted">
+                Provas, avaliações e sessões agendadas com este aluno.
+              </p>
+            </div>
+            <Link href={`/eventos/novo?studentId=${id}`}>
+              <Button variant="primary" size="sm">
+                <Plus size={14} aria-hidden /> Novo evento
+              </Button>
+            </Link>
+          </div>
+          <UpcomingEventsCard events={studentEvents} />
         </TabsContent>
       </Tabs>
     </div>

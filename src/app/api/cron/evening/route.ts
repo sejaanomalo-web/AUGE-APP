@@ -79,5 +79,57 @@ export async function GET(req: Request) {
     streakSent++;
   }
 
-  return NextResponse.json({ eveningSent, streakSent });
+  // === Inactivity alerts ===
+  // Avisa o personal quando um aluno ativo passou 7+ dias sem treinar.
+  const sevenDaysAgo = subDays(now, 7);
+  const activeLinks = await prisma.trainerStudent.findMany({
+    where: { status: "ACTIVE" },
+    include: { student: true },
+  });
+
+  let inactivityAlertsSent = 0;
+  for (const link of activeLinks) {
+    // Floor: vínculo precisa ter ao menos 7 dias pra evitar disparo logo após bind.
+    if (link.startedAt >= sevenDaysAgo) continue;
+
+    const lastLog = await prisma.workoutLog.findFirst({
+      where: { studentId: link.studentId, status: "COMPLETED" },
+      orderBy: { startedAt: "desc" },
+      take: 1,
+    });
+
+    const isInactive = !lastLog || lastLog.startedAt < sevenDaysAgo;
+    if (!isInactive) continue;
+
+    // Anti-spam: 1x por semana por aluno.
+    const recent = await prisma.notification.findFirst({
+      where: {
+        userId: link.trainerId,
+        type: "STUDENT_INACTIVE",
+        createdAt: { gte: sevenDaysAgo },
+        data: { path: ["studentId"], equals: link.studentId },
+      },
+    });
+    if (recent) continue;
+
+    const daysSinceLast = lastLog
+      ? Math.floor(
+          (now.getTime() - lastLog.startedAt.getTime()) / (1000 * 60 * 60 * 24),
+        )
+      : null;
+
+    await notifyUser({
+      userId: link.trainerId,
+      type: "STUDENT_INACTIVE",
+      title: `${link.student.name} parou de treinar`,
+      body: daysSinceLast
+        ? `${daysSinceLast} dias sem treino registrado`
+        : "Nenhum treino registrado ainda",
+      data: { studentId: link.studentId, daysSinceLast },
+      url: `/alunos/${link.studentId}`,
+    });
+    inactivityAlertsSent++;
+  }
+
+  return NextResponse.json({ eveningSent, streakSent, inactivityAlertsSent });
 }

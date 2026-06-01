@@ -554,6 +554,103 @@ CREATE POLICY plan_metrics_owner_all ON storage.objects
 
 
 -- =============================================================================
+-- ROUND 3 — Policies para FollowUp, Event, Strava (idempotente)
+-- =============================================================================
+
+ALTER TABLE "FollowUpFormTemplate" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "FollowUpFormQuestion" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "FollowUpFormSend"     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "FollowUpFormAnswer"   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "Event"                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "StravaAccount"        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "StravaActivity"       ENABLE ROW LEVEL SECURITY;
+
+-- ---------- FollowUpFormTemplate (trainer dono) ------------------------------
+DROP POLICY IF EXISTS followup_template_owner_all ON "FollowUpFormTemplate";
+CREATE POLICY followup_template_owner_all ON "FollowUpFormTemplate"
+  FOR ALL TO authenticated
+  USING      ("trainerId" = public.clerk_user_id())
+  WITH CHECK ("trainerId" = public.clerk_user_id());
+
+-- ---------- FollowUpFormQuestion (via template) ------------------------------
+DROP POLICY IF EXISTS followup_question_via_template ON "FollowUpFormQuestion";
+CREATE POLICY followup_question_via_template ON "FollowUpFormQuestion"
+  FOR ALL TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM "FollowUpFormTemplate" t
+    WHERE t.id = "FollowUpFormQuestion"."templateId"
+      AND t."trainerId" = public.clerk_user_id()
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM "FollowUpFormTemplate" t
+    WHERE t.id = "FollowUpFormQuestion"."templateId"
+      AND t."trainerId" = public.clerk_user_id()
+  ));
+
+-- ---------- FollowUpFormSend (par trainer/aluno) -----------------------------
+DROP POLICY IF EXISTS followup_send_participant_select ON "FollowUpFormSend";
+DROP POLICY IF EXISTS followup_send_trainer_write      ON "FollowUpFormSend";
+
+CREATE POLICY followup_send_participant_select ON "FollowUpFormSend"
+  FOR SELECT TO authenticated
+  USING (
+    "trainerId" = public.clerk_user_id()
+    OR "studentId" = public.clerk_user_id()
+  );
+
+CREATE POLICY followup_send_trainer_write ON "FollowUpFormSend"
+  FOR ALL TO authenticated
+  USING      ("trainerId" = public.clerk_user_id())
+  WITH CHECK ("trainerId" = public.clerk_user_id());
+
+-- ---------- FollowUpFormAnswer (via send) ------------------------------------
+DROP POLICY IF EXISTS followup_answer_select ON "FollowUpFormAnswer";
+DROP POLICY IF EXISTS followup_answer_insert ON "FollowUpFormAnswer";
+
+CREATE POLICY followup_answer_select ON "FollowUpFormAnswer"
+  FOR SELECT TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM "FollowUpFormSend" s
+    WHERE s.id = "FollowUpFormAnswer"."sendId"
+      AND (s."trainerId" = public.clerk_user_id() OR s."studentId" = public.clerk_user_id())
+  ));
+
+CREATE POLICY followup_answer_insert ON "FollowUpFormAnswer"
+  FOR INSERT TO authenticated
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM "FollowUpFormSend" s
+    WHERE s.id = "FollowUpFormAnswer"."sendId"
+      AND s."studentId" = public.clerk_user_id()
+  ));
+
+-- ---------- Event (trainer dono full; aluno só lê os seus) -------------------
+DROP POLICY IF EXISTS event_trainer_all     ON "Event";
+DROP POLICY IF EXISTS event_student_select  ON "Event";
+
+CREATE POLICY event_trainer_all ON "Event"
+  FOR ALL TO authenticated
+  USING      ("trainerId" = public.clerk_user_id())
+  WITH CHECK ("trainerId" = public.clerk_user_id());
+
+CREATE POLICY event_student_select ON "Event"
+  FOR SELECT TO authenticated
+  USING ("studentId" = public.clerk_user_id());
+
+-- ---------- StravaAccount (owner only) ---------------------------------------
+DROP POLICY IF EXISTS strava_account_owner_all ON "StravaAccount";
+CREATE POLICY strava_account_owner_all ON "StravaAccount"
+  FOR ALL TO authenticated
+  USING      ("userId" = public.clerk_user_id())
+  WITH CHECK ("userId" = public.clerk_user_id());
+
+-- ---------- StravaActivity (owner only) --------------------------------------
+DROP POLICY IF EXISTS strava_activity_owner_all ON "StravaActivity";
+CREATE POLICY strava_activity_owner_all ON "StravaActivity"
+  FOR ALL TO authenticated
+  USING      ("studentId" = public.clerk_user_id())
+  WITH CHECK ("studentId" = public.clerk_user_id());
+
+-- =============================================================================
 -- 4. SMOKE TEST
 -- =============================================================================
 -- Após rodar, confira no SQL Editor:
@@ -564,7 +661,9 @@ CREATE POLICY plan_metrics_owner_all ON storage.objects
 --     'Exercise','SessionExercise','WorkoutLog','ExerciseLog','BodyMetric',
 --     'ExamUpload','RunningSession','PlanMetricDefinition','PlanMetricLog',
 --     'Notification','PushSubscription','PasskeyCredential',
---     'NotificationSettings','Goal'
+--     'NotificationSettings','Goal',
+--     'FollowUpFormTemplate','FollowUpFormQuestion','FollowUpFormSend','FollowUpFormAnswer',
+--     'Event','StravaAccount','StravaActivity'
 --   );
 -- Todas devem aparecer com relrowsecurity = true.
 --

@@ -6,10 +6,12 @@ import { Progress } from "@/components/ui/Progress";
 import { HeroCard } from "@/components/visual/HeroCard";
 import { StatHero } from "@/components/visual/StatHero";
 import { WeightSparkline } from "@/components/aluno/WeightSparkline";
+import { UpcomingEventsCard } from "@/components/shared/UpcomingEventsCard";
 import { capitalize, formatDayMonth } from "@/lib/date";
 import { requireRole } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { getActivePlanForStudent } from "@/lib/actions/workout-plans";
+import { listMyStudentEvents } from "@/lib/actions/events";
 import { getAlunoWeeklyStats } from "@/lib/aluno-stats";
 
 const WEEKDAY_LABELS_PT = [
@@ -193,6 +195,7 @@ export default async function HojePage() {
     orderBy: { date: "desc" },
     take: 4,
   });
+  const upcomingEvents = await listMyStudentEvents();
 
   const brNow = getBrazilNow();
   const today = brNow.date;
@@ -421,6 +424,12 @@ export default async function HojePage() {
           />
         </HeroCard>
       </section>
+
+      {upcomingEvents.length > 0 && (
+        <section>
+          <UpcomingEventsCard events={upcomingEvents} />
+        </section>
+      )}
 
       {nextSession && (
         <section>

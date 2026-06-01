@@ -10,6 +10,7 @@ export interface ExerciseOption {
   id: string;
   name: string;
   muscleGroup: string;
+  category: "ACADEMIA" | "CORRIDA";
 }
 
 const MUSCLE_GROUPS = [
@@ -22,6 +23,14 @@ const MUSCLE_GROUPS = [
   "Tríceps",
   "Abdômen",
   "Cardio",
+];
+
+type CategoryFilter = "TODOS" | "ACADEMIA" | "CORRIDA";
+
+const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
+  { value: "TODOS", label: "Todos" },
+  { value: "ACADEMIA", label: "Academia" },
+  { value: "CORRIDA", label: "Corrida" },
 ];
 
 export function ExerciseSelector({
@@ -37,11 +46,13 @@ export function ExerciseSelector({
 }) {
   const [open, setOpen] = React.useState(false);
   const [group, setGroup] = React.useState("Todos");
+  const [category, setCategory] = React.useState<CategoryFilter>("TODOS");
   const [q, setQ] = React.useState("");
 
   const selected = options.find((o) => o.id === value);
 
   const filtered = options.filter((e) => {
+    if (category !== "TODOS" && e.category !== category) return false;
     if (group !== "Todos" && e.muscleGroup !== group) return false;
     if (q && !e.name.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
@@ -59,6 +70,7 @@ export function ExerciseSelector({
         onClick={() => {
           setQ("");
           setGroup(selected?.muscleGroup ?? "Todos");
+          setCategory(selected?.category ?? "TODOS");
           setOpen(true);
         }}
         className={cn(
@@ -83,6 +95,26 @@ export function ExerciseSelector({
         className="max-w-[560px]"
       >
         <div className="flex flex-col gap-3">
+          {/* Filtro de categoria no topo: separa academia de corrida antes
+              do grupo muscular. */}
+          <div className="flex gap-1 p-1 bg-bg-elevated rounded-pill w-fit">
+            {CATEGORY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setCategory(opt.value)}
+                className={cn(
+                  "px-3 py-1 rounded-pill text-[12px] font-semibold transition-colors",
+                  category === opt.value
+                    ? "bg-accent text-text-on-accent"
+                    : "text-text-secondary hover:text-text-primary",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
           <div className="relative">
             <Search
               size={18}
