@@ -1,0 +1,23 @@
+name: cron strava-refresh
+
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: cron-strava-refresh
+  cancel-in-progress: false
+
+jobs:
+  fire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit /api/cron/strava-refresh
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          ENDPOINT: ${{ vars.CRON_BASE_URL || 'https://auge-app.vercel.app' }}/api/cron/strava-refresh
+        run: |
+          curl -fsSL --retry 3 --retry-delay 10 --max-time 120 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${ENDPOINT}"
