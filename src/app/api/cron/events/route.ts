@@ -61,10 +61,7 @@ export async function GET(req: Request) {
       `;
       if (claim === 0) continue;
 
-      const body =
-        offset === 1
-          ? `${ev.title} em 1 hora`
-          : `${ev.title} em ${offset} horas`;
+      const body = `${ev.title} em ${offset} horas`;
 
       try {
         await notifyUser({
