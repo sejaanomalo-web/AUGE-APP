@@ -35,6 +35,7 @@ export default async function NovoPlanoAlunoPage() {
           id: e.id,
           name: e.name,
           muscleGroup: e.muscleGroup,
+          category: e.category,
         }))}
         successRedirect="/planos"
       />

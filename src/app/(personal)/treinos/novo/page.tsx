@@ -38,6 +38,7 @@ export default async function NovoPlanoPage() {
           id: e.id,
           name: e.name,
           muscleGroup: e.muscleGroup,
+          category: e.category,
         }))}
       />
     </div>

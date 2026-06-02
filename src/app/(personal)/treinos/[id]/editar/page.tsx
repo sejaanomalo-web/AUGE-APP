@@ -56,6 +56,7 @@ export default async function EditPlanoPage({
           id: e.id,
           name: e.name,
           muscleGroup: e.muscleGroup,
+          category: e.category,
         }))}
         successRedirect={`/treinos/${plan.id}`}
         initialData={{
