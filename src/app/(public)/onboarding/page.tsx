@@ -3,21 +3,23 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Activity, Check, ChevronLeft, Loader2, Users } from "lucide-react";
+import { Activity, Apple, Check, ChevronLeft, Loader2, Users } from "lucide-react";
 import { Logo } from "@/components/shared/Logo";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Input";
 import { setUserRole } from "@/lib/actions/users";
 import { validateInviteCode } from "@/lib/actions/invites";
+import { ROLE_DEFAULT_ROUTE } from "@/lib/auth/role-routes";
 import { cn } from "@/lib/utils";
 
-type Role = "PERSONAL" | "ALUNO";
+type Role = "PERSONAL" | "ALUNO" | "NUTRICIONISTA";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = React.useState<"role" | "details">("role");
   const [role, setRole] = React.useState<Role | null>(null);
   const [cref, setCref] = React.useState("");
+  const [crn, setCrn] = React.useState("");
   const [code, setCode] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -79,13 +81,14 @@ export default function OnboardingPage() {
     try {
       await setUserRole(role, {
         cref: role === "PERSONAL" ? cref.trim() || undefined : undefined,
+        crn:  role === "NUTRICIONISTA" ? crn.trim() || undefined : undefined,
         // Only consume invite if code was provided and validated.
         inviteCode:
           role === "ALUNO" && code.length === 6 && validation.state === "valid"
             ? code.toUpperCase()
             : undefined,
       });
-      router.push(role === "PERSONAL" ? "/dashboard" : "/hoje");
+      router.push(ROLE_DEFAULT_ROUTE[role]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não conseguimos concluir agora.");
       setSubmitting(false);
@@ -120,7 +123,7 @@ export default function OnboardingPage() {
               Escolha seu perfil para personalizar a experiência.
             </p>
 
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <button
                 type="button"
                 onClick={() => pickRole("ALUNO")}
@@ -133,8 +136,8 @@ export default function OnboardingPage() {
                 />
                 <h2 className="mt-5 text-h2 text-text-primary">Sou Aluno</h2>
                 <p className="mt-2 text-body text-text-secondary">
-                  Quero acompanhar meus treinos prescritos pelo personal e
-                  evolução.
+                  Quero acompanhar meus treinos e evolução com meu personal ou
+                  nutricionista.
                 </p>
               </button>
 
@@ -151,6 +154,25 @@ export default function OnboardingPage() {
                 <h2 className="mt-5 text-h2 text-text-primary">Sou Personal</h2>
                 <p className="mt-2 text-body text-text-secondary">
                   Quero criar treinos e acompanhar a evolução dos meus alunos.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => pickRole("NUTRICIONISTA")}
+                className="group bg-bg-surface border border-border-subtle rounded-xl p-6 sm:p-8 text-left transition-all duration-200 hover:bg-bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent pulse-line"
+              >
+                <Apple
+                  size={40}
+                  className="text-accent group-hover:scale-110 transition-transform"
+                  aria-hidden
+                />
+                <h2 className="mt-5 text-h2 text-text-primary">
+                  Sou Nutricionista
+                </h2>
+                <p className="mt-2 text-body text-text-secondary">
+                  Quero criar planos alimentares e acompanhar a evolução dos
+                  meus alunos.
                 </p>
               </button>
             </div>
@@ -236,7 +258,7 @@ export default function OnboardingPage() {
                     "Sem código? Sem problema - pula essa parte e vincule um personal depois pelo seu perfil."}
                 </div>
               </>
-            ) : (
+            ) : role === "PERSONAL" ? (
               <>
                 <div>
                   <h1 className="text-h1 text-text-primary">
@@ -253,6 +275,27 @@ export default function OnboardingPage() {
                     placeholder="ex: 012345-G/SP"
                     value={cref}
                     onChange={(e) => setCref(e.target.value)}
+                    autoComplete="off"
+                  />
+                </Field>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h1 className="text-h1 text-text-primary">
+                    Bem-vinda(o), nutricionista
+                  </h1>
+                  <p className="mt-2 text-body-lg text-text-secondary">
+                    Você pode preencher seu CRN agora ou depois no perfil.
+                  </p>
+                </div>
+
+                <Field label="CRN (opcional)" htmlFor="crn">
+                  <Input
+                    id="crn"
+                    placeholder="ex: CRN-3 12345/SP"
+                    value={crn}
+                    onChange={(e) => setCrn(e.target.value)}
                     autoComplete="off"
                   />
                 </Field>

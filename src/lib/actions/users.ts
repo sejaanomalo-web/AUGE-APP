@@ -51,16 +51,27 @@ export async function ensureUserRecord() {
 
 export async function setUserRole(
   role: UserRole,
-  opts?: { cref?: string; inviteCode?: string },
+  opts?: { cref?: string; crn?: string; inviteCode?: string },
 ) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
+
+  if (role === "PERSONAL" && opts?.crn) {
+    throw new Error("Personal não pode ter CRN. Use CREF.");
+  }
+  if (role === "NUTRICIONISTA" && opts?.cref) {
+    throw new Error("Nutricionista não pode ter CREF. Use CRN.");
+  }
 
   await ensureUserRecord();
 
   await prisma.user.update({
     where: { id: userId },
-    data: { role, cref: opts?.cref },
+    data: {
+      role,
+      cref: role === "PERSONAL" ? opts?.cref : undefined,
+      crn:  role === "NUTRICIONISTA" ? opts?.crn  : undefined,
+    },
   });
 
   if (role === "ALUNO" && opts?.inviteCode) {

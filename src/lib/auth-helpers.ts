@@ -30,3 +30,7 @@ export async function requireAuth() {
   if (!userId) redirect("/login");
   return userId;
 }
+
+export function requireNutricionista() {
+  return requireRole("NUTRICIONISTA");
+}
