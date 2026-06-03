@@ -26,7 +26,11 @@ export default function OnboardingPage() {
   const [validation, setValidation] = React.useState<
     | { state: "idle" }
     | { state: "checking" }
-    | { state: "valid"; trainerName: string }
+    | {
+        state: "valid";
+        professionalName: string;
+        vertical: "TREINOS" | "NUTRICAO";
+      }
     | { state: "invalid"; reason: string }
   >({ state: "idle" });
 
@@ -48,7 +52,11 @@ export default function OnboardingPage() {
         const r = await validateInviteCode(code);
         if (cancelled) return;
         if (r.valid) {
-          setValidation({ state: "valid", trainerName: r.trainerName });
+          setValidation({
+            state: "valid",
+            professionalName: r.professionalName,
+            vertical: r.vertical,
+          });
         } else {
           setValidation({ state: "invalid", reason: r.reason });
         }
@@ -248,8 +256,11 @@ export default function OnboardingPage() {
                 >
                   {validation.state === "valid" && (
                     <>
-                      <strong>{validation.trainerName}</strong> é seu personal.
-                      Clica em continuar para confirmar a vinculação.
+                      <strong>{validation.professionalName}</strong>{" "}
+                      {validation.vertical === "NUTRICAO"
+                        ? "é sua nutricionista"
+                        : "é seu personal"}
+                      . Clica em continuar para confirmar a vinculação.
                     </>
                   )}
                   {validation.state === "invalid" && validation.reason}

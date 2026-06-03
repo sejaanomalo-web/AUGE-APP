@@ -19,7 +19,11 @@ export function LinkTrainerDialog() {
   const [validation, setValidation] = React.useState<
     | { state: "idle" }
     | { state: "checking" }
-    | { state: "valid"; trainerName: string }
+    | {
+        state: "valid";
+        professionalName: string;
+        vertical: "TREINOS" | "NUTRICAO";
+      }
     | { state: "invalid"; reason: string }
   >({ state: "idle" });
 
@@ -39,7 +43,11 @@ export function LinkTrainerDialog() {
         const r = await validateInviteCode(code);
         if (cancelled) return;
         if (r.valid) {
-          setValidation({ state: "valid", trainerName: r.trainerName });
+          setValidation({
+            state: "valid",
+            professionalName: r.professionalName,
+            vertical: r.vertical,
+          });
         } else {
           setValidation({ state: "invalid", reason: r.reason });
         }
@@ -71,7 +79,7 @@ export function LinkTrainerDialog() {
   return (
     <>
       <Button variant="primary" size="md" onClick={() => setOpen(true)}>
-        <UserPlus size={16} aria-hidden /> Vincular personal
+        <UserPlus size={16} aria-hidden /> Vincular profissional
       </Button>
 
       <Dialog
@@ -84,8 +92,8 @@ export function LinkTrainerDialog() {
           }
           setOpen(o);
         }}
-        title="Vincular um personal"
-        description="Cole o código de 6 caracteres que seu personal te passou."
+        title="Vincular um profissional"
+        description="Cole o código de 6 caracteres que seu personal ou nutricionista te passou."
       >
         <div className="flex flex-col gap-4">
           <Field label="Código de convite" htmlFor="link-code">
@@ -133,7 +141,11 @@ export function LinkTrainerDialog() {
             )}
           >
             {validation.state === "valid" &&
-              `${validation.trainerName} será seu personal.`}
+              `${validation.professionalName} será ${
+                validation.vertical === "NUTRICAO"
+                  ? "sua nutricionista"
+                  : "seu personal"
+              }.`}
             {validation.state === "invalid" && validation.reason}
             {validation.state === "checking" && "Validando código..."}
             {validation.state === "idle" &&

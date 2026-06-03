@@ -27,23 +27,55 @@ export async function createInviteCode() {
   return invite;
 }
 
-export async function validateInviteCode(code: string) {
-  const invite = await prisma.inviteCode.findUnique({
-    where: { code: code.toUpperCase() },
+type ValidationFailure = { valid: false; reason: string };
+type ValidationSuccess = {
+  valid: true;
+  professionalName: string;
+  professionalId: string;
+  vertical: "TREINOS" | "NUTRICAO";
+};
+type ValidationResult = ValidationFailure | ValidationSuccess;
+
+export async function validateInviteCode(
+  code: string,
+): Promise<ValidationResult> {
+  const upper = code.toUpperCase();
+
+  const trainerInvite = await prisma.inviteCode.findUnique({
+    where: { code: upper },
     include: { trainer: true },
   });
+  if (trainerInvite) {
+    if (trainerInvite.status !== "ACTIVE")
+      return { valid: false, reason: "Código já usado ou expirado" };
+    if (trainerInvite.expiresAt < new Date())
+      return { valid: false, reason: "Código expirado" };
+    return {
+      valid: true,
+      professionalName: trainerInvite.trainer.name,
+      professionalId: trainerInvite.trainerId,
+      vertical: "TREINOS",
+    };
+  }
 
-  if (!invite) return { valid: false as const, reason: "Código não encontrado" };
-  if (invite.status !== "ACTIVE")
-    return { valid: false as const, reason: "Código já usado ou expirado" };
-  if (invite.expiresAt < new Date())
-    return { valid: false as const, reason: "Código expirado" };
+  const nutriInvite = await prisma.inviteCodeNutri.findUnique({
+    where: { code: upper },
+    include: { nutritionist: true },
+  });
+  if (nutriInvite) {
+    if (nutriInvite.status !== "ACTIVE")
+      return { valid: false, reason: "Código já usado ou expirado" };
+    if (nutriInvite.expiresAt < new Date())
+      return { valid: false, reason: "Código expirado" };
+    return {
+      valid: true,
+      professionalName: nutriInvite.nutritionist.name,
+      professionalId: nutriInvite.nutritionistId,
+      vertical: "NUTRICAO",
+    };
+  }
 
-  return {
-    valid: true as const,
-    trainerName: invite.trainer.name,
-    trainerId: invite.trainerId,
-  };
+  return { valid: false, reason: "Código não encontrado" };
 }
 
 export async function consumeInviteCode(code: string) {
@@ -53,37 +85,128 @@ export async function consumeInviteCode(code: string) {
   const validation = await validateInviteCode(code);
   if (!validation.valid) throw new Error(validation.reason);
 
-  const invite = await prisma.inviteCode.findUnique({
-    where: { code: code.toUpperCase() },
-  });
+  if (validation.vertical === "TREINOS") {
+    return consumeTrainerInvite(code, userId);
+  }
+  return consumeNutritionistInvite(code, userId);
+}
+
+async function consumeTrainerInvite(code: string, studentId: string) {
+  const upper = code.toUpperCase();
+  const invite = await prisma.inviteCode.findUnique({ where: { code: upper } });
   if (!invite) throw new Error("Código não encontrado");
+
+  // Re-link safe: if prior link is ENDED, reactivate it; if active/paused, refuse.
+  const existing = await prisma.trainerStudent.findUnique({
+    where: {
+      trainerId_studentId: {
+        trainerId: invite.trainerId,
+        studentId,
+      },
+    },
+  });
+
+  if (existing && existing.status !== "ENDED") {
+    throw new Error("Você já tem um vínculo ativo com este profissional");
+  }
 
   await prisma.$transaction([
     prisma.inviteCode.update({
       where: { id: invite.id },
-      data: { status: "USED", usedById: userId, usedAt: new Date() },
+      data: { status: "USED", usedById: studentId, usedAt: new Date() },
     }),
-    prisma.trainerStudent.create({
-      data: {
-        trainerId: invite.trainerId,
-        studentId: userId,
-        inviteId: invite.id,
-        status: "ACTIVE",
-      },
-    }),
+    existing
+      ? prisma.trainerStudent.update({
+          where: { id: existing.id },
+          data: {
+            status: "ACTIVE",
+            endedAt: null,
+            inviteId: invite.id,
+            startedAt: new Date(),
+          },
+        })
+      : prisma.trainerStudent.create({
+          data: {
+            trainerId: invite.trainerId,
+            studentId,
+            inviteId: invite.id,
+            status: "ACTIVE",
+          },
+        }),
   ]);
 
-  // Notifica personal
   notifyUser({
     userId: invite.trainerId,
     type: "STUDENT_INVITE_ACCEPTED",
+    vertical: "TREINOS",
     title: "Novo aluno vinculado",
     body: "Um aluno acabou de se vincular usando seu código",
-    data: { studentId: userId },
+    data: { studentId },
     url: "/alunos",
   }).catch(() => null);
 
-  return { trainerId: invite.trainerId };
+  return { professionalId: invite.trainerId, vertical: "TREINOS" as const };
+}
+
+async function consumeNutritionistInvite(code: string, studentId: string) {
+  const upper = code.toUpperCase();
+  const invite = await prisma.inviteCodeNutri.findUnique({
+    where: { code: upper },
+  });
+  if (!invite) throw new Error("Código não encontrado");
+
+  const existing = await prisma.nutritionistStudent.findUnique({
+    where: {
+      nutritionistId_studentId: {
+        nutritionistId: invite.nutritionistId,
+        studentId,
+      },
+    },
+  });
+
+  if (existing && existing.status !== "ENDED") {
+    throw new Error("Você já tem um vínculo ativo com esta nutricionista");
+  }
+
+  await prisma.$transaction([
+    prisma.inviteCodeNutri.update({
+      where: { id: invite.id },
+      data: { status: "USED", usedById: studentId, usedAt: new Date() },
+    }),
+    existing
+      ? prisma.nutritionistStudent.update({
+          where: { id: existing.id },
+          data: {
+            status: "ACTIVE",
+            endedAt: null,
+            inviteId: invite.id,
+            startedAt: new Date(),
+          },
+        })
+      : prisma.nutritionistStudent.create({
+          data: {
+            nutritionistId: invite.nutritionistId,
+            studentId,
+            inviteId: invite.id,
+            status: "ACTIVE",
+          },
+        }),
+  ]);
+
+  notifyUser({
+    userId: invite.nutritionistId,
+    type: "NUTRI_INVITE_ACCEPTED",
+    vertical: "NUTRICAO",
+    title: "Novo aluno vinculado",
+    body: "Um aluno acabou de se vincular usando seu código",
+    data: { studentId },
+    url: "/nutri/alunos",
+  }).catch(() => null);
+
+  return {
+    professionalId: invite.nutritionistId,
+    vertical: "NUTRICAO" as const,
+  };
 }
 
 export async function listMyInvites() {

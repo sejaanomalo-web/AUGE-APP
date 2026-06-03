@@ -1,7 +1,7 @@
 import "server-only";
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
-import type { NotificationType, Prisma } from "@prisma/client";
+import type { NotificationType, Prisma, Vertical } from "@prisma/client";
 
 let vapidConfigured = false;
 
@@ -21,6 +21,7 @@ function ensureVapid() {
 export interface NotifyParams {
   userId: string;
   type: NotificationType;
+  vertical?: Vertical;
   title: string;
   body: string;
   data?: Record<string, unknown>;
@@ -33,6 +34,7 @@ export async function notifyUser(params: NotifyParams) {
     data: {
       userId: params.userId,
       type: params.type,
+      vertical: params.vertical ?? null,
       title: params.title,
       body: params.body,
       data: (params.data ?? null) as Prisma.InputJsonValue,
@@ -128,7 +130,10 @@ type SettingsKey =
   | "eveningReminder"
   | "streakAlerts"
   | "trainerActivity"
-  | "studentActivity";
+  | "studentActivity"
+  | "nutricionistActivity"
+  | "mealReminder"
+  | "hydrationReminder";
 
 const TYPE_TO_PREF: Partial<Record<NotificationType, SettingsKey>> = {
   WORKOUT_REMINDER_MORNING: "morningReminder",
@@ -153,6 +158,17 @@ const TYPE_TO_PREF: Partial<Record<NotificationType, SettingsKey>> = {
   FOLLOWUP_FORM_ANSWERED: "studentActivity",   // chega no personal (atividade do aluno)
   EVENT_REMINDER_PERSONAL: "studentActivity",  // personal sendo lembrado de evento do aluno
   EVENT_REMINDER_STUDENT: "trainerActivity",   // aluno sendo lembrado de evento do personal
+  // Round 4 — Nutrição
+  MEAL_PLAN_CREATED: "nutricionistActivity",
+  MEAL_PLAN_UPDATED: "nutricionistActivity",
+  MEAL_REMINDER: "mealReminder",
+  STUDENT_MEAL_LOGGED: "studentActivity",
+  STUDENT_MEAL_SKIPPED: "studentActivity",
+  NUTRI_COMMENT: "nutricionistActivity",
+  NUTRI_INVITE_ACCEPTED: "studentActivity",
+  NUTRI_FOLLOWUP_FORM_SENT: "nutricionistActivity",
+  NUTRI_FOLLOWUP_FORM_ANSWERED: "studentActivity",
+  HYDRATION_REMINDER: "hydrationReminder",
 };
 
 function checkPreference(
