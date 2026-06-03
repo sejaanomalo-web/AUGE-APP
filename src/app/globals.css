@@ -27,6 +27,9 @@
   --intensity-glow: rgba(255, 106, 42, 0.18);
   --coach: 29 78 216;
   --coach-glow: rgba(29, 78, 216, 0.22);
+  --nutri: 56 189 168;
+  --nutri-hover: 70 200 180;
+  --nutri-glow: rgba(56, 189, 168, 0.22);
 
   /* Text */
   --text-primary: 247 248 250;
@@ -78,6 +81,9 @@
   --intensity-glow: rgba(207, 74, 17, 0.14);
   --coach: 29 78 216;
   --coach-glow: rgba(29, 78, 216, 0.14);
+  --nutri: 16 130 110;
+  --nutri-hover: 22 145 124;
+  --nutri-glow: rgba(16, 130, 110, 0.14);
 
   --text-primary: 18 18 18;
   --text-secondary: 77 77 77;
@@ -107,6 +113,15 @@
    * dimmed to 40% of the original presence (0.05 → 0.020). */
   --grid-line: rgba(0, 0, 0, 0.020);
   --grid-size: 40px;
+}
+
+/* Vertical accent override: re-tints --accent and dependent tokens to teal.
+ * Cascades automatically through bg-accent, text-accent, .pulse-line,
+ * focus rings, primary Button, BottomNav active state, etc. */
+[data-vertical="nutricao"] {
+  --accent: var(--nutri);
+  --accent-hover: var(--nutri-hover);
+  --accent-glow: var(--nutri-glow);
 }
 
 @layer base {
