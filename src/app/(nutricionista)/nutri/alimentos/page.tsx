@@ -1,22 +1,19 @@
-import { Wheat } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { Card } from "@/components/ui/Card";
+import { NutriFoodsClient } from "@/components/nutri/NutriFoodsClient";
+import { requireNutricionista } from "@/lib/auth-helpers";
+import { listFoods } from "@/lib/actions/nutri-foods";
 
-export default function NutriAlimentosPlaceholder() {
+export default async function NutriAlimentosPage() {
+  await requireNutricionista();
+  const foods = await listFoods();
+
   return (
     <div className="max-w-5xl mx-auto">
       <PageHeader
         title="Alimentos"
-        subtitle="Catálogo de alimentos TACO e seus alimentos personalizados"
+        subtitle={`${foods.length} alimentos no catálogo`}
       />
-      <Card variant="default">
-        <EmptyState
-          icon={Wheat}
-          title="Em construção"
-          description="O catálogo de alimentos com busca estará disponível na próxima atualização."
-        />
-      </Card>
+      <NutriFoodsClient initialFoods={foods} />
     </div>
   );
 }
