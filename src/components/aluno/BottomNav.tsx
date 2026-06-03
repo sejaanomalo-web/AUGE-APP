@@ -1,29 +1,22 @@
 "use client";
 
-import {
-  ClipboardList,
-  Crosshair,
-  Target,
-  TrendingUp,
-  User,
-} from "lucide-react";
 import { BottomNav as SharedBottomNav } from "@/components/shared/BottomNav";
+import {
+  NAV_ALUNO_NUTRICAO,
+  NAV_ALUNO_TREINOS,
+  type NavItem,
+} from "@/lib/nav/registry";
 
-// Ordered intentionally so "Hoje" sits dead center (position 3 of 5).
-const items = [
-  { href: "/planos", label: "Treinos", icon: ClipboardList },
-  { href: "/objetivos", label: "Objetivos", icon: Crosshair },
-  { href: "/hoje", label: "Hoje", icon: Target },
-  { href: "/evolucao", label: "Evolução", icon: TrendingUp },
-  { href: "/perfil", label: "Perfil", icon: User },
-];
-
-export function BottomNav({ className }: { className?: string }) {
-  return <SharedBottomNav items={items} className={className} />;
+export function BottomNav({
+  items,
+  className,
+}: {
+  items?: NavItem[];
+  className?: string;
+}) {
+  return <SharedBottomNav items={items ?? NAV_ALUNO_TREINOS} className={className} />;
 }
 
-export const alunoSidebarItems = items.map(({ href, label, icon }) => ({
-  href,
-  label,
-  icon,
-}));
+// Backward-compat re-export for existing (personal) and tooling consumers.
+export const alunoSidebarItems = NAV_ALUNO_TREINOS;
+export { NAV_ALUNO_NUTRICAO };
