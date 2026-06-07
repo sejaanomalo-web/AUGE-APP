@@ -13,6 +13,8 @@ const buttonVariants = cva(
           "bg-bg-elevated text-text-primary border border-border-subtle font-semibold shadow-sm hover:bg-bg-hover hover:border-border-strong",
         tertiary:
           "bg-transparent text-text-secondary hover:text-text-primary hover:bg-bg-elevated font-semibold",
+        link:
+          "bg-transparent text-text-secondary hover:text-text-primary font-semibold hover:scale-[1.04] active:scale-95",
         coach:
           "bg-coach text-white font-bold shadow-coach hover:bg-coach/90",
         intensity:

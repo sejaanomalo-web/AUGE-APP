@@ -45,6 +45,7 @@ export function Sidebar({
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
+              data-tour={`navitem:${item.href}`}
               className={cn(
                 "relative flex items-center gap-3 px-4 py-3 rounded-xl text-body font-semibold transition-colors duration-200",
                 active

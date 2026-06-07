@@ -10,6 +10,7 @@ import { ProfileEditor } from "@/components/shared/ProfileEditor";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PasskeySettings } from "@/components/shared/PasskeySettings";
 import { LinkTrainerDialog } from "@/components/aluno/LinkTrainerDialog";
+import { StartTourButton } from "@/components/shared/StartTourButton";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyProfessionals } from "@/lib/actions/professional-context";
 import { listMyPasskeys } from "@/lib/actions/passkeys";
@@ -64,6 +65,11 @@ export default async function PerfilAlunoPage() {
             emptyText="Cole um código de convite para vincular uma nutricionista."
           />
         </div>
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-h3 text-text-primary mb-3">Ajuda</h2>
+        <StartTourButton role="aluno" />
       </section>
 
       <section className="mb-6">

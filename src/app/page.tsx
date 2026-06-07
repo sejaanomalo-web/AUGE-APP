@@ -39,7 +39,7 @@ export default function LandingPage() {
           </LinkButton>
           <LinkButton
             href="/login"
-            variant="tertiary"
+            variant="link"
             size="md"
             fullWidth
           >

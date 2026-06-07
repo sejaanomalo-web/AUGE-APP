@@ -15,8 +15,8 @@ interface VerticalToggleProps {
 }
 
 const META: Record<VerticalKey, { label: string; icon: React.ReactNode }> = {
-  treinos: { label: "Treinos", icon: <Dumbbell size={14} aria-hidden /> },
-  nutricao: { label: "Nutrição", icon: <Apple size={14} aria-hidden /> },
+  treinos: { label: "Treinos", icon: <Dumbbell size={13} aria-hidden /> },
+  nutricao: { label: "Nutrição", icon: <Apple size={13} aria-hidden /> },
 };
 
 export function VerticalToggle({ available }: VerticalToggleProps) {
@@ -30,6 +30,7 @@ export function VerticalToggle({ available }: VerticalToggleProps) {
     <div
       role="tablist"
       aria-label="Vertical"
+      data-tour="vertical-toggle"
       className="inline-flex items-center gap-0.5 bg-bg-elevated border border-border-subtle rounded-pill p-0.5"
     >
       {(["treinos", "nutricao"] as const).map((v) => {
@@ -46,7 +47,7 @@ export function VerticalToggle({ available }: VerticalToggleProps) {
               router.push(mirrorRoute(pathname, v));
             }}
             className={cn(
-              "inline-flex items-center gap-1 px-3 py-1 rounded-pill text-caption font-semibold transition-colors",
+              "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-pill text-[11px] font-semibold transition-colors",
               active
                 ? "bg-accent text-text-on-accent"
                 : "text-text-secondary hover:text-text-primary",

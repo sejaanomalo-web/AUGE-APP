@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { AppHeader } from "@/components/shared/AppHeader";
@@ -17,30 +18,53 @@ import {
   type VerticalKey,
 } from "@/lib/vertical/route-mirror";
 
+const SHARED_PREFIXES = ["/perfil"];
+function isSharedRoute(pathname: string) {
+  return SHARED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/"),
+  );
+}
+
 /**
  * Client-side shell wrapped by the server-side (aluno)/layout.tsx.
  *
- * IMPORTANT: the active vertical is derived from `usePathname()` HERE, not
- * passed down from the server layout. The (aluno) layout is shared between
- * /hoje and /nutricao/* — Next.js does NOT re-render shared layouts on
- * client navigation, so a server-computed vertical would freeze on the
- * value from the first load. Deriving it client-side makes the theme
- * (data-vertical → teal), the nav swap and the active tab all update
- * instantly when the toggle navigates.
+ * A vertical ativa é derivada de usePathname() AQUI (não passada pelo server),
+ * porque o layout (aluno) é compartilhado entre /hoje e /nutricao/* e o Next
+ * NÃO re-renderiza layouts compartilhados em navegação client — computar no
+ * server congelaria tema/nav.
  *
- * Items + icons stay imported here so the lucide React components don't
- * cross the RSC boundary (that throws "Functions cannot be passed directly
- * to Client Components").
+ * Rotas compartilhadas (ex.: /perfil) não pertencem a uma vertical. Para elas
+ * preservamos a última vertical em que o usuário esteve (estado + cookie), em
+ * vez de cair no default "treinos" — senão abrir o Perfil estando em Nutrição
+ * jogava tudo de volta pro tema de treino.
  */
 export function AlunoLayoutShell({
   available,
+  initialVertical = "treinos",
   children,
 }: {
   available: VerticalKey[];
+  initialVertical?: VerticalKey;
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "/hoje";
-  const vertical = detectVerticalFromPathname(pathname);
+  const routeVertical = detectVerticalFromPathname(pathname);
+  const shared = isSharedRoute(pathname);
+  const sole = available.length === 1 ? available[0] : null;
+
+  const [remembered, setRemembered] = React.useState<VerticalKey>(
+    sole ?? (shared ? initialVertical : routeVertical),
+  );
+
+  // Em rotas próprias de uma vertical, memoriza qual é e persiste no cookie
+  // (lido pelo server no próximo full load para evitar flash em /perfil).
+  React.useEffect(() => {
+    if (sole || shared) return;
+    setRemembered(routeVertical);
+    document.cookie = `auge_vertical=${routeVertical};path=/;max-age=31536000;samesite=lax`;
+  }, [routeVertical, shared, sole]);
+
+  const vertical: VerticalKey = sole ?? (shared ? remembered : routeVertical);
 
   const items: NavItem[] =
     vertical === "nutricao" ? NAV_ALUNO_NUTRICAO : NAV_ALUNO_TREINOS;

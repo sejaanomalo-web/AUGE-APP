@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { SignOutButton, useUser } from "@clerk/nextjs";
-import { LogOut, User as UserIcon, ChevronDown } from "lucide-react";
+import { Bell, LogOut, User as UserIcon, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
 import { Avatar } from "@/components/ui/Avatar";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { NotificationSheet } from "@/components/notifications/NotificationSheet";
+import { useNotifications } from "@/lib/notifications/use-notifications";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
@@ -24,6 +25,7 @@ export function AppHeader({
   className?: string;
 }) {
   const { user } = useUser();
+  const notif = useNotifications();
   const [open, setOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   // Anchor coords are computed from the trigger's bounding rect at open
@@ -130,17 +132,25 @@ export function AppHeader({
         </div>
       )}
 
-      {/* RIGHT: notifications + account menu */}
+      {/* RIGHT: account menu (notifications now live inside it) */}
       <div className="flex-1 flex items-center justify-end gap-1">
-        <NotificationBell />
         <button
           ref={triggerRef}
           type="button"
           onClick={toggle}
-          className="flex items-center gap-2 rounded-pill pl-1 pr-2 py-1 border border-transparent hover:bg-bg-elevated hover:border-border-subtle transition-colors"
+          data-tour="account-menu"
+          className="relative flex items-center gap-2 rounded-pill pl-1 pr-2 py-1 border border-transparent hover:bg-bg-elevated hover:border-border-subtle transition-colors"
           aria-haspopup="menu"
           aria-expanded={open}
         >
+          {notif.unreadCount > 0 && (
+            <span
+              aria-hidden
+              className="absolute -top-0.5 left-5 bg-accent text-text-on-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none shadow-accent"
+            >
+              {notif.unreadCount > 99 ? "99+" : notif.unreadCount}
+            </span>
+          )}
           <Avatar src={avatar} name={name} size={32} />
           <span className="hidden sm:inline text-body font-semibold text-text-primary max-w-[140px] truncate">
             {firstName}
@@ -183,6 +193,22 @@ export function AppHeader({
                     {email}
                   </p>
                 </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setOpen(false);
+                    notif.setOpen(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-body text-text-primary hover:bg-bg-hover"
+                >
+                  <Bell size={16} aria-hidden /> Notificações
+                  {notif.unreadCount > 0 && (
+                    <span className="ml-auto bg-accent text-text-on-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+                      {notif.unreadCount > 99 ? "99+" : notif.unreadCount}
+                    </span>
+                  )}
+                </button>
                 <Link
                   href={perfilHref}
                   role="menuitem"
@@ -205,6 +231,17 @@ export function AppHeader({
           </AnimatePresence>,
           document.body,
         )}
+
+      {/* Notification inbox — mounted at header level (not inside the dropdown,
+       * which unmounts on outside-click) so opening it from the menu works. */}
+      <NotificationSheet
+        open={notif.open}
+        notifications={notif.notifications}
+        onClose={() => notif.setOpen(false)}
+        onOpenNotification={notif.openNotification}
+        onDelete={notif.remove}
+        onClearAll={notif.clearAll}
+      />
     </header>
   );
 }

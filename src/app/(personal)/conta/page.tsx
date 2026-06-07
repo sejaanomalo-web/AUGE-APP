@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { ProfileEditor } from "@/components/shared/ProfileEditor";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PasskeySettings } from "@/components/shared/PasskeySettings";
+import { StartTourButton } from "@/components/shared/StartTourButton";
 import { requireRole } from "@/lib/auth-helpers";
 import { getMyStudents } from "@/lib/actions/students";
 import { listMyPasskeys } from "@/lib/actions/passkeys";
@@ -99,6 +100,11 @@ export default async function PerfilPersonalPage() {
             </ul>
           </Card>
         )}
+      </section>
+
+      <section className="mb-6">
+        <h2 className="text-h3 text-text-primary mb-3">Ajuda</h2>
+        <StartTourButton role="personal" />
       </section>
 
       <section className="mb-6">

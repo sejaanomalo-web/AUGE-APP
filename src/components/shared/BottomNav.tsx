@@ -45,6 +45,7 @@ export function BottomNav({
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
+                data-tour={`navitem:${item.href}`}
                 className={cn(
                   "group relative h-full flex flex-col items-center justify-center gap-0.5 rounded-full px-1",
                   "transition-[color,background-color,transform,box-shadow] duration-200 ease-out",
