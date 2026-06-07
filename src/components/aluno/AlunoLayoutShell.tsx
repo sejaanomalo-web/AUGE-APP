@@ -6,6 +6,7 @@ import { PageTransition } from "@/components/shared/PageTransition";
 import { BottomNav } from "@/components/shared/BottomNav";
 import { InstallPWAPrompt } from "@/components/notifications/InstallPWAPrompt";
 import { VerticalToggle } from "@/components/shared/VerticalToggle";
+import { VerticalBanner } from "@/components/aluno/VerticalBanner";
 import {
   NAV_ALUNO_NUTRICAO,
   NAV_ALUNO_TREINOS,
@@ -46,6 +47,7 @@ export function AlunoLayoutShell({
           rightSlot={toggle}
           mobileLeftSlot={toggle}
         />
+        {available.length >= 2 && <VerticalBanner vertical={vertical} />}
         <main className="flex-1 pb-[calc(env(safe-area-inset-bottom)+96px)] lg:pb-12 px-4 lg:px-8 py-6 lg:py-8">
           <PageTransition>{children}</PageTransition>
         </main>

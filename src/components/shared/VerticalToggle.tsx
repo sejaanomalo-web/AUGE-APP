@@ -53,7 +53,7 @@ export function VerticalToggle({ available }: VerticalToggleProps) {
             )}
           >
             {META[v].icon}
-            <span className="hidden sm:inline">{META[v].label}</span>
+            <span>{META[v].label}</span>
           </button>
         );
       })}

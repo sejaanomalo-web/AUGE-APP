@@ -36,8 +36,8 @@ export default async function NutricaoHojePage() {
         <Card variant="default">
           <EmptyState
             icon={Utensils}
-            title="Nenhum cardápio ativo"
-            description="Quando sua nutricionista prescrever um cardápio, ele vai aparecer aqui com as refeições do dia."
+            title="Seu cardápio está a caminho"
+            description="Assim que sua nutricionista prescrever um cardápio, as refeições do dia aparecem aqui — com horários, porções e o registro de cada uma."
           />
         </Card>
       ) : (

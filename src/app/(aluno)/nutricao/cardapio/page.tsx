@@ -24,7 +24,7 @@ export default async function NutricaoCardapioPage() {
           <EmptyState
             icon={Utensils}
             title="Nenhum cardápio ainda"
-            description="Quando sua nutricionista prescrever um cardápio, ele vai aparecer aqui."
+            description="Quando sua nutricionista prescrever um cardápio, ele aparece aqui — você poderá ver as refeições e acompanhar tudo na aba Hoje."
           />
         </Card>
       ) : (

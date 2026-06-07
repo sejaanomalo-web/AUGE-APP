@@ -166,6 +166,123 @@ export async function getTodayHydration(): Promise<HydrationToday> {
   };
 }
 
+export interface NutritionEvolutionDay {
+  /** ISO date (YYYY-MM-DD) */
+  date: string;
+  /** Aderência do dia em % (0-100), ou null se não havia refeições previstas. */
+  adherence: number | null;
+  /** Calorias previstas das refeições registradas (LOGGED) no dia. */
+  calories: number;
+  /** Total de hidratação no dia, em ml. */
+  hydration: number;
+}
+
+export interface NutritionEvolution {
+  rangeDays: number;
+  days: NutritionEvolutionDay[];
+  /** Nº de refeições previstas/dia (soma das refeições dos planos ativos). */
+  scheduledPerDay: number;
+  /** Meta de calorias do plano ativo, se houver. */
+  targetCalories: number | null;
+  /** true se há ao menos um registro de refeição/hidratação no período. */
+  hasData: boolean;
+}
+
+function isoDay(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+/**
+ * Série diária dos últimos `rangeDays` dias para a tela /nutricao/evolucao:
+ * aderência (refeições registradas / previstas), calorias previstas registradas
+ * e hidratação. Somente leitura.
+ */
+export async function getNutritionEvolution(
+  rangeDays = 30,
+): Promise<NutritionEvolution> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Não autenticado");
+
+  const span = Math.max(1, Math.min(rangeDays, 365));
+
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = new Date(end.getTime() - (span - 1) * 24 * 60 * 60 * 1000);
+  const endInclusive = new Date(end.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+  const [activePlans, mealLogs, hydrationGroups] = await Promise.all([
+    prisma.mealPlan.findMany({
+      where: { studentId: userId, isActive: true, pausedAt: null },
+      select: {
+        targetCalories: true,
+        meals: { select: { id: true } },
+      },
+    }),
+    prisma.mealLog.findMany({
+      where: {
+        studentId: userId,
+        date: { gte: start, lte: endInclusive },
+        status: "LOGGED",
+      },
+      include: {
+        meal: { include: { items: { include: { food: true } } } },
+      },
+    }),
+    prisma.hydrationLog.groupBy({
+      by: ["date"],
+      where: { studentId: userId, date: { gte: start, lte: endInclusive } },
+      _sum: { ml: true },
+    }),
+  ]);
+
+  const scheduledPerDay = activePlans.reduce(
+    (acc, p) => acc + p.meals.length,
+    0,
+  );
+  const targetCalories =
+    activePlans.find((p) => p.targetCalories != null)?.targetCalories ?? null;
+
+  // Agrega por dia.
+  const loggedByDay = new Map<string, number>();
+  const caloriesByDay = new Map<string, number>();
+  for (const log of mealLogs) {
+    const key = isoDay(new Date(log.date));
+    loggedByDay.set(key, (loggedByDay.get(key) ?? 0) + 1);
+    const kcal = log.meal.items.reduce(
+      (acc, it) => acc + (Number(it.quantity) / 100) * it.food.kcalPer100g,
+      0,
+    );
+    caloriesByDay.set(key, (caloriesByDay.get(key) ?? 0) + kcal);
+  }
+
+  const hydrationByDay = new Map<string, number>();
+  for (const g of hydrationGroups) {
+    hydrationByDay.set(isoDay(new Date(g.date)), g._sum.ml ?? 0);
+  }
+
+  const days: NutritionEvolutionDay[] = [];
+  for (let i = 0; i < span; i++) {
+    const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+    const key = isoDay(d);
+    const logged = loggedByDay.get(key) ?? 0;
+    days.push({
+      date: key,
+      adherence:
+        scheduledPerDay > 0
+          ? Math.min(100, Math.round((logged / scheduledPerDay) * 100))
+          : null,
+      calories: Math.round(caloriesByDay.get(key) ?? 0),
+      hydration: hydrationByDay.get(key) ?? 0,
+    });
+  }
+
+  const hasData = mealLogs.length > 0 || hydrationGroups.length > 0;
+
+  return { rangeDays: span, days, scheduledPerDay, targetCalories, hasData };
+}
+
 export async function logHydration(ml: number) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
