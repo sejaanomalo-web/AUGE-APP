@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { notifyUser } from "@/lib/notifications/notify";
 
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

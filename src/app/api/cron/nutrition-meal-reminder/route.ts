@@ -10,6 +10,9 @@ import { notifyUser } from "@/lib/notifications/notify";
  * true, procura refeições cujo timeOfDay (HH:MM) começa com a hora atual em
  * BRT (UTC-3). Manda MEAL_REMINDER pra cada uma.
  */
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

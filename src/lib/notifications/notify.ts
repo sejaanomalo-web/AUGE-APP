@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 import type { NotificationType, Prisma, Vertical } from "@prisma/client";
@@ -47,22 +48,24 @@ export async function notifyUser(params: NotifyParams) {
   });
   if (!checkPreference(params.type, settings)) return notification;
 
-  // 3. Best-effort push. Não bloqueia retorno; UI/Realtime aparece igual.
-  sendPushToUser(params.userId, {
-    title: params.title,
-    body: params.body,
-    data: params.data,
-    url: params.url ?? "/",
-    tag: `auge-${params.type}`,
-  })
-    .then(() =>
-      prisma.notification.update({
+  // 3. Push DEPOIS da resposta via after(): não bloqueia o retorno da
+  // action/cron, mas sobrevive ao congelamento do serverless (antes era
+  // fire-and-forget e podia ser morto antes de enviar / gravar pushSent).
+  after(async () => {
+    try {
+      await sendPushToUser(params.userId, {
+        title: params.title,
+        body: params.body,
+        data: params.data,
+        url: params.url ?? "/",
+        tag: `auge-${params.type}`,
+      });
+      await prisma.notification.update({
         where: { id: notification.id },
         data: { pushSent: true },
-      }),
-    )
-    .catch((err: unknown) =>
-      prisma.notification
+      });
+    } catch (err: unknown) {
+      await prisma.notification
         .update({
           where: { id: notification.id },
           data: {
@@ -71,8 +74,9 @@ export async function notifyUser(params: NotifyParams) {
               err instanceof Error ? err.message.slice(0, 200) : String(err),
           },
         })
-        .catch(() => null),
-    );
+        .catch(() => null);
+    }
+  });
 
   return notification;
 }

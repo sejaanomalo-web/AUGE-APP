@@ -10,8 +10,8 @@ Sentry.init({
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Amostragem de traces em produção: 20% (era 100%).
+  tracesSampleRate: 0.2,
   // Enable logs to be sent to Sentry
   enableLogs: true,
 

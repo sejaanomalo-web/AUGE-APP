@@ -5,6 +5,9 @@ import { getValidAccessToken } from "@/lib/integrations/strava/client";
 // Cron: refresca tokens com menos de 24h de validade pra não expirar offline.
 const REFRESH_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {

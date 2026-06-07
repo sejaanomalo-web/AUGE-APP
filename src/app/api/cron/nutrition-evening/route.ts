@@ -10,6 +10,9 @@ const INACTIVITY_DAYS = 3;
  * ativo e se a última MealLog é > 3 dias atrás. Se sim, notifica a
  * nutricionista com STUDENT_INACTIVE (vertical=NUTRICAO).
  */
+export const runtime = "nodejs";
+export const maxDuration = 300;
+
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
