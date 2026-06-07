@@ -72,6 +72,14 @@ export function AlunoLayoutShell({
 
   const vertical: VerticalKey = sole ?? (shared ? remembered : routeVertical);
 
+  // Espelha a vertical no <body> para que conteúdo renderizado via portal
+  // (tutorial, sheet de notificações, menu da conta) — que fica FORA da div
+  // com data-vertical abaixo — também herde o accent teal em Nutrição.
+  React.useEffect(() => {
+    document.body.setAttribute("data-vertical", vertical);
+    return () => document.body.removeAttribute("data-vertical");
+  }, [vertical]);
+
   // Troca de vertical pelo toggle. Em rota própria, navega pro espelho; em
   // rota compartilhada (/perfil), alterna em lugar (atualiza memória + cookie).
   const selectVertical = React.useCallback(
