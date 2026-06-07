@@ -11,13 +11,13 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { PasskeySettings } from "@/components/shared/PasskeySettings";
 import { LinkTrainerDialog } from "@/components/aluno/LinkTrainerDialog";
 import { requireRole } from "@/lib/auth-helpers";
-import { getMyTrainer } from "@/lib/actions/users";
+import { getMyProfessionals } from "@/lib/actions/professional-context";
 import { listMyPasskeys } from "@/lib/actions/passkeys";
 
 export default async function PerfilAlunoPage() {
   const user = await requireRole("ALUNO");
-  const [trainer, passkeys] = await Promise.all([
-    getMyTrainer(),
+  const [{ trainer, nutritionist }, passkeys] = await Promise.all([
+    getMyProfessionals(),
     listMyPasskeys(),
   ]);
 
@@ -46,38 +46,24 @@ export default async function PerfilAlunoPage() {
       />
 
       <section className="mt-8 mb-6">
-        <h2 className="text-h3 text-text-primary mb-3">Personal vinculado</h2>
-        {trainer ? (
-          <Card variant="default" className="flex items-center gap-4">
-            <Avatar
-              src={trainer.avatarUrl ?? undefined}
-              name={trainer.name}
-              size={48}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-body-lg font-semibold text-text-primary truncate">
-                {trainer.name}
-              </p>
-              <p className="text-caption text-text-muted truncate">
-                {trainer.email}
-              </p>
-            </div>
-            <Badge variant="concluido">Ativo</Badge>
-          </Card>
-        ) : (
-          <Card variant="default" className="flex items-center gap-3">
-            <UserCircle size={32} className="text-text-muted" aria-hidden />
-            <div className="flex-1 min-w-0">
-              <p className="text-body text-text-primary">
-                Sem personal vinculado
-              </p>
-              <p className="text-caption text-text-muted">
-                Cole um código de convite para vincular um personal.
-              </p>
-            </div>
-            <LinkTrainerDialog />
-          </Card>
-        )}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-h3 text-text-primary">Profissionais</h2>
+          <LinkButton href="/perfil/profissionais" variant="secondary" size="md">
+            Gerenciar
+          </LinkButton>
+        </div>
+        <div className="flex flex-col gap-3">
+          <ProfessionalSlot
+            label="Personal"
+            professional={trainer}
+            emptyText="Cole um código de convite para vincular um personal."
+          />
+          <ProfessionalSlot
+            label="Nutricionista"
+            professional={nutritionist}
+            emptyText="Cole um código de convite para vincular uma nutricionista."
+          />
+        </div>
       </section>
 
       <section className="mb-6">
@@ -113,5 +99,45 @@ export default async function PerfilAlunoPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function ProfessionalSlot({
+  label,
+  professional,
+  emptyText,
+}: {
+  label: string;
+  professional: { id: string; name: string; avatarUrl: string | null } | null;
+  emptyText: string;
+}) {
+  if (professional) {
+    return (
+      <Card variant="default" className="flex items-center gap-4">
+        <Avatar
+          src={professional.avatarUrl ?? undefined}
+          name={professional.name}
+          size={48}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-caption text-text-muted">{label}</p>
+          <p className="text-body-lg font-semibold text-text-primary truncate">
+            {professional.name}
+          </p>
+        </div>
+        <Badge variant="concluido">Ativo</Badge>
+      </Card>
+    );
+  }
+
+  return (
+    <Card variant="default" className="flex items-center gap-3">
+      <UserCircle size={32} className="text-text-muted" aria-hidden />
+      <div className="flex-1 min-w-0">
+        <p className="text-body text-text-primary">Sem {label.toLowerCase()} vinculado</p>
+        <p className="text-caption text-text-muted">{emptyText}</p>
+      </div>
+      <LinkTrainerDialog />
+    </Card>
   );
 }
