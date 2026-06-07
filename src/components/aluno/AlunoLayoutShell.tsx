@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/shared/Sidebar";
 import { AppHeader } from "@/components/shared/AppHeader";
 import { PageTransition } from "@/components/shared/PageTransition";
@@ -15,8 +15,13 @@ import {
 } from "@/lib/nav/registry";
 import {
   detectVerticalFromPathname,
+  mirrorRoute,
   type VerticalKey,
 } from "@/lib/vertical/route-mirror";
+
+function persistVertical(v: VerticalKey) {
+  document.cookie = `auge_vertical=${v};path=/;max-age=31536000;samesite=lax`;
+}
 
 const SHARED_PREFIXES = ["/perfil"];
 function isSharedRoute(pathname: string) {
@@ -47,6 +52,7 @@ export function AlunoLayoutShell({
   initialVertical?: VerticalKey;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const pathname = usePathname() ?? "/hoje";
   const routeVertical = detectVerticalFromPathname(pathname);
   const shared = isSharedRoute(pathname);
@@ -61,16 +67,33 @@ export function AlunoLayoutShell({
   React.useEffect(() => {
     if (sole || shared) return;
     setRemembered(routeVertical);
-    document.cookie = `auge_vertical=${routeVertical};path=/;max-age=31536000;samesite=lax`;
+    persistVertical(routeVertical);
   }, [routeVertical, shared, sole]);
 
   const vertical: VerticalKey = sole ?? (shared ? remembered : routeVertical);
+
+  // Troca de vertical pelo toggle. Em rota própria, navega pro espelho; em
+  // rota compartilhada (/perfil), alterna em lugar (atualiza memória + cookie).
+  const selectVertical = React.useCallback(
+    (v: VerticalKey) => {
+      setRemembered(v);
+      persistVertical(v);
+      if (!isSharedRoute(pathname)) router.push(mirrorRoute(pathname, v));
+    },
+    [pathname, router],
+  );
 
   const items: NavItem[] =
     vertical === "nutricao" ? NAV_ALUNO_NUTRICAO : NAV_ALUNO_TREINOS;
   const homeHref = vertical === "nutricao" ? "/nutricao/hoje" : "/hoje";
   const toggle =
-    available.length >= 2 ? <VerticalToggle available={available} /> : null;
+    available.length >= 2 ? (
+      <VerticalToggle
+        available={available}
+        current={vertical}
+        onSelect={selectVertical}
+      />
+    ) : null;
 
   return (
     <div data-vertical={vertical} className="min-h-screen bg-bg-base">

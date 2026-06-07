@@ -1,29 +1,30 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useRouter } from "next/navigation";
 import { Apple, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  mirrorRoute,
-  detectVerticalFromPathname,
-  type VerticalKey,
-} from "@/lib/vertical/route-mirror";
-
-interface VerticalToggleProps {
-  available: VerticalKey[];
-}
+import type { VerticalKey } from "@/lib/vertical/route-mirror";
 
 const META: Record<VerticalKey, { label: string; icon: React.ReactNode }> = {
   treinos: { label: "Treinos", icon: <Dumbbell size={13} aria-hidden /> },
   nutricao: { label: "Nutrição", icon: <Apple size={13} aria-hidden /> },
 };
 
-export function VerticalToggle({ available }: VerticalToggleProps) {
-  const router = useRouter();
-  const pathname = usePathname() ?? "/";
-  const current = detectVerticalFromPathname(pathname);
-
+/**
+ * Toggle CONTROLADO: o estado ativo vem de `current` (a vertical resolvida
+ * pelo shell, que respeita a vertical lembrada em rotas compartilhadas como
+ * /perfil), não do pathname. Senão, ao abrir o Perfil estando em Nutrição, o
+ * toggle voltava a destacar "Treinos". A troca em si é delegada ao `onSelect`.
+ */
+export function VerticalToggle({
+  available,
+  current,
+  onSelect,
+}: {
+  available: VerticalKey[];
+  current: VerticalKey;
+  onSelect: (v: VerticalKey) => void;
+}) {
   if (available.length < 2) return null;
 
   return (
@@ -43,8 +44,7 @@ export function VerticalToggle({ available }: VerticalToggleProps) {
             role="tab"
             aria-selected={active}
             onClick={() => {
-              if (active) return;
-              router.push(mirrorRoute(pathname, v));
+              if (!active) onSelect(v);
             }}
             className={cn(
               "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-pill text-[11px] font-semibold transition-colors",
