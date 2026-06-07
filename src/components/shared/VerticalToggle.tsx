@@ -32,7 +32,7 @@ export function VerticalToggle({
       role="tablist"
       aria-label="Vertical"
       data-tour="vertical-toggle"
-      className="inline-flex items-center gap-0.5 bg-bg-elevated border border-border-subtle rounded-pill p-0.5"
+      className="inline-flex items-center gap-0.5 bg-bg-elevated border border-border-subtle rounded-pill p-0.5 scale-110 origin-center"
     >
       {(["treinos", "nutricao"] as const).map((v) => {
         if (!available.includes(v)) return null;
