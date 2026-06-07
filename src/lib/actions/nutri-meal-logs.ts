@@ -283,6 +283,30 @@ export async function getNutritionEvolution(
   return { rangeDays: span, days, scheduledPerDay, targetCalories, hasData };
 }
 
+/**
+ * Datas (YYYY-MM-DD) do ano com ao menos uma refeição registrada (LOGGED),
+ * para o calendário de aderência da tela /nutricao/evolucao. Somente leitura.
+ */
+export async function getNutritionLoggedDates(year: number): Promise<string[]> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Não autenticado");
+
+  const start = new Date(year, 0, 1);
+  const end = new Date(year, 11, 31, 23, 59, 59, 999);
+
+  const logs = await prisma.mealLog.findMany({
+    where: {
+      studentId: userId,
+      status: "LOGGED",
+      date: { gte: start, lte: end },
+    },
+    select: { date: true },
+    distinct: ["date"],
+  });
+
+  return logs.map((l) => isoDay(new Date(l.date)));
+}
+
 export async function logHydration(ml: number) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");

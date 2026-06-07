@@ -29,6 +29,7 @@
   --coach-glow: rgba(29, 78, 216, 0.22);
   --nutri: 56 189 168;
   --nutri-hover: 70 200 180;
+  --nutri-muted: 38 150 133;
   --nutri-glow: rgba(56, 189, 168, 0.22);
 
   /* Text */
@@ -83,6 +84,7 @@
   --coach-glow: rgba(29, 78, 216, 0.14);
   --nutri: 16 130 110;
   --nutri-hover: 22 145 124;
+  --nutri-muted: 12 100 85;
   --nutri-glow: rgba(16, 130, 110, 0.14);
 
   --text-primary: 18 18 18;
@@ -121,6 +123,7 @@
 [data-vertical="nutricao"] {
   --accent: var(--nutri);
   --accent-hover: var(--nutri-hover);
+  --accent-muted: var(--nutri-muted);
   --accent-glow: var(--nutri-glow);
 }
 

@@ -27,8 +27,8 @@ export const NAV_ALUNO_TREINOS: NavItem[] = [
 ];
 
 export const NAV_ALUNO_NUTRICAO: NavItem[] = [
-  { href: "/nutricao/cardapio", label: "Cardápio", icon: Utensils },
   { href: "/nutricao/historico", label: "Histórico", icon: History },
+  { href: "/nutricao/cardapio", label: "Cardápio", icon: Utensils },
   { href: "/nutricao/hoje", label: "Hoje", icon: Target },
   { href: "/nutricao/evolucao", label: "Evolução", icon: TrendingUp },
   { href: "/perfil", label: "Perfil", icon: User },

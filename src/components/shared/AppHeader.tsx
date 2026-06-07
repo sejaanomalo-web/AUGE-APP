@@ -12,14 +12,13 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 
 export function AppHeader({
-  rightSlot,
-  mobileLeftSlot,
+  centerSlot,
   perfilHref,
   homeHref = "/",
   className,
 }: {
-  rightSlot?: React.ReactNode;
-  mobileLeftSlot?: React.ReactNode;
+  /** Rendered centered in the header (e.g. the vertical toggle). */
+  centerSlot?: React.ReactNode;
   perfilHref: string;
   homeHref?: string;
   className?: string;
@@ -117,18 +116,22 @@ export function AppHeader({
         className,
       )}
     >
-      <div className="flex items-center gap-2 lg:hidden">
-        {mobileLeftSlot}
-        <Link href={homeHref}>
+      {/* LEFT: logo (mobile only — desktop logo lives in the sidebar) */}
+      <div className="flex-1 flex items-center gap-2 min-w-0">
+        <Link href={homeHref} className="lg:hidden">
           <Logo size="sm" />
         </Link>
       </div>
 
-      <div className="hidden lg:flex items-center gap-2 flex-1">
-        {rightSlot && <div className="ml-auto">{rightSlot}</div>}
-      </div>
+      {/* CENTER: vertical toggle, kept dead-centre by the equal flex-1 sides */}
+      {centerSlot && (
+        <div className="flex items-center justify-center shrink-0">
+          {centerSlot}
+        </div>
+      )}
 
-      <div className="flex items-center gap-1">
+      {/* RIGHT: notifications + account menu */}
+      <div className="flex-1 flex items-center justify-end gap-1">
         <NotificationBell />
         <button
           ref={triggerRef}

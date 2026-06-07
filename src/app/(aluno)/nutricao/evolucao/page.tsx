@@ -3,7 +3,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Card } from "@/components/ui/Card";
 import { requireRole } from "@/lib/auth-helpers";
-import { getNutritionEvolution } from "@/lib/actions/nutri-meal-logs";
+import {
+  getNutritionEvolution,
+  getNutritionLoggedDates,
+} from "@/lib/actions/nutri-meal-logs";
 import { NutricaoEvolucaoClient } from "@/components/aluno/NutricaoEvolucaoClient";
 
 const ALLOWED_RANGES = [7, 30, 90];
@@ -18,7 +21,10 @@ export default async function NutricaoEvolucaoPage({
   const requested = Number(rangeParam);
   const range = ALLOWED_RANGES.includes(requested) ? requested : 30;
 
-  const data = await getNutritionEvolution(range);
+  const [data, loggedDates] = await Promise.all([
+    getNutritionEvolution(range),
+    getNutritionLoggedDates(new Date().getFullYear()),
+  ]);
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -33,7 +39,7 @@ export default async function NutricaoEvolucaoPage({
           />
         </Card>
       ) : (
-        <NutricaoEvolucaoClient data={data} />
+        <NutricaoEvolucaoClient data={data} loggedDates={loggedDates} />
       )}
     </div>
   );

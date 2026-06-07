@@ -20,7 +20,15 @@ export interface EvolucaoCalendarProps {
   trainedDates: Set<string>;
   /** When true, dim everything outside the current week. */
   thisWeekOnly?: boolean;
+  /** Texto da legenda/aria. Default = vocabulário de treino. */
+  labels?: { done: string; missed: string; future: string };
 }
+
+const DEFAULT_LABELS = {
+  done: "treinou",
+  missed: "sem treino",
+  future: "futuro",
+};
 
 function toKey(d: Date) {
   // Local date YYYY-MM-DD (avoid UTC drift on day boundaries).
@@ -35,6 +43,7 @@ export function EvolucaoCalendar({
   month,
   trainedDates,
   thisWeekOnly = false,
+  labels = DEFAULT_LABELS,
 }: EvolucaoCalendarProps) {
   const today = React.useMemo(() => new Date(), []);
   const todayKey = toKey(today);
@@ -120,7 +129,7 @@ export function EvolucaoCalendar({
                 dimmed && "opacity-25",
               )}
               aria-label={`${d.getDate()}${
-                trained ? " · treinou" : isFuture ? "" : " · sem treino"
+                trained ? ` · ${labels.done}` : isFuture ? "" : ` · ${labels.missed}`
               }`}
             >
               <span className="leading-none">{d.getDate()}</span>
@@ -133,15 +142,15 @@ export function EvolucaoCalendar({
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 mt-1 text-caption text-text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded-sm bg-accent" /> treinou
+          <span className="inline-block w-3 h-3 rounded-sm bg-accent" /> {labels.done}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-sm bg-bg-elevated border border-border-subtle" />{" "}
-          sem treino
+          {labels.missed}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block w-3 h-3 rounded-sm border border-dashed border-border-subtle" />{" "}
-          futuro
+          {labels.future}
         </span>
       </div>
     </div>

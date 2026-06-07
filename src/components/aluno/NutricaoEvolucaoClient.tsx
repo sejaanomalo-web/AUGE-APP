@@ -2,7 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { IconButton } from "@/components/ui/IconButton";
+import { EvolucaoCalendar } from "./EvolucaoCalendar";
 import { cn } from "@/lib/utils";
 import type { NutritionEvolution } from "@/lib/actions/nutri-meal-logs";
 
@@ -10,11 +13,32 @@ const RANGES = [7, 30, 90] as const;
 
 export interface NutricaoEvolucaoClientProps {
   data: NutritionEvolution;
+  /** Datas (YYYY-MM-DD) com refeição registrada, para o calendário. */
+  loggedDates: string[];
 }
 
-export function NutricaoEvolucaoClient({ data }: NutricaoEvolucaoClientProps) {
+export function NutricaoEvolucaoClient({
+  data,
+  loggedDates,
+}: NutricaoEvolucaoClientProps) {
   const router = useRouter();
   const { days, scheduledPerDay, targetCalories } = data;
+
+  // ── Calendário (navegação de mês client-side) ──
+  const now = React.useMemo(() => new Date(), []);
+  const loggedSet = React.useMemo(() => new Set(loggedDates), [loggedDates]);
+  const [cursor, setCursor] = React.useState({
+    y: now.getFullYear(),
+    m: now.getMonth(),
+  });
+  const atCurrentMonth =
+    cursor.y === now.getFullYear() && cursor.m === now.getMonth();
+  function shiftMonth(delta: number) {
+    setCursor((c) => {
+      const d = new Date(c.y, c.m + delta, 1);
+      return { y: d.getFullYear(), m: d.getMonth() };
+    });
+  }
 
   // ── Resumo do período ──
   const adherenceVals = days
@@ -89,6 +113,40 @@ export function NutricaoEvolucaoClient({ data }: NutricaoEvolucaoClientProps) {
           suffix={avgHydration > 0 ? "L" : undefined}
         />
       </section>
+
+      {/* ── Calendário de aderência ── */}
+      <Card variant="default">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <p className="text-body-lg font-semibold text-text-primary">
+            Calendário de aderência
+          </p>
+          <div className="flex items-center gap-1">
+            <IconButton
+              aria-label="Mês anterior"
+              onClick={() => shiftMonth(-1)}
+            >
+              <ChevronLeft size={18} />
+            </IconButton>
+            <IconButton
+              aria-label="Próximo mês"
+              onClick={() => shiftMonth(1)}
+              disabled={atCurrentMonth}
+            >
+              <ChevronRight size={18} />
+            </IconButton>
+          </div>
+        </div>
+        <EvolucaoCalendar
+          year={cursor.y}
+          month={cursor.m}
+          trainedDates={loggedSet}
+          labels={{
+            done: "registrou",
+            missed: "não registrou",
+            future: "futuro",
+          }}
+        />
+      </Card>
 
       {/* ── Aderência ── */}
       <Card variant="default">
