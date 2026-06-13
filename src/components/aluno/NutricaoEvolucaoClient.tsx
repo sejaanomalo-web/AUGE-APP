@@ -98,17 +98,17 @@ export function NutricaoEvolucaoClient({
       <section className="grid grid-cols-3 gap-3">
         <StatCard
           label="Aderência média"
-          value={avgAdherence != null ? `${avgAdherence}%` : "—"}
+          value={avgAdherence != null ? `${avgAdherence}%` : "·"}
         />
         <StatCard
           label="Calorias/dia"
-          value={avgCalories > 0 ? `${avgCalories}` : "—"}
+          value={avgCalories > 0 ? `${avgCalories}` : "·"}
           suffix={avgCalories > 0 ? "kcal" : undefined}
         />
         <StatCard
           label="Hidratação/dia"
           value={
-            avgHydration > 0 ? `${(avgHydration / 1000).toFixed(1)}` : "—"
+            avgHydration > 0 ? `${(avgHydration / 1000).toFixed(1)}` : "·"
           }
           suffix={avgHydration > 0 ? "L" : undefined}
         />

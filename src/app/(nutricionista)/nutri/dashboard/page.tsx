@@ -38,13 +38,13 @@ export default async function NutriDashboardPage() {
         <StatCard
           icon={<Wheat size={20} aria-hidden />}
           label="Aderência média"
-          value="—"
+          value="·"
           hint="Disponível quando alunos começarem a logar refeições"
         />
         <StatCard
           icon={<MessageSquare size={20} aria-hidden />}
           label="Follow-ups"
-          value="—"
+          value="·"
           hint="Em breve"
         />
       </section>

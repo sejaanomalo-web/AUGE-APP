@@ -5,7 +5,7 @@ import { notifyUser } from "@/lib/notifications/notify";
 const INACTIVITY_DAYS = 3;
 
 /**
- * Cron diário noturno (BRT) — disparado por GitHub Actions às 22 UTC.
+ * Cron diário noturno (BRT) - disparado por GitHub Actions às 22 UTC.
  * Para cada NutritionistStudent ACTIVE, verifica se o aluno tem MealPlan
  * ativo e se a última MealLog é > 3 dias atrás. Se sim, notifica a
  * nutricionista com STUDENT_INACTIVE (vertical=NUTRICAO).

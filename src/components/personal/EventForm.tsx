@@ -2,11 +2,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import type { EventType } from "@prisma/client";
 import { Dialog } from "@/components/ui/Dialog";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea, Field } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { maskInt } from "@/lib/masks";
 import { createEvent, updateEvent, deleteEvent } from "@/lib/actions/events";
 
 export interface EventFormStudent {
@@ -85,8 +87,8 @@ export function EventForm({
     initial?.locationUrl ?? "",
   );
   const [notes, setNotes] = React.useState(initial?.notes ?? "");
-  const [studentId, setStudentId] = React.useState<string>(
-    initial?.studentId ?? "",
+  const [studentIds, setStudentIds] = React.useState<string[]>(
+    initial?.studentId ? [initial.studentId] : [],
   );
   const [studentSearch, setStudentSearch] = React.useState("");
 
@@ -94,13 +96,33 @@ export function EventForm({
   const [deleting, setDeleting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const filteredStudents = React.useMemo(() => {
-    const term = studentSearch.trim().toLowerCase();
-    if (!term) return students;
-    return students.filter((s) => s.name.toLowerCase().includes(term));
-  }, [students, studentSearch]);
+  const selectedStudents = React.useMemo(
+    () => students.filter((s) => studentIds.includes(s.id)),
+    [students, studentIds],
+  );
 
-  const selectedStudent = students.find((s) => s.id === studentId) ?? null;
+  // Resultados da busca que ainda não foram selecionados.
+  const availableStudents = React.useMemo(() => {
+    const term = studentSearch.trim().toLowerCase();
+    return students.filter(
+      (s) =>
+        !studentIds.includes(s.id) &&
+        (term === "" || s.name.toLowerCase().includes(term)),
+    );
+  }, [students, studentSearch, studentIds]);
+
+  function addStudent(id: string) {
+    // Na edição, cada evento pertence a um aluno: substitui. Na criação,
+    // acumula (um evento será criado por aluno).
+    setStudentIds((prev) =>
+      isEdit ? [id] : prev.includes(id) ? prev : [...prev, id],
+    );
+    setStudentSearch("");
+  }
+
+  function removeStudent(id: string) {
+    setStudentIds((prev) => prev.filter((x) => x !== id));
+  }
 
   async function handleSave() {
     setError(null);
@@ -114,7 +136,7 @@ export function EventForm({
     }
     setSaving(true);
     try {
-      const payload = {
+      const common = {
         title: title.trim(),
         type,
         // input datetime-local é hora local; new Date() interpreta sem TZ.
@@ -123,11 +145,13 @@ export function EventForm({
         location: location || null,
         locationUrl: locationUrl || null,
         notes: notes || null,
-        studentId: studentId || null,
       };
       const res = isEdit
-        ? await updateEvent(initial!.id!, payload)
-        : await createEvent(payload);
+        ? await updateEvent(initial!.id!, {
+            ...common,
+            studentId: studentIds[0] ?? null,
+          })
+        : await createEvent({ ...common, studentIds });
       if (!res.ok) {
         setError(res.error);
         return;
@@ -222,11 +246,10 @@ export function EventForm({
         >
           <Input
             id="evt-duration"
-            type="number"
             inputMode="numeric"
-            min={0}
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
+            mask={(s) => maskInt(s, 4)}
             placeholder="Ex.: 60"
           />
         </Field>
@@ -250,56 +273,71 @@ export function EventForm({
             type="url"
             value={locationUrl}
             onChange={(e) => setLocationUrl(e.target.value)}
+            maxLength={200}
             placeholder="https://"
           />
         </Field>
 
-        <Field label="Aluno" hint="Opcional. Deixe em branco para evento pessoal.">
-          {selectedStudent ? (
-            <div className="flex items-center justify-between gap-3 bg-bg-surface border border-border-subtle rounded-lg px-3.5 py-3">
-              <span className="text-body-lg text-text-primary truncate">
-                {selectedStudent.name}
-              </span>
-              <button
-                type="button"
-                onClick={() => setStudentId("")}
-                className="text-caption text-accent hover:underline"
-              >
-                Remover
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <Input
-                placeholder="Buscar aluno"
-                value={studentSearch}
-                onChange={(e) => setStudentSearch(e.target.value)}
-              />
-              {studentSearch.trim() !== "" && (
-                <div className="max-h-44 overflow-y-auto rounded-lg border border-border-subtle bg-bg-surface">
-                  {filteredStudents.length === 0 ? (
-                    <p className="px-3 py-2 text-caption text-text-muted">
-                      Nenhum aluno encontrado.
-                    </p>
-                  ) : (
-                    filteredStudents.slice(0, 8).map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => {
-                          setStudentId(s.id);
-                          setStudentSearch("");
-                        }}
-                        className="w-full text-left px-3 py-2 text-body text-text-secondary hover:text-text-primary hover:bg-bg-hover"
-                      >
-                        {s.name}
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+        <Field
+          label={isEdit ? "Aluno" : "Aluno(s)"}
+          hint={
+            isEdit
+              ? "Opcional. Deixe em branco para evento pessoal."
+              : "Opcional. Selecione um ou mais alunos - será criado um evento para cada um."
+          }
+        >
+          <div className="flex flex-col gap-2">
+            {selectedStudents.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {selectedStudents.map((s) => (
+                  <span
+                    key={s.id}
+                    className="inline-flex items-center gap-1.5 bg-accent-glow text-accent rounded-pill pl-3 pr-1.5 py-1 text-caption font-semibold"
+                  >
+                    {s.name}
+                    <button
+                      type="button"
+                      onClick={() => removeStudent(s.id)}
+                      aria-label={`Remover ${s.name}`}
+                      className="rounded-full p-0.5 hover:text-text-primary"
+                    >
+                      <X size={14} aria-hidden />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <Input
+              placeholder={
+                isEdit && selectedStudents.length > 0
+                  ? "Trocar aluno"
+                  : "Buscar aluno"
+              }
+              value={studentSearch}
+              onChange={(e) => setStudentSearch(e.target.value)}
+              maxLength={80}
+            />
+            {studentSearch.trim() !== "" && (
+              <div className="max-h-44 overflow-y-auto rounded-lg border border-border-subtle bg-bg-surface">
+                {availableStudents.length === 0 ? (
+                  <p className="px-3 py-2 text-caption text-text-muted">
+                    Nenhum aluno encontrado.
+                  </p>
+                ) : (
+                  availableStudents.slice(0, 8).map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => addStudent(s.id)}
+                      className="w-full text-left px-3 py-2 text-body text-text-secondary hover:text-text-primary hover:bg-bg-hover"
+                    >
+                      {s.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </Field>
 
         <Field label="Observações" htmlFor="evt-notes" hint="Opcional">

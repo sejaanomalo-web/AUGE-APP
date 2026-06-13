@@ -606,7 +606,7 @@ function ExerciseFormDialog({
   );
 }
 
-// Preview do vídeo embaixo do Input — usa useDeferredValue pra evitar
+// Preview do vídeo embaixo do Input - usa useDeferredValue pra evitar
 // re-render por keystroke enquanto o personal cola a URL.
 function VideoPreview({ url }: { url: string }) {
   const deferred = React.useDeferredValue(url);
@@ -618,7 +618,7 @@ function VideoPreview({ url }: { url: string }) {
   if (!parsed) {
     return (
       <p className="text-xs text-text-tertiary mt-2">
-        URL não reconhecida — o aluno verá apenas um link.
+        URL não reconhecida - o aluno verá apenas um link.
       </p>
     );
   }

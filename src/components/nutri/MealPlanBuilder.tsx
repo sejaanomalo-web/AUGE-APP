@@ -43,7 +43,7 @@ const emptyMeal = (name: string, timeOfDay = ""): DraftMeal => ({
 });
 
 function cryptoLikeId() {
-  // Pseudo-random — only used as React key; not security-sensitive.
+  // Pseudo-random - only used as React key; not security-sensitive.
   return Math.random().toString(36).slice(2, 10);
 }
 
@@ -217,7 +217,7 @@ export function MealPlanBuilder({
             id="cardapio-nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="ex: Hipertrofia — 2200 kcal"
+            placeholder="ex: Hipertrofia · 2200 kcal"
             autoFocus
           />
         </Field>

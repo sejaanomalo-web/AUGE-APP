@@ -19,7 +19,7 @@ export type GoalResult<T = void> =
   | { ok: false; error: string };
 
 /**
- * Prisma errors that mean "the Goal table isn't there yet" — i.e. the
+ * Prisma errors that mean "the Goal table isn't there yet" - i.e. the
  * migration hasn't run against this database. We want the page to render
  * a friendly state instead of crashing the whole server component.
  *
@@ -84,7 +84,7 @@ async function progressFor(
     return { current: count, start, end };
   }
 
-  // DISTANCE_KM — somar no banco (aggregate) em vez de trazer todas as linhas
+  // DISTANCE_KM - somar no banco (aggregate) em vez de trazer todas as linhas
   // do período só para reduzir em JS. distanceKm é Float não-nulo, então _sum
   // só é null quando não há linhas: o `?? 0` reproduz exatamente o reduce.
   const agg = await prisma.runningSession.aggregate({
@@ -113,7 +113,7 @@ export async function listMyGoals(): Promise<ListGoalsResult> {
   } catch (err) {
     if (isMissingGoalsTable(err)) {
       console.warn(
-        "[listMyGoals] Goal table missing — migration 20260517_add_goals not applied yet.",
+        "[listMyGoals] Goal table missing - migration 20260517_add_goals not applied yet.",
       );
       return { goals: [], schemaMissing: true };
     }
@@ -171,10 +171,10 @@ export async function createGoal(data: {
       return { ok: false, error: "Meta precisa ser um número maior que zero." };
     }
     if (data.metric === "WORKOUT_COUNT" && data.target > 1000) {
-      return { ok: false, error: "Quantidade muito alta — confira a meta." };
+      return { ok: false, error: "Quantidade muito alta. Confira a meta." };
     }
     if (data.metric === "DISTANCE_KM" && data.target > 100000) {
-      return { ok: false, error: "Distância muito alta — confira a meta." };
+      return { ok: false, error: "Distância muito alta. Confira a meta." };
     }
 
     // Refuse duplicates: same student × sport × metric × period stays unique.
@@ -228,7 +228,7 @@ export async function deleteGoal(id: string): Promise<GoalResult> {
     const { userId } = await auth();
     if (!userId) return { ok: false, error: "Não autenticado." };
 
-    // deleteMany guards the studentId — caller can only remove their own.
+    // deleteMany guards the studentId - caller can only remove their own.
     const res = await prisma.goal.deleteMany({
       where: { id, studentId: userId },
     });

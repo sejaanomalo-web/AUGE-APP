@@ -99,7 +99,7 @@ export async function deleteCustomFood(id: string) {
   if (!food.isCustom || food.createdById !== userId)
     throw new Error("Você só pode excluir alimentos que você criou");
 
-  // Prevent delete if referenced — Prisma will throw P2003 on FK violation,
+  // Prevent delete if referenced - Prisma will throw P2003 on FK violation,
   // but we precheck to give a clearer error message.
   const inUse = await prisma.mealItem.count({ where: { foodId: id } });
   if (inUse > 0)

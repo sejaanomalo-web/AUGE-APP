@@ -90,6 +90,7 @@ export default function NovaMedidaPage() {
               type="number"
               step={0.1}
               min={0}
+              max={500}
               inputMode="decimal"
               placeholder="80.1"
             />
@@ -101,6 +102,7 @@ export default function NovaMedidaPage() {
               type="number"
               step={0.1}
               min={0}
+              max={100}
               inputMode="decimal"
               placeholder="18.5"
             />
@@ -109,22 +111,22 @@ export default function NovaMedidaPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Peitoral (cm)" htmlFor="chest">
-            <Input id="chest" name="chest" type="number" step={0.1} />
+            <Input id="chest" name="chest" type="number" step={0.1} min={0} max={300} />
           </Field>
           <Field label="Cintura (cm)" htmlFor="waist">
-            <Input id="waist" name="waist" type="number" step={0.1} />
+            <Input id="waist" name="waist" type="number" step={0.1} min={0} max={300} />
           </Field>
           <Field label="Quadril (cm)" htmlFor="hip">
-            <Input id="hip" name="hip" type="number" step={0.1} />
+            <Input id="hip" name="hip" type="number" step={0.1} min={0} max={300} />
           </Field>
           <Field label="Braço (cm)" htmlFor="arm">
-            <Input id="arm" name="arm" type="number" step={0.1} />
+            <Input id="arm" name="arm" type="number" step={0.1} min={0} max={300} />
           </Field>
           <Field label="Coxa (cm)" htmlFor="thigh">
-            <Input id="thigh" name="thigh" type="number" step={0.1} />
+            <Input id="thigh" name="thigh" type="number" step={0.1} min={0} max={300} />
           </Field>
           <Field label="Panturrilha (cm)" htmlFor="calf">
-            <Input id="calf" name="calf" type="number" step={0.1} />
+            <Input id="calf" name="calf" type="number" step={0.1} min={0} max={300} />
           </Field>
         </div>
 

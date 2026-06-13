@@ -11,7 +11,7 @@ const AVATAR_BUCKET = "avatars";
 const ALLOWED_AVATAR_MIMES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_AVATAR_SIZE = 3 * 1024 * 1024;
 
-// Standard result shape — Next.js sanitises thrown error messages on
+// Standard result shape - Next.js sanitises thrown error messages on
 // server actions in production builds. Returning a typed { ok, error }
 // keeps the real message readable on the client.
 export type ProfileResult<T = void> =

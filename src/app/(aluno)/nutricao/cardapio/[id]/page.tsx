@@ -58,7 +58,7 @@ export default async function NutricaoCardapioViewPage({
                 >
                   <span className="truncate">
                     <span className="text-text-primary">{item.food.name}</span>{" "}
-                    — {item.quantity}
+                    - {item.quantity}
                     {item.unit}
                   </span>
                   <span className="text-caption text-text-muted tnum shrink-0">

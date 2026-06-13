@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // Sync inicial — não bloqueia o redirect se falhar.
+  // Sync inicial - não bloqueia o redirect se falhar.
   try {
     await syncRecentActivities(userId, { perPage: 30 });
   } catch (err) {

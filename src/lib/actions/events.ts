@@ -101,6 +101,8 @@ export async function createEvent(data: {
   locationUrl?: string | null;
   notes?: string | null;
   studentId?: string | null;
+  /** Vários alunos no mesmo evento: cria um evento por aluno selecionado. */
+  studentIds?: string[];
   remindersHours?: number[];
 }): Promise<EventResult<{ id: string }>> {
   try {
@@ -114,13 +116,28 @@ export async function createEvent(data: {
       return { ok: false, error: "Data inválida." };
     }
 
-    // Garante que o studentId pertence a este personal.
-    if (data.studentId) {
-      const link = await prisma.trainerStudent.findFirst({
-        where: { trainerId: user.id, studentId: data.studentId },
-        select: { id: true },
+    // Alunos do evento: aceita lista (multi) ou o campo único (compat). Sem
+    // nenhum aluno = evento pessoal do personal.
+    const studentIds = Array.from(
+      new Set(
+        data.studentIds && data.studentIds.length > 0
+          ? data.studentIds
+          : data.studentId
+            ? [data.studentId]
+            : [],
+      ),
+    );
+
+    // Garante que TODOS os alunos pertencem a este personal.
+    if (studentIds.length > 0) {
+      const links = await prisma.trainerStudent.findMany({
+        where: { trainerId: user.id, studentId: { in: studentIds } },
+        select: { studentId: true },
       });
-      if (!link) return { ok: false, error: "Aluno não vinculado a você." };
+      const linked = new Set(links.map((l) => l.studentId));
+      if (studentIds.some((id) => !linked.has(id))) {
+        return { ok: false, error: "Aluno não vinculado a você." };
+      }
     }
 
     const reminders =
@@ -130,25 +147,34 @@ export async function createEvent(data: {
           )
         : [24, 2];
 
-    const created = await prisma.event.create({
-      data: {
-        trainerId: user.id,
-        studentId: data.studentId ?? null,
-        title,
-        type: data.type,
-        startsAt,
-        durationMinutes: data.durationMinutes ?? null,
-        location: data.location?.trim() || null,
-        locationUrl: data.locationUrl?.trim() || null,
-        notes: data.notes?.trim() || null,
-        remindersHours: reminders,
-      },
-      select: { id: true },
-    });
+    const base = {
+      trainerId: user.id,
+      title,
+      type: data.type,
+      startsAt,
+      durationMinutes: data.durationMinutes ?? null,
+      location: data.location?.trim() || null,
+      locationUrl: data.locationUrl?.trim() || null,
+      notes: data.notes?.trim() || null,
+      remindersHours: reminders,
+    };
+
+    // Um evento por aluno (cada um recebe seus próprios lembretes); ou um
+    // evento pessoal quando nenhum aluno foi escolhido.
+    const targets: (string | null)[] =
+      studentIds.length > 0 ? studentIds : [null];
+    const created = await prisma.$transaction(
+      targets.map((sid) =>
+        prisma.event.create({
+          data: { ...base, studentId: sid },
+          select: { id: true },
+        }),
+      ),
+    );
 
     revalidatePath("/eventos");
-    if (data.studentId) revalidatePath(`/alunos/${data.studentId}`);
-    return { ok: true, data: { id: created.id } };
+    for (const sid of studentIds) revalidatePath(`/alunos/${sid}`);
+    return { ok: true, data: { id: created[0]?.id ?? "" } };
   } catch (err) {
     console.error("[createEvent] failed", err);
     return {

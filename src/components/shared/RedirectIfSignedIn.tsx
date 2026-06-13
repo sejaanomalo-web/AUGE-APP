@@ -9,7 +9,7 @@ import { useAuth } from "@clerk/nextjs";
  * ativa, manda o usuário direto para o app (`/post-login` resolve role → home).
  * A landing continua estática e servida do cache (paint instantâneo no launch);
  * o redirect só dispara após a hidratação. Deslogado: não faz nada (vê a
- * landing normalmente). Renderiza `null` — é só efeito.
+ * landing normalmente). Renderiza `null` - é só efeito.
  */
 export function RedirectIfSignedIn() {
   const { isLoaded, isSignedIn } = useAuth();

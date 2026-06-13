@@ -15,7 +15,7 @@ export async function getAlunoWeeklyStats(studentId: string) {
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
 
-  // As quatro consultas só dependem de studentId e de datas pré-computadas —
+  // As quatro consultas só dependem de studentId e de datas pré-computadas -
   // são independentes entre si, então rodam em paralelo (antes: 4 round-trips
   // em série no caminho crítico de /hoje e /alunos/[id]). O logsThisWeek usa
   // `select` enxuto: o cálculo de volume só lê completed/weight/reps.

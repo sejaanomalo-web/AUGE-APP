@@ -106,7 +106,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 py-12">
       <div className="w-full max-w-3xl relative">
-        {/* Back to landing — present on the role step (where there's no
+        {/* Back to landing - present on the role step (where there's no
          * other "Voltar" affordance) so the user is never trapped. */}
         {step === "role" && (
           <Link

@@ -108,7 +108,7 @@ export function NutricaoHojeClient({
                   className="flex items-baseline justify-between gap-2 text-body text-text-secondary"
                 >
                   <span className="truncate">
-                    <span className="text-text-primary">{item.name}</span> —{" "}
+                    <span className="text-text-primary">{item.name}</span>{" · "}
                     {item.quantity}
                     {item.unit}
                   </span>

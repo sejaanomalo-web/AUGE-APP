@@ -8,7 +8,7 @@ export default function LandingPage() {
       {/* Usuário já logado abre direto no app, sem passar pela landing. */}
       <RedirectIfSignedIn />
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
-        {/* Logo — rises in first, then settles dead-center on the screen. */}
+        {/* Logo - rises in first, then settles dead-center on the screen. */}
         <div
           className="animate-hero-rise"
           style={{ animationDelay: "0ms" }}
@@ -19,7 +19,7 @@ export default function LandingPage() {
           />
         </div>
 
-        {/* Brand line — fades up slightly after the logo. */}
+        {/* Brand line - fades up slightly after the logo. */}
         <p
           className="mt-6 max-w-[480px] text-body-lg sm:text-h3 text-text-secondary animate-hero-rise"
           style={{ animationDelay: "220ms" }}
@@ -27,7 +27,7 @@ export default function LandingPage() {
           Seja a sua melhor versão.
         </p>
 
-        {/* CTAs — last to appear so the eye lands on them naturally. */}
+        {/* CTAs - last to appear so the eye lands on them naturally. */}
         <div
           className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full max-w-xs sm:max-w-none sm:w-auto animate-hero-rise"
           style={{ animationDelay: "420ms" }}

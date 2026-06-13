@@ -7,7 +7,7 @@ import { useMemo } from "react";
 /**
  * Cliente Supabase no browser autenticado via Clerk (Native Third-Party Auth).
  * O `accessToken` é resolvido on-demand pela Supabase SDK em cada request e
- * em cada handshake do Realtime — as RLS policies enxergam o Clerk userId
+ * em cada handshake do Realtime - as RLS policies enxergam o Clerk userId
  * em `auth.jwt() ->> 'sub'`.
  *
  * Memoizado para manter uma única instância (e um único websocket de Realtime)

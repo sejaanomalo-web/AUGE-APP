@@ -100,7 +100,7 @@ export async function createCustomExercise(data: {
       data: {
         ...data,
         name,
-        // Default ACADEMIA — maioria dos exercícios é de musculação.
+        // Default ACADEMIA - maioria dos exercícios é de musculação.
         category: data.category ?? "ACADEMIA",
         isCustom: true,
         createdById: gate.userId,
@@ -161,7 +161,7 @@ export async function updateExercise(
     }
 
     // updateMany with where:{id} so a missing row is a 0-count instead
-    // of a thrown P2025 — easier to translate into a friendly message.
+    // of a thrown P2025 - easier to translate into a friendly message.
     const result = await prisma.exercise.updateMany({
       where: { id },
       data: {
@@ -237,7 +237,7 @@ export async function getExerciseById(id: string) {
 /**
  * Delete an exercise the personal can see. Blocks the delete (with a
  * clear, in-Portuguese error) if the exercise is referenced by any
- * existing WorkoutPlan session or historical ExerciseLog — those FKs
+ * existing WorkoutPlan session or historical ExerciseLog - those FKs
  * have no cascade rule, so deleting underneath them would corrupt
  * student plans and training history.
  */

@@ -105,7 +105,7 @@ export default async function NutriCardapioViewPage({
                       <span className="text-text-primary">
                         {item.food.name}
                       </span>{" "}
-                      — {item.quantity}
+                      - {item.quantity}
                       {item.unit}
                     </span>
                     <span className="text-caption text-text-muted tnum shrink-0">
@@ -143,7 +143,7 @@ function TargetCell({
         {label}/dia
       </span>
       <span className="text-h2 text-text-primary tnum">
-        {value ?? "—"}
+        {value ?? "·"}
         {value !== null && unit ? unit : ""}
       </span>
     </Card>

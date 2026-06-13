@@ -35,12 +35,12 @@ function isSharedRoute(pathname: string) {
  *
  * A vertical ativa é derivada de usePathname() AQUI (não passada pelo server),
  * porque o layout (aluno) é compartilhado entre /hoje e /nutricao/* e o Next
- * NÃO re-renderiza layouts compartilhados em navegação client — computar no
+ * NÃO re-renderiza layouts compartilhados em navegação client - computar no
  * server congelaria tema/nav.
  *
  * Rotas compartilhadas (ex.: /perfil) não pertencem a uma vertical. Para elas
  * preservamos a última vertical em que o usuário esteve (estado + cookie), em
- * vez de cair no default "treinos" — senão abrir o Perfil estando em Nutrição
+ * vez de cair no default "treinos" - senão abrir o Perfil estando em Nutrição
  * jogava tudo de volta pro tema de treino.
  */
 export function AlunoLayoutShell({
@@ -73,8 +73,8 @@ export function AlunoLayoutShell({
   const vertical: VerticalKey = sole ?? (shared ? remembered : routeVertical);
 
   // Espelha a vertical no <body> para que conteúdo renderizado via portal
-  // (tutorial, sheet de notificações, menu da conta) — que fica FORA da div
-  // com data-vertical abaixo — também herde o accent teal em Nutrição.
+  // (tutorial, sheet de notificações, menu da conta) - que fica FORA da div
+  // com data-vertical abaixo - também herde o accent teal em Nutrição.
   React.useEffect(() => {
     document.body.setAttribute("data-vertical", vertical);
     return () => document.body.removeAttribute("data-vertical");

@@ -30,7 +30,7 @@ export default async function DashboardPersonalPage() {
   // planos ativos dos alunos (só a contagem de sessões), treinos concluídos
   // por aluno nos últimos 28 dias e os treinos ativos do personal. Antes a
   // aderência fazia 2 round-trips por aluno EM SÉRIE (O(2N)); agora são 2
-  // queries agregadas — o TTFB do painel deixa de crescer com a carteira.
+  // queries agregadas - o TTFB do painel deixa de crescer com a carteira.
   const fourWeeksAgo = subDays(new Date(), 28);
   const [logsThisWeek, activePlans, doneCounts, plans] = await Promise.all([
     studentIds.length

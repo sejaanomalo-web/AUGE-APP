@@ -36,7 +36,7 @@ function getRatelimit(): Ratelimit | null {
   if (!url || !token) {
     if (!warnedMissingEnv) {
       console.warn(
-        "[middleware] UPSTASH_REDIS_REST_URL/TOKEN ausentes — rate limit desativado.",
+        "[middleware] UPSTASH_REDIS_REST_URL/TOKEN ausentes - rate limit desativado.",
       );
       warnedMissingEnv = true;
     }

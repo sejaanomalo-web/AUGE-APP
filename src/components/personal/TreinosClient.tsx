@@ -12,6 +12,7 @@ import {
   PlayCircle,
   Search,
   Target,
+  Trash2,
 } from "lucide-react";
 import { AvatarStack } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -19,7 +20,12 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { setPlanStatus, type PlanStatus } from "@/lib/actions/workout-plans";
+import { DeletePlanDialog } from "@/components/personal/DeletePlanDialog";
+import {
+  deletePlan,
+  setPlanStatus,
+  type PlanStatus,
+} from "@/lib/actions/workout-plans";
 import { formatLongDate } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +47,7 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
   { value: "ALL", label: "Todos" },
   { value: "ACTIVE", label: "Ativo" },
   { value: "PAUSED", label: "Pausado" },
-  { value: "INACTIVE", label: "Inativo" },
+  { value: "INACTIVE", label: "Desativado" },
 ];
 
 function statusBadge(status: PlanStatus) {
@@ -51,7 +57,7 @@ function statusBadge(status: PlanStatus) {
   if (status === "PAUSED") {
     return { variant: "warning" as const, label: "Pausado" };
   }
-  return { variant: "pulado" as const, label: "Inativo" };
+  return { variant: "pulado" as const, label: "Desativado" };
 }
 
 export function TreinosClient({ plans }: { plans: TreinoCardData[] }) {
@@ -109,6 +115,18 @@ export function TreinosClient({ plans }: { plans: TreinoCardData[] }) {
       prev.map((p) => (p.id === planId ? { ...p, status: next } : p)),
     );
     const res = await setPlanStatus(planId, next);
+    if (!res.ok) {
+      setItems(snapshot);
+      window.alert(res.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleDelete(planId: string) {
+    const snapshot = items;
+    setItems((prev) => prev.filter((p) => p.id !== planId));
+    const res = await deletePlan(planId);
     if (!res.ok) {
       setItems(snapshot);
       window.alert(res.error);
@@ -255,6 +273,7 @@ export function TreinosClient({ plans }: { plans: TreinoCardData[] }) {
               key={p.id}
               plan={p}
               onChangeStatus={(next) => handleStatusChange(p.id, next)}
+              onDelete={() => handleDelete(p.id)}
             />
           ))}
         </div>
@@ -266,12 +285,16 @@ export function TreinosClient({ plans }: { plans: TreinoCardData[] }) {
 function PlanCard({
   plan,
   onChangeStatus,
+  onDelete,
 }: {
   plan: TreinoCardData;
   onChangeStatus: (next: PlanStatus) => void;
+  onDelete: () => void | Promise<void>;
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const isInactive = plan.status === "INACTIVE";
 
   // Click-away closes the menu - PlanCard is purely client-side state.
   React.useEffect(() => {
@@ -290,7 +313,10 @@ function PlanCard({
   return (
     <div className="relative">
       <Link href={`/treinos/${plan.id}`} className="block">
-        <Card variant="interactive">
+        <Card
+          variant="interactive"
+          className={cn(isInactive && "opacity-55")}
+        >
           <div className="flex items-center gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -359,7 +385,7 @@ function PlanCard({
             />
             <MenuItem
               icon={Archive}
-              label="Inativar"
+              label="Desativar"
               disabled={plan.status === "INACTIVE"}
               onSelect={() => {
                 setMenuOpen(false);
@@ -374,9 +400,28 @@ function PlanCard({
             >
               <PlayCircle size={14} aria-hidden /> Editar conteúdo
             </Link>
+            <div className="my-1 border-t border-border-subtle" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                setDeleteOpen(true);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-body text-left text-error hover:bg-error/10 transition-colors"
+            >
+              <Trash2 size={14} aria-hidden /> Excluir plano
+            </button>
           </div>
         )}
       </div>
+
+      <DeletePlanDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        planName={plan.name}
+        onConfirm={() => onDelete()}
+      />
     </div>
   );
 }

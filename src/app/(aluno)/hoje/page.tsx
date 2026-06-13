@@ -74,8 +74,8 @@ function getBrazilNow(): {
 
 /**
  * Look ahead up to `maxDays` and return the next session prescribed in the
- * plan, or `null` if none in the window. Strictly plan-driven — no
- * heuristics — so any "amanhã tem treino" copy can only fire when there's
+ * plan, or `null` if none in the window. Strictly plan-driven - no
+ * heuristics - so any "amanhã tem treino" copy can only fire when there's
  * actually a session on `dayOfWeek == tomorrow` in the schedule.
  */
 type PlanSession = { name: string; dayOfWeek: number | null };
@@ -138,7 +138,7 @@ function pickRestCopy(today: Date, next: UpcomingHit | null) {
     };
   }
 
-  // No session in the next 7 days — true rest week.
+  // No session in the next 7 days - true rest week.
   if (isWeekend) {
     return {
       badge: { label: "Final de semana", variant: "info" as const },
@@ -189,7 +189,7 @@ function pickGreetingSubtitle(args: {
 export default async function HojePage() {
   const user = await requireRole("ALUNO");
   // Estas quatro consultas dependem apenas de user.id e são independentes
-  // entre si — buscar em paralelo corta o TTFB de /hoje (a aba central do
+  // entre si - buscar em paralelo corta o TTFB de /hoje (a aba central do
   // aluno) de "soma das latências" para "a maior latência".
   const [plan, stats, metrics, upcomingEvents] = await Promise.all([
     getActivePlanForStudent(user.id),

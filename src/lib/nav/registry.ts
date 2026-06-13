@@ -16,7 +16,7 @@ export interface NavItem {
 }
 
 // Ordered intentionally so "Hoje" sits dead center (position 3 of 5)
-// across both verticais — usuário não precisa procurar o botão central.
+// across both verticais - usuário não precisa procurar o botão central.
 
 export const NAV_ALUNO_TREINOS: NavItem[] = [
   { href: "/planos", label: "Treinos", icon: ClipboardList },

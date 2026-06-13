@@ -1,7 +1,7 @@
 /**
  * Pares de rotas treino-side ↔ nutrição-side. Quando o aluno alterna o
  * top toggle, navegamos pra rota correspondente. Path dinâmico (ex.
- * /planos/[id]) cai pra rota base da outra vertical — perda de contexto
+ * /planos/[id]) cai pra rota base da outra vertical - perda de contexto
  * intencional já que IDs entre verticais são distintos.
  */
 export const ROUTE_PAIRS: ReadonlyArray<{
@@ -14,7 +14,7 @@ export const ROUTE_PAIRS: ReadonlyArray<{
   { treino: "/evolucao", nutricao: "/nutricao/evolucao" },
   { treino: "/objetivos", nutricao: "/nutricao/hoje" },
   { treino: "/medidas", nutricao: "/nutricao/hoje" },
-  // /perfil é compartilhado entre verticais — preservado como está.
+  // /perfil é compartilhado entre verticais - preservado como está.
 ];
 
 export type VerticalKey = "treinos" | "nutricao";

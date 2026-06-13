@@ -147,7 +147,7 @@ function AnswerValue({
     | undefined;
 }) {
   if (!answer) {
-    return <p className="text-body text-text-muted">—</p>;
+    return <p className="text-body text-text-muted">-</p>;
   }
   if (type === "YES_NO") {
     return (
@@ -156,7 +156,7 @@ function AnswerValue({
           ? "Sim"
           : answer.valueBool === false
             ? "Não"
-            : "—"}
+            : "·"}
       </p>
     );
   }
@@ -180,13 +180,13 @@ function AnswerValue({
   if (type === "NUMBER") {
     return (
       <p className="text-body text-text-primary tnum">
-        {answer.valueNumber ?? "—"}
+        {answer.valueNumber ?? "·"}
       </p>
     );
   }
   return (
     <p className="text-body text-text-primary whitespace-pre-wrap">
-      {answer.valueText ?? "—"}
+      {answer.valueText ?? "·"}
     </p>
   );
 }

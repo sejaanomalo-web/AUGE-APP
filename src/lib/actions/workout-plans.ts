@@ -315,16 +315,48 @@ export async function replacePlanContent(
   }
 }
 
-export async function deletePlan(id: string) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
+export type DeletePlanResult = { ok: true } | { ok: false; error: string };
 
-  if (!(await canEditPlan(userId, id)))
-    throw new Error("Sem permissão para excluir este plano");
+/**
+ * Exclusão TOTAL e permanente de um plano e de todos os dados ligados a ele,
+ * tanto para o personal quanto para o aluno. `WorkoutLog -> session` é FK
+ * Restrict (não cascateia), então apagamos os logs das sessões primeiro
+ * (ExerciseLog cascateia), e então o plano - sessions, sessionExercises,
+ * definições de métrica e seus logs cascateiam pelo schema. Tudo em transação.
+ */
+export async function deletePlan(id: string): Promise<DeletePlanResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { ok: false, error: "Não autenticado." };
 
-  await prisma.workoutPlan.delete({ where: { id } });
-  revalidatePath("/treinos");
-  revalidatePath("/planos");
+    if (!(await canEditPlan(userId, id)))
+      return { ok: false, error: "Sem permissão para excluir este plano." };
+
+    await prisma.$transaction(async (tx) => {
+      const sessions = await tx.workoutSession.findMany({
+        where: { planId: id },
+        select: { id: true },
+      });
+      const sessionIds = sessions.map((s) => s.id);
+      if (sessionIds.length > 0) {
+        await tx.workoutLog.deleteMany({
+          where: { sessionId: { in: sessionIds } },
+        });
+      }
+      await tx.workoutPlan.delete({ where: { id } });
+    });
+
+    revalidatePath("/treinos");
+    revalidatePath("/planos");
+    revalidatePath("/hoje");
+    return { ok: true };
+  } catch (err) {
+    console.error("[deletePlan] failed", { id, err });
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Erro ao excluir o plano.",
+    };
+  }
 }
 
 export async function getActivePlanForStudent(studentId: string) {
@@ -367,19 +399,20 @@ export async function getMyPlans() {
 
   let where:
     | { trainerId: string }
-    | { studentId: string }
-    | { studentId: string; trainerId: { not: null } };
+    | { studentId: string; isActive: boolean }
+    | { studentId: string; trainerId: { not: null }; isActive: boolean };
   if (me.role === "PERSONAL") {
     where = { trainerId: userId };
   } else {
     // Aluno: when there's an active trainer, hide self-created solo plans -
-    // only trainer-owned plans should appear.
+    // only trainer-owned plans should appear. Planos DESATIVADOS (isActive
+    // false) somem do aluno; o personal continua vendo todos no /treinos.
     const activeLink = await prisma.trainerStudent.findFirst({
       where: { studentId: userId, status: "ACTIVE" },
     });
     where = activeLink
-      ? { studentId: userId, trainerId: { not: null } }
-      : { studentId: userId };
+      ? { studentId: userId, trainerId: { not: null }, isActive: true }
+      : { studentId: userId, isActive: true };
   }
 
   return prisma.workoutPlan.findMany({

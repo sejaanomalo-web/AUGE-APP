@@ -29,7 +29,7 @@ export default async function ObjetivosPage() {
       />
 
       {goalsResult.schemaMissing ? (
-        // The Goal table doesn't exist yet — show a precise message instead
+        // The Goal table doesn't exist yet - show a precise message instead
         // of letting the page crash. Disappears as soon as the migration runs.
         <HeroCard className="p-6 flex items-start gap-3">
           <div className="h-10 w-10 rounded-full bg-warning/15 border border-warning/40 text-warning flex items-center justify-center shrink-0">

@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/Button";
 import { GuidedTour, type TourStep } from "./GuidedTour";
 
 const NAV_DESC: Record<string, string> = {
-  // Aluno — treino
+  // Aluno - treino
   "/hoje": "Seu dia: o treino de hoje e os próximos eventos.",
   "/planos": "Seus planos de treino montados pelo personal.",
   "/objetivos": "Suas metas e objetivos para acompanhar.",
   "/evolucao": "Sua evolução: frequência, calendário e medidas.",
   "/perfil": "Seus dados, profissionais vinculados e este tutorial.",
-  // Aluno — nutrição
+  // Aluno - nutrição
   "/nutricao/hoje": "Seu dia na nutrição: refeições e hidratação para registrar.",
   "/nutricao/cardapio": "Os cardápios prescritos pela sua nutricionista.",
   "/nutricao/historico": "O histórico das refeições que você registrou.",
@@ -75,7 +75,7 @@ function buildSteps(role: "aluno" | "personal"): TourStep[] {
 
   steps.push({
     title: "Tudo pronto! 🎉",
-    body: "Explore à vontade — é só tocar nos menus. Você pode rever este tutorial quando quiser, aqui no Perfil.",
+    body: "Explore à vontade. É só tocar nos menus. Você pode rever este tutorial quando quiser, aqui no Perfil.",
   });
 
   return steps;

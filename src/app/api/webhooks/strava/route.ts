@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { syncSingleActivity } from "@/lib/integrations/strava/sync";
 
-// GET — handshake de subscription do Strava.
+// GET - handshake de subscription do Strava.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const mode = searchParams.get("hub.mode");
@@ -27,7 +27,7 @@ type StravaWebhookEvent = {
   aspect_type?: string;
 };
 
-// POST — eventos. Responder 200 rápido; sync em background.
+// POST - eventos. Responder 200 rápido; sync em background.
 export async function POST(req: Request) {
   let body: StravaWebhookEvent;
   try {

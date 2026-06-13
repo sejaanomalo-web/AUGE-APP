@@ -9,6 +9,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input } from "@/components/ui/Input";
 import { Progress } from "@/components/ui/Progress";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { maskDecimal, maskInt } from "@/lib/masks";
 import { createGoal, deleteGoal } from "@/lib/actions/goals";
 import type { GoalWithProgress } from "@/lib/actions/goals";
 import { cn } from "@/lib/utils";
@@ -360,12 +361,14 @@ function AddGoalDialog({
               <Field label={`Meta (${preset.unit})`} htmlFor="goal-target">
                 <Input
                   id="goal-target"
-                  type="number"
                   inputMode="decimal"
-                  min={0}
-                  step={preset.metric === "DISTANCE_KM" ? 0.5 : 1}
                   value={target}
                   onChange={(e) => setTarget(e.target.value)}
+                  mask={
+                    preset.metric === "DISTANCE_KM"
+                      ? (s) => maskDecimal(s, { intDigits: 5, decimals: 1 })
+                      : (s) => maskInt(s, 6)
+                  }
                   placeholder={preset.placeholderTarget}
                 />
               </Field>

@@ -5,7 +5,22 @@ import { ptBR } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { MotionProvider } from "@/components/providers/MotionProvider";
+import { SplashDismiss } from "@/components/shared/SplashDismiss";
 import "./globals.css";
+
+// CSS crítico INLINE do splash de inicialização: pinta instantaneamente junto
+// do HTML (sem esperar o CSS externo), eliminando a tela branca do cold start.
+// Logo "ꓥuge" expande ao centro (scale 0.6→1) sobre o fundo do app (#080A0D),
+// estilo WhatsApp/Chrome. Cores literais para não depender de variáveis.
+const SPLASH_CSS = `
+#auge-splash{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:#080A0D;opacity:1;transition:opacity .45s ease;animation:augeSplashSafety .5s ease 4s forwards}
+#auge-splash[data-hidden="true"]{opacity:0;pointer-events:none}
+#auge-splash .auge-splash-mark{font-family:Inter,system-ui,-apple-system,sans-serif;font-weight:800;font-size:clamp(46px,15vw,76px);line-height:1;letter-spacing:-.01em;color:#B7FF2A;transform-origin:center;animation:augeSplashIn .7s cubic-bezier(.32,.72,0,1) both,augeSplashPulse 1.8s ease-in-out .7s infinite}
+@keyframes augeSplashIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes augeSplashPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes augeSplashSafety{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){#auge-splash .auge-splash-mark{animation:augeSplashIn .3s ease both}}
+`;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -91,6 +106,12 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <body className="font-sans bg-bg-base text-text-primary min-h-screen antialiased">
+          {/* Splash de inicialização - primeiro nó do body, pinta na hora. */}
+          <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
+          <div id="auge-splash" aria-hidden="true">
+            <span className="auge-splash-mark">ꓥuge</span>
+          </div>
+          <SplashDismiss />
           <ThemeProvider>
             <MotionProvider>
               <ToastProvider>{children}</ToastProvider>

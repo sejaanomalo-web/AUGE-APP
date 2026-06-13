@@ -37,7 +37,7 @@ export default async function NutricaoHojePage() {
           <EmptyState
             icon={Utensils}
             title="Seu cardápio está a caminho"
-            description="Assim que sua nutricionista prescrever um cardápio, as refeições do dia aparecem aqui — com horários, porções e o registro de cada uma."
+            description="Assim que sua nutricionista prescrever um cardápio, as refeições do dia aparecem aqui, com horários, porções e o registro de cada uma."
           />
         </Card>
       ) : (

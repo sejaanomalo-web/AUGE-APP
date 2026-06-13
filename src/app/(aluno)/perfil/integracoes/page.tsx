@@ -13,7 +13,7 @@ function formatKm(meters: number): string {
 }
 
 function formatPace(seconds: number, meters: number): string {
-  if (!meters || meters <= 0) return "—";
+  if (!meters || meters <= 0) return "·";
   const sPerKm = seconds / (meters / 1000);
   const m = Math.floor(sPerKm / 60);
   const s = Math.round(sPerKm % 60);

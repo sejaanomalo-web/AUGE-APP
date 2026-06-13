@@ -240,7 +240,7 @@ function SwipeRow({
       }}
       transition={{ duration: 0.22, ease: "easeOut" }}
     >
-      {/* One single card surface — no underlay. The card itself follows
+      {/* One single card surface - no underlay. The card itself follows
        * the finger during a horizontal drag (dragSnapToOrigin springs it
        * back if the user doesn't cross the threshold). The trash icon
        * lives in the top-right corner of the card content. */}
@@ -260,7 +260,7 @@ function SwipeRow({
           !notif.read && "bg-accent/[0.04]",
         )}
       >
-        {/* Trash — anchored to the top-right corner of the card.
+        {/* Trash - anchored to the top-right corner of the card.
          * z-10 keeps it above the tap surface so clicks land here when
          * they overlap. stopPropagation prevents the parent tap. */}
         <button
@@ -272,7 +272,7 @@ function SwipeRow({
           <Trash2 size={14} aria-hidden />
         </button>
 
-        {/* Tap surface — opens the notification. pr-10 reserves the
+        {/* Tap surface - opens the notification. pr-10 reserves the
          * top-right corner for the trash button so copy never collides
          * with it on long titles. */}
         <button

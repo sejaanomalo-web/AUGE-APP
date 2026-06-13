@@ -118,7 +118,7 @@ export function AppHeader({
         className,
       )}
     >
-      {/* LEFT: logo (mobile only — desktop logo lives in the sidebar) */}
+      {/* LEFT: logo (mobile only - desktop logo lives in the sidebar) */}
       <div className="flex-1 flex items-center gap-2 min-w-0">
         <Link href={homeHref} className="lg:hidden">
           <Logo size="sm" />
@@ -232,7 +232,7 @@ export function AppHeader({
           document.body,
         )}
 
-      {/* Notification inbox — mounted at header level (not inside the dropdown,
+      {/* Notification inbox - mounted at header level (not inside the dropdown,
        * which unmounts on outside-click) so opening it from the menu works. */}
       <NotificationSheet
         open={notif.open}

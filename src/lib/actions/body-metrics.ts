@@ -37,7 +37,7 @@ function isPhotoColumnMissing(err: unknown): boolean {
   );
 }
 
-/** Legacy entry point — kept for /medidas/novo. No file support. */
+/** Legacy entry point - kept for /medidas/novo. No file support. */
 export async function addMetric(data: {
   date: Date;
   weight?: number;
@@ -89,7 +89,7 @@ export async function deleteMetric(id: string) {
 }
 
 /* ─────────────────────────────────────────────────────────────
- * New "evaluation" flow — used by /evolucao. Same BodyMetric table,
+ * New "evaluation" flow - used by /evolucao. Same BodyMetric table,
  * but the action accepts FormData so it can optionally carry a photo
  * upload alongside the numeric fields. Returns ActionResult so
  * production builds don't sanitise the error message.
@@ -125,7 +125,7 @@ export async function listMyEvaluations(): Promise<ListEvaluationsResult> {
   } catch (err) {
     if (isPhotoColumnMissing(err)) {
       console.warn(
-        "[listMyEvaluations] BodyMetric.photoUrl missing — apply migration 20260518_bodymetric_photo.",
+        "[listMyEvaluations] BodyMetric.photoUrl missing - apply migration 20260518_bodymetric_photo.",
       );
       return { evaluations: [], schemaMissing: true };
     }
@@ -138,17 +138,17 @@ export async function listMyEvaluations(): Promise<ListEvaluationsResult> {
  * action can carry both numeric fields AND an optional File upload.
  *
  * FormData expected keys:
- *   date           — "YYYY-MM-DD" (required)
- *   weight         — number or "" (optional)
- *   bodyFat        — number or "" (optional)
+ *   date           - "YYYY-MM-DD" (required)
+ *   weight         - number or "" (optional)
+ *   bodyFat        - number or "" (optional)
  *   height,
  *   waist,
  *   arm,
  *   thigh,
  *   hip,
- *   chest          — measurements (optional, all in cm; height in cm too)
- *   notes          — free text (optional)
- *   photo          — File (optional, JPG/PNG/WebP, ≤ 4MB)
+ *   chest          - measurements (optional, all in cm; height in cm too)
+ *   notes          - free text (optional)
+ *   photo          - File (optional, JPG/PNG/WebP, ≤ 4MB)
  */
 export async function addEvaluation(
   formData: FormData,
@@ -171,7 +171,7 @@ export async function addEvaluation(
       if (!Number.isFinite(n) || n < 0 || n > max) {
         return {
           ok: false as const,
-          error: `${label} fora do intervalo (0–${max}).`,
+          error: `${label} fora do intervalo (0 a ${max}).`,
         };
       }
       return { ok: true as const, value: n };
@@ -279,7 +279,7 @@ export async function addEvaluation(
         } catch (err) {
           if (isPhotoColumnMissing(err)) {
             console.warn(
-              "[addEvaluation] photoUrl column missing — evaluation saved without photo.",
+              "[addEvaluation] photoUrl column missing - evaluation saved without photo.",
             );
             // Keep the row, drop the photo URL silently.
           } else {

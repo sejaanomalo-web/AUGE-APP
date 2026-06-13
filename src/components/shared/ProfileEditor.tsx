@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field, Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { maskDecimal, maskPhoneBR, parseDecimalBR } from "@/lib/masks";
 import { updateProfile, uploadAvatar } from "@/lib/actions/users";
 
 const SPORTS = ["Musculação", "Corrida"];
@@ -37,10 +38,10 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
   const [phone, setPhone] = React.useState(user.phone ?? "");
   const [birthDate, setBirthDate] = React.useState(user.birthDate ?? "");
   const [height, setHeight] = React.useState(
-    user.height != null ? String(user.height) : "",
+    user.height != null ? String(user.height).replace(".", ",") : "",
   );
   const [currentWeight, setCurrentWeight] = React.useState(
-    user.currentWeight != null ? String(user.currentWeight) : "",
+    user.currentWeight != null ? String(user.currentWeight).replace(".", ",") : "",
   );
   const [goal, setGoal] = React.useState(user.goal ?? "");
   const [cref, setCref] = React.useState(user.cref ?? "");
@@ -56,9 +57,11 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
     setName(user.name);
     setPhone(user.phone ?? "");
     setBirthDate(user.birthDate ?? "");
-    setHeight(user.height != null ? String(user.height) : "");
+    setHeight(user.height != null ? String(user.height).replace(".", ",") : "");
     setCurrentWeight(
-      user.currentWeight != null ? String(user.currentWeight) : "",
+      user.currentWeight != null
+        ? String(user.currentWeight).replace(".", ",")
+        : "",
     );
     setGoal(user.goal ?? "");
     setCref(user.cref ?? "");
@@ -71,19 +74,22 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
     setSubmitting(true);
     setError(null);
     try {
-      const heightNum = height === "" ? null : parseFloat(height);
+      const heightNum = height === "" ? null : parseDecimalBR(height);
       const weightNum =
-        currentWeight === "" ? null : parseFloat(currentWeight);
+        currentWeight === "" ? null : parseDecimalBR(currentWeight);
 
       // Client-side guards so the user gets immediate feedback instead of
       // waiting for the round-trip to surface the same complaint.
-      if (heightNum !== null && Number.isNaN(heightNum)) {
-        setError("Altura inválida.");
+      if (height !== "" && (heightNum === null || heightNum <= 0 || heightNum > 300)) {
+        setError("Altura inválida (1 a 300 cm).");
         setSubmitting(false);
         return;
       }
-      if (weightNum !== null && Number.isNaN(weightNum)) {
-        setError("Peso inválido.");
+      if (
+        currentWeight !== "" &&
+        (weightNum === null || weightNum <= 0 || weightNum > 500)
+      ) {
+        setError("Peso inválido (1 a 500 kg).");
         setSubmitting(false);
         return;
       }
@@ -234,7 +240,8 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
                 id="profile-phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+55 11 ..."
+                mask={maskPhoneBR}
+                placeholder="(11) 99999-9999"
                 inputMode="tel"
               />
             </Field>
@@ -249,11 +256,9 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
             <Field label="Altura (cm)" htmlFor="profile-height">
               <Input
                 id="profile-height"
-                type="number"
-                min={0}
-                step={0.5}
                 value={height}
                 onChange={(e) => setHeight(e.target.value)}
+                mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
                 inputMode="decimal"
                 placeholder="178"
               />
@@ -261,13 +266,11 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
             <Field label="Peso atual (kg)" htmlFor="profile-weight">
               <Input
                 id="profile-weight"
-                type="number"
-                min={0}
-                step={0.1}
                 value={currentWeight}
                 onChange={(e) => setCurrentWeight(e.target.value)}
+                mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
                 inputMode="decimal"
-                placeholder="80.1"
+                placeholder="80,1"
               />
             </Field>
             <Field
@@ -288,6 +291,7 @@ export function ProfileEditor({ user }: { user: ProfileData }) {
                   id="profile-cref"
                   value={cref}
                   onChange={(e) => setCref(e.target.value)}
+                  maxLength={20}
                   placeholder="012345-G/SP"
                 />
               </Field>

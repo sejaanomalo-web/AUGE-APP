@@ -162,7 +162,7 @@ const TYPE_TO_PREF: Partial<Record<NotificationType, SettingsKey>> = {
   FOLLOWUP_FORM_ANSWERED: "studentActivity",   // chega no personal (atividade do aluno)
   EVENT_REMINDER_PERSONAL: "studentActivity",  // personal sendo lembrado de evento do aluno
   EVENT_REMINDER_STUDENT: "trainerActivity",   // aluno sendo lembrado de evento do personal
-  // Round 4 — Nutrição
+  // Round 4 - Nutrição
   MEAL_PLAN_CREATED: "nutricionistActivity",
   MEAL_PLAN_UPDATED: "nutricionistActivity",
   MEAL_REMINDER: "mealReminder",
