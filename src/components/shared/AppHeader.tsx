@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { SignOutButton, useUser } from "@clerk/nextjs";
 import { Bell, LogOut, User as UserIcon, ChevronDown } from "lucide-react";
@@ -170,7 +170,7 @@ export function AppHeader({
         createPortal(
           <AnimatePresence>
             {open && anchor && (
-              <motion.div
+              <m.div
                 ref={menuRef}
                 role="menu"
                 initial={{ opacity: 0, y: -6, scale: 0.97 }}
@@ -226,7 +226,7 @@ export function AppHeader({
                     <LogOut size={16} aria-hidden /> Sair
                   </button>
                 </SignOutButton>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>,
           document.body,

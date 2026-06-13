@@ -15,14 +15,49 @@ export async function getAlunoWeeklyStats(studentId: string) {
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
 
-  const logsThisWeek = await prisma.workoutLog.findMany({
-    where: {
-      studentId,
-      status: "COMPLETED",
-      startedAt: { gte: weekStart, lte: weekEnd },
-    },
-    include: { exerciseLogs: true },
-  });
+  // As quatro consultas só dependem de studentId e de datas pré-computadas —
+  // são independentes entre si, então rodam em paralelo (antes: 4 round-trips
+  // em série no caminho crítico de /hoje e /alunos/[id]). O logsThisWeek usa
+  // `select` enxuto: o cálculo de volume só lê completed/weight/reps.
+  const [logsThisWeek, monthCount, allCompleted, last90] = await Promise.all([
+    prisma.workoutLog.findMany({
+      where: {
+        studentId,
+        status: "COMPLETED",
+        startedAt: { gte: weekStart, lte: weekEnd },
+      },
+      select: {
+        exerciseLogs: {
+          select: { completed: true, weight: true, reps: true },
+        },
+      },
+    }),
+    // Treinos no mês - count of completed workouts in the current calendar month.
+    prisma.workoutLog.count({
+      where: {
+        studentId,
+        status: "COMPLETED",
+        startedAt: { gte: monthStart, lte: monthEnd },
+      },
+    }),
+    // Tempo médio dos treinos - total duration / total count across ALL
+    // completed workouts (lifetime average). Reads as "how long a typical
+    // session lasts for me" rather than a weekly snapshot.
+    prisma.workoutLog.findMany({
+      where: { studentId, status: "COMPLETED", finishedAt: { not: null } },
+      select: { startedAt: true, finishedAt: true },
+    }),
+    // Streak - consecutive days with at least 1 completed workout in last 90d
+    prisma.workoutLog.findMany({
+      where: {
+        studentId,
+        status: "COMPLETED",
+        startedAt: { gte: subDays(now, 90) },
+      },
+      select: { startedAt: true },
+      orderBy: { startedAt: "desc" },
+    }),
+  ]);
 
   const completedWorkouts = logsThisWeek.length;
   const volume = logsThisWeek.reduce(
@@ -36,22 +71,6 @@ export async function getAlunoWeeklyStats(studentId: string) {
     0,
   );
 
-  // Treinos no mês - count of completed workouts in the current calendar month.
-  const monthCount = await prisma.workoutLog.count({
-    where: {
-      studentId,
-      status: "COMPLETED",
-      startedAt: { gte: monthStart, lte: monthEnd },
-    },
-  });
-
-  // Tempo médio dos treinos - total duration / total count across ALL
-  // completed workouts (lifetime average). Reads as "how long a typical
-  // session lasts for me" rather than a weekly snapshot.
-  const allCompleted = await prisma.workoutLog.findMany({
-    where: { studentId, status: "COMPLETED", finishedAt: { not: null } },
-    select: { startedAt: true, finishedAt: true },
-  });
   const totalSecondsAll = allCompleted.reduce(
     (a, l) => a + (l.finishedAt!.getTime() - l.startedAt.getTime()) / 1000,
     0,
@@ -61,16 +80,6 @@ export async function getAlunoWeeklyStats(studentId: string) {
       ? Math.round(totalSecondsAll / 60 / allCompleted.length)
       : 0;
 
-  // Streak - consecutive days with at least 1 completed workout in last 90d
-  const last90 = await prisma.workoutLog.findMany({
-    where: {
-      studentId,
-      status: "COMPLETED",
-      startedAt: { gte: subDays(now, 90) },
-    },
-    select: { startedAt: true },
-    orderBy: { startedAt: "desc" },
-  });
   const trainedDays = new Set(
     last90.map((l) => l.startedAt.toISOString().slice(0, 10)),
   );

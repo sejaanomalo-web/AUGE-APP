@@ -188,14 +188,19 @@ function pickGreetingSubtitle(args: {
 
 export default async function HojePage() {
   const user = await requireRole("ALUNO");
-  const plan = await getActivePlanForStudent(user.id);
-  const stats = await getAlunoWeeklyStats(user.id);
-  const metrics = await prisma.bodyMetric.findMany({
-    where: { studentId: user.id },
-    orderBy: { date: "desc" },
-    take: 4,
-  });
-  const upcomingEvents = await listMyStudentEvents();
+  // Estas quatro consultas dependem apenas de user.id e são independentes
+  // entre si — buscar em paralelo corta o TTFB de /hoje (a aba central do
+  // aluno) de "soma das latências" para "a maior latência".
+  const [plan, stats, metrics, upcomingEvents] = await Promise.all([
+    getActivePlanForStudent(user.id),
+    getAlunoWeeklyStats(user.id),
+    prisma.bodyMetric.findMany({
+      where: { studentId: user.id },
+      orderBy: { date: "desc" },
+      take: 4,
+    }),
+    listMyStudentEvents(),
+  ]);
 
   const brNow = getBrazilNow();
   const today = brNow.date;
@@ -205,26 +210,26 @@ export default async function HojePage() {
   // days. Powers every rest-day copy decision below.
   const nextSessionHit = findNextSession(plan?.sessions ?? [], today, 7);
   const isRest = !session;
-  const inProgressLog = session
-    ? await prisma.workoutLog.findFirst({
-        where: {
-          sessionId: session.id,
-          studentId: user.id,
-          status: "IN_PROGRESS",
-        },
-      })
-    : null;
-  const todayCompleted = session
-    ? await prisma.workoutLog.findFirst({
-        where: {
-          sessionId: session.id,
-          studentId: user.id,
-          status: "COMPLETED",
-          // Today defined as BR-local midnight, converted to UTC.
-          startedAt: { gte: brNow.startOfDayUtc },
-        },
-      })
-    : null;
+  const [inProgressLog, todayCompleted] = session
+    ? await Promise.all([
+        prisma.workoutLog.findFirst({
+          where: {
+            sessionId: session.id,
+            studentId: user.id,
+            status: "IN_PROGRESS",
+          },
+        }),
+        prisma.workoutLog.findFirst({
+          where: {
+            sessionId: session.id,
+            studentId: user.id,
+            status: "COMPLETED",
+            // Today defined as BR-local midnight, converted to UTC.
+            startedAt: { gte: brNow.startOfDayUtc },
+          },
+        }),
+      ])
+    : [null, null];
 
   const last4Weight = metrics
     .filter((m) => m.weight)

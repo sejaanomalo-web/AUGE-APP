@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { CheckCircle2, AlertCircle, Info, X } from "lucide-react";
 import { GlassOverlay } from "./GlassOverlay";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ export function GlassToast({
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -73,7 +73,7 @@ export function GlassToast({
               <X size={14} aria-hidden />
             </button>
           </GlassOverlay>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

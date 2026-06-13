@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { GlassOverlay } from "./GlassOverlay";
 
 export interface GlassBottomSheetProps {
@@ -30,14 +30,14 @@ export function GlassBottomSheet({
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 z-[60] bg-black/40"
           />
-          <motion.div
+          <m.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -64,7 +64,7 @@ export function GlassBottomSheet({
               )}
               <div>{children}</div>
             </GlassOverlay>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

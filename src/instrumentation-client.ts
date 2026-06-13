@@ -7,9 +7,6 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "https://3cf9c9e2458b637caa7a6d9db4e274b9@o4511448505712640.ingest.us.sentry.io/4511448513052672",
 
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
-
   // Amostragem de traces em produção: 20% (era 100%).
   tracesSampleRate: 0.2,
   // Enable logs to be sent to Sentry
@@ -27,5 +24,14 @@ Sentry.init({
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
 });
+
+// Session Replay carregado sob demanda APÓS o init: o código da integração
+// (~50 kB gzip) sai do first-load JS de todas as rotas. Os sample rates acima
+// continuam valendo; falha ao carregar (ex.: ad blocker) só perde telemetria.
+Sentry.lazyLoadIntegration("replayIntegration")
+  .then((replayIntegration) => {
+    Sentry.addIntegration(replayIntegration());
+  })
+  .catch(() => {});
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

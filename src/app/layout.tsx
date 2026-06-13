@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { MotionProvider } from "@/components/providers/MotionProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -74,7 +75,9 @@ export default function RootLayout({
       >
         <body className="font-sans bg-bg-base text-text-primary min-h-screen antialiased">
           <ThemeProvider>
-            <ToastProvider>{children}</ToastProvider>
+            <MotionProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </MotionProvider>
           </ThemeProvider>
         </body>
       </html>

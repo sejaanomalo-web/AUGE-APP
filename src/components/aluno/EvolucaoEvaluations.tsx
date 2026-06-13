@@ -202,6 +202,8 @@ function EvaluationCard({
             <img
               src={evaluation.photoUrl}
               alt="Foto da avaliação"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           </a>

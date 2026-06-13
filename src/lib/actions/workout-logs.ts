@@ -190,16 +190,21 @@ export async function getMyHistory(limit = 30) {
   const { userId } = await auth();
   if (!userId) throw new Error("Não autenticado");
 
+  // A tela de histórico usa apenas estes campos. Antes o include trazia o
+  // plano completo + exercícios prescritos + cadastro de cada exercício por
+  // set — dezenas de KB descartados por log. O select devolve exatamente o
+  // que /historico renderiza.
   return prisma.workoutLog.findMany({
     where: { studentId: userId, status: { in: ["COMPLETED", "ABANDONED"] } },
-    include: {
-      session: {
-        include: {
-          plan: true,
-          exercises: { include: { exercise: true } },
-        },
+    select: {
+      id: true,
+      status: true,
+      startedAt: true,
+      finishedAt: true,
+      session: { select: { name: true } },
+      exerciseLogs: {
+        select: { completed: true, weight: true, reps: true },
       },
-      exerciseLogs: { include: { exercise: true } },
     },
     orderBy: { startedAt: "desc" },
     take: limit,

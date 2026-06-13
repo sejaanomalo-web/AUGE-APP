@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Bell, Trash2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -85,7 +85,7 @@ export function NotificationSheet({
         <>
           {/* Heavy backdrop blur over the rest of the screen - sells the
            * iOS sheet-over-blur look the user asked for. */}
-          <motion.div
+          <m.div
             key="notif-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -100,7 +100,7 @@ export function NotificationSheet({
             }}
           />
 
-          <motion.div
+          <m.div
             key="notif-sheet"
             role="dialog"
             aria-modal
@@ -175,7 +175,7 @@ export function NotificationSheet({
               </ul>
             )}
           </div>
-        </motion.div>
+        </m.div>
         </>
       )}
     </AnimatePresence>,
@@ -222,7 +222,7 @@ function SwipeRow({
   }
 
   return (
-    <motion.li
+    <m.li
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -244,7 +244,7 @@ function SwipeRow({
        * the finger during a horizontal drag (dragSnapToOrigin springs it
        * back if the user doesn't cross the threshold). The trash icon
        * lives in the top-right corner of the card content. */}
-      <motion.div
+      <m.div
         drag="x"
         dragConstraints={{ left: -MAX_SWIPE, right: 0 }}
         dragElastic={0.12}
@@ -308,7 +308,7 @@ function SwipeRow({
             </div>
           </div>
         </button>
-      </motion.div>
-    </motion.li>
+      </m.div>
+    </m.li>
   );
 }

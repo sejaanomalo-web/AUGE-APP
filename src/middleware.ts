@@ -80,11 +80,7 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     await auth.protect();
   }
 
-  // Inject x-pathname so server components can detect the current path
-  // via next/headers — used by the aluno layout to pick the active vertical.
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", request.nextUrl.pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  return NextResponse.next();
 });
 
 export const config = {

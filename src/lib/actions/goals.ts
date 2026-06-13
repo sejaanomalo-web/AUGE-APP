@@ -84,13 +84,14 @@ async function progressFor(
     return { current: count, start, end };
   }
 
-  // DISTANCE_KM
-  const runs = await prisma.runningSession.findMany({
+  // DISTANCE_KM — somar no banco (aggregate) em vez de trazer todas as linhas
+  // do período só para reduzir em JS. distanceKm é Float não-nulo, então _sum
+  // só é null quando não há linhas: o `?? 0` reproduz exatamente o reduce.
+  const agg = await prisma.runningSession.aggregate({
     where: { studentId, date: { gte: start, lte: end } },
-    select: { distanceKm: true },
+    _sum: { distanceKm: true },
   });
-  const total = runs.reduce((a, r) => a + (r.distanceKm ?? 0), 0);
-  return { current: total, start, end };
+  return { current: agg._sum.distanceKm ?? 0, start, end };
 }
 
 export interface ListGoalsResult {
@@ -120,23 +121,36 @@ export async function listMyGoals(): Promise<ListGoalsResult> {
     throw err;
   }
 
-  const withProgress: GoalWithProgress[] = [];
-  for (const g of goals) {
-    const p = await progressFor(userId, g.metric, g.period);
-    const pct = g.target > 0 ? Math.min(100, (p.current / g.target) * 100) : 0;
-    withProgress.push({
-      id: g.id,
-      sport: g.sport,
-      metric: g.metric,
-      target: g.target,
-      period: g.period,
-      isActive: g.isActive,
-      current: p.current,
-      pct,
-      windowStart: p.start.toISOString(),
-      windowEnd: p.end.toISOString(),
-    });
-  }
+  // progressFor depende só de (metric, period); metas que compartilham os dois
+  // produzem o mesmo número, então memoizamos a Promise por chave para evitar
+  // round-trips repetidos. Promise.all preserva a ordem original de `goals`
+  // (antes: uma query por meta EM SÉRIE).
+  const progressCache = new Map<string, ReturnType<typeof progressFor>>();
+  const withProgress: GoalWithProgress[] = await Promise.all(
+    goals.map(async (g) => {
+      const key = `${g.metric}:${g.period}`;
+      let progressPromise = progressCache.get(key);
+      if (!progressPromise) {
+        progressPromise = progressFor(userId, g.metric, g.period);
+        progressCache.set(key, progressPromise);
+      }
+      const p = await progressPromise;
+      const pct =
+        g.target > 0 ? Math.min(100, (p.current / g.target) * 100) : 0;
+      return {
+        id: g.id,
+        sport: g.sport,
+        metric: g.metric,
+        target: g.target,
+        period: g.period,
+        isActive: g.isActive,
+        current: p.current,
+        pct,
+        windowStart: p.start.toISOString(),
+        windowEnd: p.end.toISOString(),
+      };
+    }),
+  );
   return { goals: withProgress };
 }
 

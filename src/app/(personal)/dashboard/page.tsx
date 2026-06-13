@@ -26,18 +26,48 @@ export default async function DashboardPersonalPage() {
   });
   const studentIds = studentLinks.map((l) => l.studentId);
 
-  // Logs this week (across all students)
-  const logsThisWeek = studentIds.length
-    ? await prisma.workoutLog.findMany({
-        where: {
-          studentId: { in: studentIds },
-          startedAt: { gte: weekStart, lte: weekEnd },
-        },
-        include: { student: true, session: true },
-        orderBy: { startedAt: "desc" },
-        take: 30,
-      })
-    : [];
+  // Quatro consultas independentes buscadas em paralelo: logs da semana,
+  // planos ativos dos alunos (só a contagem de sessões), treinos concluídos
+  // por aluno nos últimos 28 dias e os treinos ativos do personal. Antes a
+  // aderência fazia 2 round-trips por aluno EM SÉRIE (O(2N)); agora são 2
+  // queries agregadas — o TTFB do painel deixa de crescer com a carteira.
+  const fourWeeksAgo = subDays(new Date(), 28);
+  const [logsThisWeek, activePlans, doneCounts, plans] = await Promise.all([
+    studentIds.length
+      ? prisma.workoutLog.findMany({
+          where: {
+            studentId: { in: studentIds },
+            startedAt: { gte: weekStart, lte: weekEnd },
+          },
+          include: { student: true, session: true },
+          orderBy: { startedAt: "desc" },
+          take: 30,
+        })
+      : Promise.resolve([]),
+    studentIds.length
+      ? prisma.workoutPlan.findMany({
+          where: { studentId: { in: studentIds }, isActive: true },
+          select: { studentId: true, _count: { select: { sessions: true } } },
+        })
+      : Promise.resolve([]),
+    studentIds.length
+      ? prisma.workoutLog.groupBy({
+          by: ["studentId"],
+          where: {
+            studentId: { in: studentIds },
+            status: "COMPLETED",
+            startedAt: { gte: fourWeeksAgo },
+          },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+    prisma.workoutPlan.findMany({
+      where: { trainerId: personal.id, isActive: true },
+      include: { sessions: true },
+      orderBy: { updatedAt: "desc" },
+      take: 4,
+    }),
+  ]);
 
   const finishedToday = logsThisWeek.filter(
     (l) =>
@@ -55,26 +85,28 @@ export default async function DashboardPersonalPage() {
     studentLinks.length - activeThisWeekIds.size,
   );
 
-  // Adherence: prescribed sessions in last 4 weeks vs completed
-  const fourWeeksAgo = subDays(new Date(), 28);
-  const adherenceByStudent: { studentId: string; adherence: number }[] = [];
-  for (const link of studentLinks) {
-    const plans = await prisma.workoutPlan.findMany({
-      where: { studentId: link.studentId, isActive: true },
-      include: { sessions: true },
-    });
-    const sessionsPerWeek = plans.reduce((a, p) => a + p.sessions.length, 0);
-    const expected = sessionsPerWeek * 4; // 4 weeks
-    const done = await prisma.workoutLog.count({
-      where: {
-        studentId: link.studentId,
-        status: "COMPLETED",
-        startedAt: { gte: fourWeeksAgo },
-      },
-    });
-    const adherence = expected > 0 ? Math.min(100, (done / expected) * 100) : 0;
-    adherenceByStudent.push({ studentId: link.studentId, adherence });
+  // Aderência: sessões prescritas nas últimas 4 semanas vs concluídas.
+  // Sessões prescritas por aluno = soma das sessões de todos os planos ativos
+  // do aluno (sem filtrar trainerId, igual ao comportamento original).
+  const prescribedByStudent = new Map<string, number>();
+  for (const p of activePlans) {
+    prescribedByStudent.set(
+      p.studentId,
+      (prescribedByStudent.get(p.studentId) ?? 0) + p._count.sessions,
+    );
   }
+  const doneByStudent = new Map<string, number>();
+  for (const d of doneCounts) {
+    doneByStudent.set(d.studentId, d._count._all);
+  }
+  // Iterar studentLinks preserva a ordem original (desempate estável do sort
+  // por aderência abaixo); alunos sem plano/log entram com 0, como antes.
+  const adherenceByStudent = studentLinks.map((link) => {
+    const expected = (prescribedByStudent.get(link.studentId) ?? 0) * 4; // 4 weeks
+    const done = doneByStudent.get(link.studentId) ?? 0;
+    const adherence = expected > 0 ? Math.min(100, (done / expected) * 100) : 0;
+    return { studentId: link.studentId, adherence };
+  });
   // Lista completa de alunos com aproveitamento (pior primeiro)
   const studentsAdherence = adherenceByStudent
     .map((s) => {
@@ -89,13 +121,7 @@ export default async function DashboardPersonalPage() {
       )
     : 0;
 
-  // Active plans summary
-  const plans = await prisma.workoutPlan.findMany({
-    where: { trainerId: personal.id, isActive: true },
-    include: { sessions: true },
-    orderBy: { updatedAt: "desc" },
-    take: 4,
-  });
+  // (treinos ativos do personal já buscados no Promise.all acima como `plans`)
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col gap-6">

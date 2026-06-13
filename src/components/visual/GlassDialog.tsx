@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { GlassOverlay } from "./GlassOverlay";
 
@@ -44,7 +44,7 @@ export function GlassDialog({
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -52,7 +52,7 @@ export function GlassDialog({
             onClick={onClose}
             className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -95,7 +95,7 @@ export function GlassDialog({
                 </div>
               )}
             </GlassOverlay>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

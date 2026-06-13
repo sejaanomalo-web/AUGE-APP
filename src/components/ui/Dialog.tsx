@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./IconButton";
@@ -73,7 +73,7 @@ export function Dialog({
            * on a framer-motion transformed node breaks touch scrolling
            * on iOS Safari, which was the bug on the long evaluation
            * form. */}
-          <motion.div
+          <m.div
             key="dialog-backdrop"
             aria-hidden
             initial={{ opacity: 0 }}
@@ -99,7 +99,7 @@ export function Dialog({
               onClick={handleBackdropClick}
               className="min-h-full grid place-items-center p-4"
             >
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.96, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 12 }}
@@ -139,7 +139,7 @@ export function Dialog({
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             </div>
           </div>
         </>
