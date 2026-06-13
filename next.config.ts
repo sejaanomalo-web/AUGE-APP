@@ -33,6 +33,18 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "5mb",
     },
+    // Router cache do cliente: ao voltar para uma aba visitada há pouco, reusa
+    // o conteúdo em cache em vez de refazer o round-trip (auth + Prisma). As
+    // mutações já chamam revalidatePath/router.refresh, então dados do próprio
+    // usuário continuam atualizando na hora; só muda a percepção de velocidade.
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+    // Reescreve imports de barrel para deep-imports por símbolo, tirando peso
+    // do First Load JS compartilhado (lucide-react é usado em ~90 arquivos,
+    // inclusive nos layouts sempre carregados). Comportamento idêntico.
+    optimizePackageImports: ["lucide-react", "date-fns"],
   },
   async headers() {
     return [

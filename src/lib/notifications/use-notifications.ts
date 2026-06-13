@@ -7,8 +7,7 @@ import { useSupabaseClient } from "@/lib/supabase/client";
 import {
   deleteAllNotifications,
   deleteNotification,
-  getMyNotifications,
-  getUnreadCount,
+  getNotificationsWithCount,
   markAsRead,
 } from "@/lib/actions/notifications";
 import type { NotificationItem } from "@/components/notifications/NotificationSheet";
@@ -30,12 +29,9 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = React.useState(0);
 
   const refresh = React.useCallback(async () => {
-    const [items, count] = await Promise.all([
-      getMyNotifications(),
-      getUnreadCount(),
-    ]);
+    const { items, unreadCount } = await getNotificationsWithCount();
     setNotifications(items as NotificationItem[]);
-    setUnreadCount(count);
+    setUnreadCount(unreadCount);
   }, []);
 
   React.useEffect(() => {

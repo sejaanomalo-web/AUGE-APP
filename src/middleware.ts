@@ -16,6 +16,9 @@ const isPublicRoute = createRouteMatcher([
   "/workbox-(.*)",
   "/swe-worker-(.*)",
   "/api/cron(.*)",
+  // Tunnel de telemetria do Sentry (next.config tunnelRoute) — não deve passar
+  // por auth.protect() a cada envio de evento.
+  "/monitoring(.*)",
 ]);
 
 // Rate-limit applies to /api/* with two carve-outs:

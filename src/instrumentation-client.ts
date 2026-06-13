@@ -9,15 +9,14 @@ Sentry.init({
 
   // Amostragem de traces em produção: 20% (era 100%).
   tracesSampleRate: 0.2,
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
+  // Logs do cliente desligados: instrumentavam o console e geravam tráfego de
+  // telemetria contínuo no mobile. Erros continuam via captureException.
+  enableLogs: false,
 
-  // Define how likely Replay events are sampled.
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
-  replaysSessionSampleRate: 0.1,
-
-  // Define how likely Replay events are sampled when an error occurs.
+  // Session Replay só em sessões COM erro (o que importa pra debugar). A
+  // gravação contínua de 10% das sessões saudáveis foi desligada (custo de
+  // CPU/upload no mobile sem benefício).
+  replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 1.0,
 
   // Enable sending user PII (Personally Identifiable Information)

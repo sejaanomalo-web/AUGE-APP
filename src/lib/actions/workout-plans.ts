@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { notifyUser } from "@/lib/notifications/notify";
 
 /**
@@ -391,11 +392,11 @@ function isPausedAtColumnMissing(err: unknown): boolean {
 }
 
 export async function getMyPlans() {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
-
-  const me = await prisma.user.findUnique({ where: { id: userId } });
-  if (!me) return [];
+  // getCurrentUser é React cache(): reaproveita o usuário já buscado pelo
+  // requireRole da página (ex.: /treinos), evitando um user.findUnique extra.
+  const me = await getCurrentUser();
+  if (!me) throw new Error("Não autenticado");
+  const userId = me.id;
 
   let where:
     | { trainerId: string }

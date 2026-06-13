@@ -22,7 +22,7 @@ export default function LandingPage() {
         {/* Brand line - fades up slightly after the logo. */}
         <p
           className="mt-6 max-w-[480px] text-body-lg sm:text-h3 text-text-secondary animate-hero-rise"
-          style={{ animationDelay: "220ms" }}
+          style={{ animationDelay: "60ms" }}
         >
           Seja a sua melhor versão.
         </p>
@@ -30,7 +30,7 @@ export default function LandingPage() {
         {/* CTAs - last to appear so the eye lands on them naturally. */}
         <div
           className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full max-w-xs sm:max-w-none sm:w-auto animate-hero-rise"
-          style={{ animationDelay: "420ms" }}
+          style={{ animationDelay: "120ms" }}
         >
           <LinkButton
             href="/cadastro"

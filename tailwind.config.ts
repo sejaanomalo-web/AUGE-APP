@@ -126,7 +126,7 @@ const config: Config = {
         // Smooth rise + scale-in used by the landing hero. fill-mode: both
         // so the element starts at opacity:0 before the animation fires
         // (no FOUC flash) and stays visible after.
-        "hero-rise": "heroRise 720ms cubic-bezier(0.32, 0.72, 0, 1) both",
+        "hero-rise": "heroRise 300ms cubic-bezier(0.32, 0.72, 0, 1) both",
       },
       keyframes: {
         shimmer: {
