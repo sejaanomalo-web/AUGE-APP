@@ -278,6 +278,7 @@ function TemplateEditor({
                       onChange={(e) =>
                         updateQuestion(idx, { label: e.target.value })
                       }
+                      maxLength={200}
                     />
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="flex-1 min-w-[180px]">

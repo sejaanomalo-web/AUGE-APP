@@ -23,6 +23,7 @@ import {
   addExerciseToSession,
 } from "@/lib/actions/workout-sessions";
 import { useToast } from "@/components/providers/ToastProvider";
+import { maskInt, maskDecimal, parseDecimalBR } from "@/lib/masks";
 
 interface StudentOption {
   id: string;
@@ -609,9 +610,9 @@ export function WorkoutBuilder({
                                 Séries
                               </span>
                               <Input
-                                type="number"
+                                inputMode="numeric"
+                                mask={(s) => maskInt(s, 3)}
                                 aria-label="Séries"
-                                min={1}
                                 value={ex.sets}
                                 onChange={(e) =>
                                   updateExercise(sIdx, exIdx, {
@@ -627,6 +628,7 @@ export function WorkoutBuilder({
                               </span>
                               <Input
                                 aria-label="Repetições"
+                                maxLength={15}
                                 value={ex.reps}
                                 onChange={(e) =>
                                   updateExercise(sIdx, exIdx, {
@@ -642,9 +644,9 @@ export function WorkoutBuilder({
                                 Descanso (s)
                               </span>
                               <Input
-                                type="number"
+                                inputMode="numeric"
+                                mask={(s) => maskInt(s, 4)}
                                 aria-label="Descanso (s)"
-                                min={0}
                                 value={ex.rest}
                                 onChange={(e) =>
                                   updateExercise(sIdx, exIdx, {
@@ -659,14 +661,15 @@ export function WorkoutBuilder({
                                 Peso (kg)
                               </span>
                               <Input
-                                type="number"
+                                inputMode="decimal"
+                                mask={(s) =>
+                                  maskDecimal(s, { intDigits: 3, decimals: 1 })
+                                }
                                 aria-label="Peso sugerido (kg)"
-                                min={0}
-                                step={0.5}
-                                value={ex.weight}
+                                value={String(ex.weight).replace(".", ",")}
                                 onChange={(e) =>
                                   updateExercise(sIdx, exIdx, {
-                                    weight: parseFloat(e.target.value) || 0,
+                                    weight: parseDecimalBR(e.target.value) ?? 0,
                                   })
                                 }
                                 className="text-center"

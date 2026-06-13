@@ -286,6 +286,7 @@ export default function OnboardingPage() {
                     placeholder="ex: 012345-G/SP"
                     value={cref}
                     onChange={(e) => setCref(e.target.value)}
+                    maxLength={20}
                     autoComplete="off"
                   />
                 </Field>
@@ -307,6 +308,7 @@ export default function OnboardingPage() {
                     placeholder="ex: CRN-3 12345/SP"
                     value={crn}
                     onChange={(e) => setCrn(e.target.value)}
+                    maxLength={20}
                     autoComplete="off"
                   />
                 </Field>

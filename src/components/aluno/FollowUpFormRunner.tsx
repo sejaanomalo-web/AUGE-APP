@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import { maskDecimal, parseDecimalBR } from "@/lib/masks";
 import { submitFormAnswers } from "@/lib/actions/followup-forms";
 
 interface Question {
@@ -178,19 +179,7 @@ function QuestionInput({
     );
   }
   if (type === "NUMBER") {
-    return (
-      <Input
-        type="number"
-        inputMode="decimal"
-        value={value?.valueNumber ?? ""}
-        onChange={(e) =>
-          onChange({
-            valueNumber: e.target.value === "" ? null : Number(e.target.value),
-          })
-        }
-        placeholder="0"
-      />
-    );
+    return <NumberQuestionInput value={value} onChange={onChange} />;
   }
   if (type === "RATING_1_5") {
     const n = value?.valueNumber ?? 0;
@@ -247,4 +236,31 @@ function QuestionInput({
     );
   }
   return null;
+}
+
+// Campo numérico decimal (vírgula BR). Mantém um texto local para a digitação
+// e armazena o number já convertido em valueNumber (parse via parseDecimalBR).
+function NumberQuestionInput({
+  value,
+  onChange,
+}: {
+  value: AnswerState | undefined;
+  onChange: (patch: Partial<AnswerState>) => void;
+}) {
+  const [text, setText] = React.useState(() =>
+    value?.valueNumber == null ? "" : String(value.valueNumber).replace(".", ","),
+  );
+  return (
+    <Input
+      inputMode="decimal"
+      mask={(s) => maskDecimal(s, { intDigits: 6, decimals: 2 })}
+      value={text}
+      onChange={(e) => {
+        const t = e.target.value;
+        setText(t);
+        onChange({ valueNumber: parseDecimalBR(t) });
+      }}
+      placeholder="0"
+    />
+  );
 }

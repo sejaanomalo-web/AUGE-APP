@@ -1,6 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { cn } from "@/lib/utils";
+import { maskInt, maskDecimal, parseDecimalBR } from "@/lib/masks";
 import { AnimatedSetButton } from "@/components/visual/AnimatedSetButton";
 
 export interface SetRowState {
@@ -19,6 +21,27 @@ export function SetRow({
   onChange: (next: SetRowState) => void;
   onToggleComplete: () => void;
 }) {
+  // Rascunhos de texto para permitir digitar/colar só o formato permitido
+  // (inteiro nas reps, decimal BR no peso) preservando o estado numérico.
+  const [repsDraft, setRepsDraft] = React.useState(() => String(state.reps));
+  const [weightDraft, setWeightDraft] = React.useState(() =>
+    String(state.weightKg).replace(".", ","),
+  );
+
+  // Mantém o rascunho em sincronia quando o número muda por fora (ex.: seed).
+  React.useEffect(() => {
+    if ((parseDecimalBR(repsDraft) ?? 0) !== state.reps) {
+      setRepsDraft(String(state.reps));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.reps]);
+  React.useEffect(() => {
+    if ((parseDecimalBR(weightDraft) ?? 0) !== state.weightKg) {
+      setWeightDraft(String(state.weightKg).replace(".", ","));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.weightKg]);
+
   return (
     <div
       className={cn(
@@ -46,13 +69,13 @@ export function SetRow({
             Repetições
           </span>
           <input
-            type="number"
             inputMode="numeric"
-            min={0}
-            value={state.reps}
-            onChange={(e) =>
-              onChange({ ...state, reps: parseInt(e.target.value) || 0 })
-            }
+            value={repsDraft}
+            onChange={(e) => {
+              const masked = maskInt(e.target.value, 3);
+              setRepsDraft(masked);
+              onChange({ ...state, reps: parseInt(masked, 10) || 0 });
+            }}
             className="w-full bg-transparent text-training-value font-mono-num text-text-primary text-center focus:outline-none"
             aria-label={`Repetições da série ${state.setNumber}`}
           />
@@ -62,14 +85,16 @@ export function SetRow({
             Kg
           </span>
           <input
-            type="number"
             inputMode="decimal"
-            step={0.5}
-            min={0}
-            value={state.weightKg}
-            onChange={(e) =>
-              onChange({ ...state, weightKg: parseFloat(e.target.value) || 0 })
-            }
+            value={weightDraft}
+            onChange={(e) => {
+              const masked = maskDecimal(e.target.value, {
+                intDigits: 3,
+                decimals: 1,
+              });
+              setWeightDraft(masked);
+              onChange({ ...state, weightKg: parseDecimalBR(masked) ?? 0 });
+            }}
             className="w-full bg-transparent text-training-value font-mono-num text-text-primary text-center focus:outline-none"
             aria-label={`Peso da série ${state.setNumber}`}
           />

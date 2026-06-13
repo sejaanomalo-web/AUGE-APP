@@ -145,6 +145,7 @@ function MetricRow({
             onChange={(e) => setValue(e.target.value)}
             placeholder={`Novo valor${def.unit ? ` em ${def.unit}` : ""}`}
             className="flex-1"
+            maxLength={20}
             required
           />
           <Button

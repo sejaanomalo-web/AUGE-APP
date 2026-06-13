@@ -491,6 +491,7 @@ function ExerciseFormDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            maxLength={80}
             placeholder="ex: Supino articulado"
           />
         </Field>
@@ -546,6 +547,7 @@ function ExerciseFormDialog({
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="https://youtube.com/watch?v=..."
             type="url"
+            maxLength={500}
           />
           <VideoPreview url={videoUrl} />
         </Field>

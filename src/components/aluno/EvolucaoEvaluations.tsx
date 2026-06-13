@@ -20,6 +20,7 @@ import {
   deleteEvaluation,
   type EvaluationListItem,
 } from "@/lib/actions/body-metrics";
+import { maskDecimal, parseDecimalBR } from "@/lib/masks";
 import { cn } from "@/lib/utils";
 
 const MEASUREMENT_FIELDS: Array<{
@@ -322,11 +323,13 @@ function AddEvaluationDialog({
     setSubmitting(true);
     const fd = new FormData();
     fd.set("date", date);
-    if (weight) fd.set("weight", weight);
-    if (bodyFat) fd.set("bodyFat", bodyFat);
+    const weightNum = parseDecimalBR(weight);
+    if (weightNum !== null) fd.set("weight", String(weightNum));
+    const bodyFatNum = parseDecimalBR(bodyFat);
+    if (bodyFatNum !== null) fd.set("bodyFat", String(bodyFatNum));
     for (const m of MEASUREMENT_FIELDS) {
-      const v = measurements[m.key];
-      if (v) fd.set(m.key, v);
+      const v = parseDecimalBR(measurements[m.key] ?? "");
+      if (v !== null) fd.set(m.key, String(v));
     }
     if (notes.trim()) fd.set("notes", notes.trim());
     if (file) fd.set("photo", file);
@@ -381,24 +384,18 @@ function AddEvaluationDialog({
           <Field label="Peso (kg)" htmlFor="eval-weight">
             <Input
               id="eval-weight"
-              type="number"
               inputMode="decimal"
-              step={0.1}
-              min={0}
-              max={500}
+              mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              placeholder="78.4"
+              placeholder="78,4"
             />
           </Field>
           <Field label="% gordura" htmlFor="eval-bodyfat">
             <Input
               id="eval-bodyfat"
-              type="number"
               inputMode="decimal"
-              step={0.1}
-              min={0}
-              max={100}
+              mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
               value={bodyFat}
               onChange={(e) => setBodyFat(e.target.value)}
               placeholder="18"
@@ -416,11 +413,8 @@ function AddEvaluationDialog({
               <Field key={m.key} label={m.label} htmlFor={`eval-${m.key}`}>
                 <Input
                   id={`eval-${m.key}`}
-                  type="number"
                   inputMode="decimal"
-                  step={0.1}
-                  min={0}
-                  max={m.max}
+                  mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
                   value={measurements[m.key] ?? ""}
                   onChange={(e) =>
                     setMeasurements((prev) => ({

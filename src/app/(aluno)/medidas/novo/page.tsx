@@ -7,13 +7,17 @@ import { ChevronLeft } from "lucide-react";
 import { IconButton } from "@/components/ui/IconButton";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Textarea } from "@/components/ui/Input";
+import { maskDecimal, parseDecimalBR } from "@/lib/masks";
 import { addMetric } from "@/lib/actions/body-metrics";
+
+// Máscara decimal BR (vírgula, 3 inteiros + 1 casa) reutilizada nos campos.
+const decimalMask = (s: string) => maskDecimal(s, { intDigits: 3, decimals: 1 });
 
 function pickNumber(form: FormData, key: string): number | undefined {
   const raw = form.get(key);
   if (typeof raw !== "string" || raw.trim() === "") return undefined;
-  const n = parseFloat(raw);
-  return Number.isFinite(n) ? n : undefined;
+  const n = parseDecimalBR(raw);
+  return n != null && Number.isFinite(n) ? n : undefined;
 }
 
 export default function NovaMedidaPage() {
@@ -87,46 +91,40 @@ export default function NovaMedidaPage() {
             <Input
               id="weight"
               name="weight"
-              type="number"
-              step={0.1}
-              min={0}
-              max={500}
               inputMode="decimal"
-              placeholder="80.1"
+              mask={decimalMask}
+              placeholder="80,1"
             />
           </Field>
           <Field label="% Gordura" htmlFor="bodyFat">
             <Input
               id="bodyFat"
               name="bodyFat"
-              type="number"
-              step={0.1}
-              min={0}
-              max={100}
               inputMode="decimal"
-              placeholder="18.5"
+              mask={decimalMask}
+              placeholder="18,5"
             />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Peitoral (cm)" htmlFor="chest">
-            <Input id="chest" name="chest" type="number" step={0.1} min={0} max={300} />
+            <Input id="chest" name="chest" inputMode="decimal" mask={decimalMask} />
           </Field>
           <Field label="Cintura (cm)" htmlFor="waist">
-            <Input id="waist" name="waist" type="number" step={0.1} min={0} max={300} />
+            <Input id="waist" name="waist" inputMode="decimal" mask={decimalMask} />
           </Field>
           <Field label="Quadril (cm)" htmlFor="hip">
-            <Input id="hip" name="hip" type="number" step={0.1} min={0} max={300} />
+            <Input id="hip" name="hip" inputMode="decimal" mask={decimalMask} />
           </Field>
           <Field label="Braço (cm)" htmlFor="arm">
-            <Input id="arm" name="arm" type="number" step={0.1} min={0} max={300} />
+            <Input id="arm" name="arm" inputMode="decimal" mask={decimalMask} />
           </Field>
           <Field label="Coxa (cm)" htmlFor="thigh">
-            <Input id="thigh" name="thigh" type="number" step={0.1} min={0} max={300} />
+            <Input id="thigh" name="thigh" inputMode="decimal" mask={decimalMask} />
           </Field>
           <Field label="Panturrilha (cm)" htmlFor="calf">
-            <Input id="calf" name="calf" type="number" step={0.1} min={0} max={300} />
+            <Input id="calf" name="calf" inputMode="decimal" mask={decimalMask} />
           </Field>
         </div>
 

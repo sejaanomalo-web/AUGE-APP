@@ -12,6 +12,7 @@ import {
   type CreateMealPlanInput,
 } from "@/lib/actions/nutri-meal-plans";
 import type { FoodOption } from "@/lib/actions/nutri-foods";
+import { maskDecimal, maskInt, parseDecimalBR } from "@/lib/masks";
 import { FoodSelector } from "./FoodSelector";
 
 interface Aluno {
@@ -153,8 +154,8 @@ export function MealPlanBuilder({
           `A refeição "${m.name}" precisa ter ao menos um alimento.`,
         );
       for (const i of m.items) {
-        const q = parseFloat(i.quantity);
-        if (Number.isNaN(q) || q <= 0)
+        const q = parseDecimalBR(i.quantity);
+        if (q === null || q <= 0)
           return setError(
             `Quantidade inválida em "${i.food.name}" (refeição "${m.name}").`,
           );
@@ -177,7 +178,7 @@ export function MealPlanBuilder({
         notes: m.notes.trim() || undefined,
         items: m.items.map((i) => ({
           foodId: i.food.id,
-          quantity: parseFloat(i.quantity),
+          quantity: parseDecimalBR(i.quantity) ?? 0,
           unit: i.unit,
           notes: undefined,
         })),
@@ -217,6 +218,7 @@ export function MealPlanBuilder({
             id="cardapio-nome"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            maxLength={80}
             placeholder="ex: Hipertrofia · 2200 kcal"
             autoFocus
           />
@@ -259,37 +261,37 @@ export function MealPlanBuilder({
           <Field label="kcal" htmlFor="t-kcal">
             <Input
               id="t-kcal"
-              type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               value={tCal}
               onChange={(e) => setTCal(e.target.value)}
+              mask={(s) => maskInt(s, 5)}
             />
           </Field>
           <Field label="Proteína (g)" htmlFor="t-prot">
             <Input
               id="t-prot"
-              type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               value={tPro}
               onChange={(e) => setTPro(e.target.value)}
+              mask={(s) => maskInt(s, 4)}
             />
           </Field>
           <Field label="Carboidrato (g)" htmlFor="t-carb">
             <Input
               id="t-carb"
-              type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               value={tCar}
               onChange={(e) => setTCar(e.target.value)}
+              mask={(s) => maskInt(s, 4)}
             />
           </Field>
           <Field label="Gordura (g)" htmlFor="t-fat">
             <Input
               id="t-fat"
-              type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               value={tFat}
               onChange={(e) => setTFat(e.target.value)}
+              mask={(s) => maskInt(s, 4)}
             />
           </Field>
         </div>
@@ -327,6 +329,7 @@ export function MealPlanBuilder({
                     onChange={(e) =>
                       updateMeal(meal.tempId, { name: e.target.value })
                     }
+                    maxLength={80}
                   />
                 </Field>
                 <Field label="Horário" htmlFor={`m-time-${meal.tempId}`}>
@@ -336,6 +339,13 @@ export function MealPlanBuilder({
                     onChange={(e) =>
                       updateMeal(meal.tempId, { timeOfDay: e.target.value })
                     }
+                    inputMode="numeric"
+                    maxLength={5}
+                    mask={(s) => {
+                      const d = s.replace(/\D+/g, "").slice(0, 4);
+                      if (d.length > 2) return `${d.slice(0, 2)}:${d.slice(2)}`;
+                      return d;
+                    }}
                     placeholder="ex: 07:30"
                   />
                 </Field>
@@ -353,7 +363,7 @@ export function MealPlanBuilder({
               {meal.items.length > 0 && (
                 <ul className="flex flex-col gap-2">
                   {meal.items.map((item) => {
-                    const q = parseFloat(item.quantity) || 0;
+                    const q = parseDecimalBR(item.quantity) ?? 0;
                     const kcal = (item.food.kcalPer100g * q) / 100;
                     return (
                       <li
@@ -364,13 +374,15 @@ export function MealPlanBuilder({
                           {item.food.name}
                         </span>
                         <Input
-                          type="number"
                           inputMode="decimal"
                           value={item.quantity}
                           onChange={(e) =>
                             updateItem(meal.tempId, item.tempId, {
                               quantity: e.target.value,
                             })
+                          }
+                          mask={(s) =>
+                            maskDecimal(s, { intDigits: 4, decimals: 1 })
                           }
                           className="w-20 text-center"
                           aria-label="Quantidade"
@@ -469,7 +481,7 @@ export function MealPlanBuilder({
 function computeMealTotals(meal: DraftMeal) {
   return meal.items.reduce(
     (acc, item) => {
-      const q = (parseFloat(item.quantity) || 0) / 100;
+      const q = (parseDecimalBR(item.quantity) ?? 0) / 100;
       return {
         kcal: acc.kcal + item.food.kcalPer100g * q,
         protein: acc.protein + item.food.proteinPer100g * q,

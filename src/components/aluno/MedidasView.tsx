@@ -366,6 +366,7 @@ export function MedidasView({
             <Input
               id="exam-type"
               name="type"
+              maxLength={80}
               placeholder="ex: Hemograma completo"
               required
             />

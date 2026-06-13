@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { Dialog } from "@/components/ui/Dialog";
 import { Field, Input } from "@/components/ui/Input";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { maskDecimal, parseDecimalBR } from "@/lib/masks";
 import {
   createCustomFood,
   deleteCustomFood,
@@ -215,17 +216,17 @@ function CreateFoodDialog({
     e.preventDefault();
     setError(null);
 
-    const kcal = parseFloat(form.kcal);
-    const protein = parseFloat(form.protein);
-    const carbs = parseFloat(form.carbs);
-    const fat = parseFloat(form.fat);
-    const fiber = form.fiber ? parseFloat(form.fiber) : undefined;
+    const kcal = parseDecimalBR(form.kcal);
+    const protein = parseDecimalBR(form.protein);
+    const carbs = parseDecimalBR(form.carbs);
+    const fat = parseDecimalBR(form.fat);
+    const fiber = form.fiber ? parseDecimalBR(form.fiber) : undefined;
 
     if (!form.name.trim()) {
       setError("Nome obrigatório.");
       return;
     }
-    if ([kcal, protein, carbs, fat].some(Number.isNaN)) {
+    if ([kcal, protein, carbs, fat].some((n) => n === null)) {
       setError("Macros precisam ser números.");
       return;
     }
@@ -235,11 +236,11 @@ function CreateFoodDialog({
       const food = await createCustomFood({
         name: form.name,
         brand: form.brand.trim() || undefined,
-        kcalPer100g: kcal,
-        proteinPer100g: protein,
-        carbsPer100g: carbs,
-        fatPer100g: fat,
-        fiberPer100g: fiber,
+        kcalPer100g: kcal as number,
+        proteinPer100g: protein as number,
+        carbsPer100g: carbs as number,
+        fatPer100g: fat as number,
+        fiberPer100g: fiber ?? undefined,
       });
       onCreated(food);
       setForm({
@@ -273,6 +274,7 @@ function CreateFoodDialog({
             id="food-name"
             value={form.name}
             onChange={field("name")}
+            maxLength={80}
             autoFocus
           />
         </Field>
@@ -281,6 +283,7 @@ function CreateFoodDialog({
             id="food-brand"
             value={form.brand}
             onChange={field("brand")}
+            maxLength={80}
             placeholder="ex: Whey GoldStandard"
           />
         </Field>
@@ -288,51 +291,46 @@ function CreateFoodDialog({
           <Field label="kcal / 100 g" htmlFor="food-kcal">
             <Input
               id="food-kcal"
-              type="number"
-              step="0.1"
               value={form.kcal}
               onChange={field("kcal")}
               inputMode="decimal"
+              mask={(s) => maskDecimal(s, { intDigits: 4, decimals: 1 })}
             />
           </Field>
           <Field label="Proteína (g)" htmlFor="food-prot">
             <Input
               id="food-prot"
-              type="number"
-              step="0.1"
               value={form.protein}
               onChange={field("protein")}
               inputMode="decimal"
+              mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
             />
           </Field>
           <Field label="Carboidrato (g)" htmlFor="food-carbs">
             <Input
               id="food-carbs"
-              type="number"
-              step="0.1"
               value={form.carbs}
               onChange={field("carbs")}
               inputMode="decimal"
+              mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
             />
           </Field>
           <Field label="Gordura (g)" htmlFor="food-fat">
             <Input
               id="food-fat"
-              type="number"
-              step="0.1"
               value={form.fat}
               onChange={field("fat")}
               inputMode="decimal"
+              mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
             />
           </Field>
           <Field label="Fibra (g) (opcional)" htmlFor="food-fiber">
             <Input
               id="food-fiber"
-              type="number"
-              step="0.1"
               value={form.fiber}
               onChange={field("fiber")}
               inputMode="decimal"
+              mask={(s) => maskDecimal(s, { intDigits: 3, decimals: 1 })}
             />
           </Field>
         </div>
