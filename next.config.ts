@@ -6,6 +6,12 @@ const withPWA = withPWAInit({
   dest: "public",
   register: true,
   cacheOnFrontEndNav: true,
+  // `/` é uma página estática (landing). Com dynamicStartUrl:false o start_url
+  // entra no PRECACHE e é servido do cache instantaneamente no launch, em vez
+  // do NetworkFirst (que esperava a rede a cada abertura — os ~5s de cold start
+  // do app instalado). Revalida em background no próximo ciclo do SW.
+  cacheStartUrl: true,
+  dynamicStartUrl: false,
   disable: process.env.NODE_ENV === "development",
   workboxOptions: {
     importScripts: ["/sw-push.js"],

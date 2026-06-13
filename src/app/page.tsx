@@ -1,9 +1,12 @@
 import { Logo } from "@/components/shared/Logo";
 import { LinkButton } from "@/components/ui/LinkButton";
+import { RedirectIfSignedIn } from "@/components/shared/RedirectIfSignedIn";
 
 export default function LandingPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-bg-base">
+      {/* Usuário já logado abre direto no app, sem passar pela landing. */}
+      <RedirectIfSignedIn />
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
         {/* Logo — rises in first, then settles dead-center on the screen. */}
         <div
