@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Pause, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -27,13 +27,14 @@ import { listMyEvents } from "@/lib/actions/events";
 import { prisma } from "@/lib/prisma";
 import { formatLongDate, formatShortDate } from "@/lib/date";
 import { SendFollowUpButton } from "./SendFollowUpButton";
+import { StudentActions } from "./StudentActions";
 
 export default async function AlunoDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireRole("PERSONAL");
+  const me = await requireRole("PERSONAL");
   const { id } = await params;
   let student;
   try {
@@ -43,10 +44,18 @@ export default async function AlunoDetailPage({
   }
   if (!student) return notFound();
 
-  const stats = await getAlunoWeeklyStats(id);
-  const activePlan = await prisma.workoutPlan.findFirst({
-    where: { studentId: id, isActive: true },
-  });
+  // stats, plano ativo e status do vínculo em paralelo (sem serializar I/O).
+  const [stats, activePlan, link] = await Promise.all([
+    getAlunoWeeklyStats(id),
+    prisma.workoutPlan.findFirst({
+      where: { studentId: id, isActive: true },
+    }),
+    prisma.trainerStudent.findFirst({
+      where: { trainerId: me.id, studentId: id },
+      select: { status: true },
+    }),
+  ]);
+  const isPaused = link?.status === "PAUSED";
 
   // Acompanhamento + eventos do aluno (paralelo p/ não serializar I/O).
   const [sendsRaw, templatesRaw, studentEvents] = await Promise.all([
@@ -96,33 +105,42 @@ export default async function AlunoDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto">
-      <header className="flex items-center gap-3 mb-6">
-        <Link href="/alunos">
-          <IconButton aria-label="Voltar">
-            <ChevronLeft size={20} />
-          </IconButton>
-        </Link>
-        <Avatar
-          src={student.avatarUrl ?? undefined}
-          name={student.name}
-          size={56}
-        />
-        <div className="flex-1 min-w-0">
-          <h1 className="text-h1 text-text-primary truncate">{student.name}</h1>
-          <p className="text-caption text-text-muted truncate">
-            Perfil de performance · {activePlan?.name ?? "Sem plano ativo"}
-          </p>
+      <header className="mb-6">
+        <div className="flex items-center gap-3">
+          <Link href="/alunos">
+            <IconButton aria-label="Voltar">
+              <ChevronLeft size={20} />
+            </IconButton>
+          </Link>
+          <Avatar
+            src={student.avatarUrl ?? undefined}
+            name={student.name}
+            size={56}
+          />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-h1 text-text-primary truncate">
+              {student.name}
+            </h1>
+            <p className="text-caption text-text-muted truncate">
+              Perfil de performance · {activePlan?.name ?? "Sem plano ativo"}
+            </p>
+          </div>
+          <div className="hidden sm:block">
+            <StudentActions
+              studentId={id}
+              studentName={student.name}
+              paused={isPaused}
+              activePlanId={activePlan?.id ?? null}
+            />
+          </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2">
-          <Button variant="secondary" size="sm" disabled>
-            <Pencil size={14} aria-hidden /> Editar treino
-          </Button>
-          <Button variant="secondary" size="sm" disabled>
-            <Pause size={14} aria-hidden /> Pausar
-          </Button>
-          <Button variant="destructive" size="sm" disabled>
-            <Trash2 size={14} aria-hidden /> Remover
-          </Button>
+        <div className="sm:hidden mt-4">
+          <StudentActions
+            studentId={id}
+            studentName={student.name}
+            paused={isPaused}
+            activePlanId={activePlan?.id ?? null}
+          />
         </div>
       </header>
 
