@@ -12,7 +12,8 @@ interface ProfessionalInfo {
 }
 
 export interface ProfessionalsContext {
-  trainer: ProfessionalInfo | null;
+  /** MULTI-PERSONAL: a student may have several active trainers. */
+  trainers: ProfessionalInfo[];
   nutritionist: ProfessionalInfo | null;
   available: VerticalKey[];
 }
@@ -26,11 +27,12 @@ export interface ProfessionalsContext {
 export const getMyProfessionals = cache(
   async (): Promise<ProfessionalsContext> => {
     const { userId } = await auth();
-    if (!userId) return { trainer: null, nutritionist: null, available: [] };
+    if (!userId) return { trainers: [], nutritionist: null, available: [] };
 
-    const [trainerLink, nutriLink] = await Promise.all([
-      prisma.trainerStudent.findFirst({
+    const [trainerLinks, nutriLink] = await Promise.all([
+      prisma.trainerStudent.findMany({
         where: { studentId: userId, status: "ACTIVE" },
+        orderBy: { startedAt: "asc" },
         select: {
           trainer: {
             select: { id: true, name: true, avatarUrl: true },
@@ -47,12 +49,13 @@ export const getMyProfessionals = cache(
       }),
     ]);
 
+    const trainers = trainerLinks.map((l) => l.trainer);
     const available: VerticalKey[] = [];
-    if (trainerLink) available.push("treinos");
+    if (trainers.length > 0) available.push("treinos");
     if (nutriLink) available.push("nutricao");
 
     return {
-      trainer: trainerLink?.trainer ?? null,
+      trainers,
       nutritionist: nutriLink?.nutritionist ?? null,
       available,
     };
