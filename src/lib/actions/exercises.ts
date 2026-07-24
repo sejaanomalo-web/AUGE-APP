@@ -231,6 +231,8 @@ export async function uploadExerciseImage(formData: FormData): Promise<string> {
 }
 
 export async function getExerciseById(id: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Não autenticado");
   return prisma.exercise.findUnique({ where: { id } });
 }
 

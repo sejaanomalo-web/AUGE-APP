@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireUserId, assertPlanAccess } from "@/lib/actions/authz";
 
 const METRICS_BUCKET = "plan-metrics";
 const ALLOWED_ATTACHMENT_MIMES = [
@@ -92,6 +93,8 @@ export async function deletePlanMetric(id: string) {
 }
 
 export async function getPlanMetrics(planId: string) {
+  const userId = await requireUserId();
+  await assertPlanAccess(userId, planId, "read");
   return prisma.planMetricDefinition.findMany({
     where: { planId },
     orderBy: { order: "asc" },

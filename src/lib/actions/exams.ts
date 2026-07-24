@@ -71,15 +71,13 @@ export async function getExamSignedUrl(examId: string) {
 
   const exam = await prisma.examUpload.findUnique({
     where: { id: examId },
-    include: { student: { include: { studentLinks: true } } },
+    select: { studentId: true, storageKey: true },
   });
   if (!exam) throw new Error("Exame não encontrado");
 
-  const isOwner = exam.studentId === userId;
-  const isLinkedTrainer = exam.student.studentLinks.some(
-    (l) => l.trainerId === userId && l.status === "ACTIVE",
-  );
-  if (!isOwner && !isLinkedTrainer) throw new Error("Sem permissão");
+  // PRIVACY (owner decision 2026-07-24): health exams are the student's
+  // private data. Trainers see TRAINING only — not exams. Owner-only access.
+  if (exam.studentId !== userId) throw new Error("Sem permissão");
 
   const { data, error } = await getSupabaseAdmin()
     .storage.from("exams")

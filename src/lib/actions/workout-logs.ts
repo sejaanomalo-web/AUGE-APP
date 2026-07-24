@@ -4,6 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { notifyUser } from "@/lib/notifications/notify";
+import {
+  requireUserId,
+  assertWorkoutLogAccess,
+  assertSessionAccess,
+  AuthzError,
+} from "@/lib/actions/authz";
 
 import type { WorkoutMode } from "@prisma/client";
 
@@ -33,8 +39,11 @@ export async function startWorkout(
   sessionId: string,
   mode: WorkoutMode = "GUIDED",
 ) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
+  const userId = await requireUserId();
+  // The caller must be the student who owns the session's plan — not merely
+  // an authenticated user, and not a trainer (trainers don't log workouts).
+  const { studentId } = await assertSessionAccess(userId, sessionId, "read");
+  if (studentId !== userId) throw new AuthzError();
 
   const existing = await prisma.workoutLog.findFirst({
     where: { sessionId, studentId: userId, status: "IN_PROGRESS" },
@@ -105,8 +114,8 @@ export async function skipExercise(
   exerciseId: string,
   reason?: string,
 ) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
+  const userId = await requireUserId();
+  await assertWorkoutLogAccess(userId, workoutLogId, "write");
 
   await prisma.exerciseLog.create({
     data: {
@@ -179,6 +188,8 @@ export async function finishWorkout(
 }
 
 export async function abandonWorkout(workoutLogId: string) {
+  const userId = await requireUserId();
+  await assertWorkoutLogAccess(userId, workoutLogId, "write");
   await prisma.workoutLog.update({
     where: { id: workoutLogId },
     data: { status: "ABANDONED", finishedAt: new Date() },

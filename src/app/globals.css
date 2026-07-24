@@ -424,12 +424,18 @@
    * saturate() is what gives the iOS feel - without it glass just
    * looks like a translucent card.
    * ───────────────────────────────────────────────────────────── */
+  /* Specular top-edge highlight — the "line of light" that reads as real
+   * glass (matches .glass-surface). Appended to every level so the three
+   * frosted tiers share the same Apple-like edge. */
   .glass-subtle {
     background-color: var(--glass-bg-subtle);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow-sm);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.32),
+      var(--glass-shadow-sm);
     transform: translateZ(0);
     will-change: transform;
   }
@@ -439,7 +445,10 @@
     backdrop-filter: blur(32px) saturate(180%);
     -webkit-backdrop-filter: blur(32px) saturate(180%);
     border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow-md);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.4),
+      var(--glass-shadow-md);
     transform: translateZ(0);
     will-change: transform;
   }
@@ -449,9 +458,71 @@
     backdrop-filter: blur(40px) saturate(200%);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
     border: 1px solid var(--glass-border-strong);
-    box-shadow: var(--glass-shadow-lg);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.42),
+      var(--glass-shadow-lg);
     transform: translateZ(0);
     will-change: transform;
+  }
+
+  .light .glass-subtle {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.72),
+      var(--glass-shadow-sm);
+  }
+  .light .glass-medium {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+      var(--glass-shadow-md);
+  }
+  .light .glass-strong {
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
+      var(--glass-shadow-lg);
+  }
+
+  /* ─────────────────────────────────────────────────────────────
+   * Liquid sheen — a diagonal band of light that sweeps across the
+   * surface on hover/press. This is the "liquid glass" premium touch,
+   * done with a translated pseudo-element (GPU-cheap) rather than an
+   * animated backdrop-filter (expensive). Add `.glass-sheen` to any
+   * glass/solid surface; it needs `position: relative` + rounded corners
+   * on the host (inherited via border-radius: inherit).
+   * ───────────────────────────────────────────────────────────── */
+  .glass-sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .glass-sheen::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.14) 46%,
+      rgba(255, 255, 255, 0.28) 50%,
+      rgba(255, 255, 255, 0.14) 54%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .glass-sheen:hover::before,
+  .glass-sheen:focus-visible::before {
+    transform: translateX(120%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .glass-sheen::before {
+      transition: none;
+      display: none;
+    }
   }
 
   /* ─────────────────────────────────────────────────────────────
