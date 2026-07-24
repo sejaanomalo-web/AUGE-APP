@@ -52,31 +52,33 @@ export async function GET(req: Request) {
   const dedupeSince = new Date(today.getTime() - 20 * 60 * 60 * 1000);
   let birthdayRemindersSent = 0;
   for (const student of birthdayStudents) {
-    const ts = await prisma.trainerStudent.findFirst({
+    // MULTI-PERSONAL: remind every active trainer of this student.
+    const links = await prisma.trainerStudent.findMany({
       where: { studentId: student.id, status: "ACTIVE" },
+      select: { trainerId: true },
     });
-    if (!ts) continue;
+    for (const { trainerId } of links) {
+      // Anti-spam: dedupe 20h, per trainer.
+      const recent = await prisma.notification.findFirst({
+        where: {
+          userId: trainerId,
+          type: "STUDENT_BIRTHDAY",
+          createdAt: { gte: dedupeSince },
+          data: { path: ["studentId"], equals: student.id },
+        },
+      });
+      if (recent) continue;
 
-    // Anti-spam: dedupe 20h.
-    const recent = await prisma.notification.findFirst({
-      where: {
-        userId: ts.trainerId,
+      await notifyUser({
+        userId: trainerId,
         type: "STUDENT_BIRTHDAY",
-        createdAt: { gte: dedupeSince },
-        data: { path: ["studentId"], equals: student.id },
-      },
-    });
-    if (recent) continue;
-
-    await notifyUser({
-      userId: ts.trainerId,
-      type: "STUDENT_BIRTHDAY",
-      title: "Aniversário de aluno hoje",
-      body: `${student.name} faz aniversário hoje`,
-      data: { studentId: student.id },
-      url: `/alunos/${student.id}`,
-    });
-    birthdayRemindersSent++;
+        title: "Aniversário de aluno hoje",
+        body: `${student.name} faz aniversário hoje`,
+        data: { studentId: student.id },
+        url: `/alunos/${student.id}`,
+      });
+      birthdayRemindersSent++;
+    }
   }
 
   return NextResponse.json({
