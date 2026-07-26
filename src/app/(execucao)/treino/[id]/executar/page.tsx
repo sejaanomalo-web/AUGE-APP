@@ -24,7 +24,7 @@ export default async function ExecutarPage({
   await requireRole("ALUNO");
   const { id } = await params;
   const { mode: modeParam } = await searchParams;
-  const session = await getSessionById(id);
+  const session = await getSessionById(id).catch(() => null);
   if (!session || session.exercises.length === 0) return notFound();
 
   const mode: WorkoutMode = modeParam === "FREE" ? "FREE" : "GUIDED";

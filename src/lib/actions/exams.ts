@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { notifyUser } from "@/lib/notifications/notify";
+import { notifyActiveTrainersOfStudent } from "@/lib/notifications/notify";
 
 const ALLOWED_MIMES = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -46,21 +46,20 @@ export async function uploadExam(formData: FormData) {
     },
   });
 
-  // Notify trainer
-  const link = await prisma.trainerStudent.findFirst({
-    where: { studentId: userId, status: "ACTIVE" },
-    include: { student: true },
+  // Notify every active trainer (multi-personal). Note: exam FILE stays
+  // private to the student — the trainer only gets an activity ping, not
+  // access to the exam itself (see getExamSignedUrl, owner-only).
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
   });
-  if (link) {
-    notifyUser({
-      userId: link.trainerId,
-      type: "STUDENT_EXAM_UPLOADED",
-      title: "Novo exame anexado",
-      body: `${link.student.name} anexou um novo exame`,
-      data: { studentId: userId },
-      url: `/alunos/${userId}`,
-    }).catch(() => null);
-  }
+  notifyActiveTrainersOfStudent(userId, () => ({
+    type: "STUDENT_EXAM_UPLOADED",
+    title: "Novo exame anexado",
+    body: `${me?.name ?? "Seu aluno"} anexou um novo exame`,
+    data: { studentId: userId },
+    url: `/alunos/${userId}`,
+  })).catch(() => null);
 
   revalidatePath("/medidas");
 }
@@ -71,15 +70,13 @@ export async function getExamSignedUrl(examId: string) {
 
   const exam = await prisma.examUpload.findUnique({
     where: { id: examId },
-    include: { student: { include: { studentLinks: true } } },
+    select: { studentId: true, storageKey: true },
   });
   if (!exam) throw new Error("Exame não encontrado");
 
-  const isOwner = exam.studentId === userId;
-  const isLinkedTrainer = exam.student.studentLinks.some(
-    (l) => l.trainerId === userId && l.status === "ACTIVE",
-  );
-  if (!isOwner && !isLinkedTrainer) throw new Error("Sem permissão");
+  // PRIVACY (owner decision 2026-07-24): health exams are the student's
+  // private data. Trainers see TRAINING only — not exams. Owner-only access.
+  if (exam.studentId !== userId) throw new Error("Sem permissão");
 
   const { data, error } = await getSupabaseAdmin()
     .storage.from("exams")

@@ -1,18 +1,13 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-
-async function assertPlanOwner(userId: string, planId: string) {
-  const plan = await prisma.workoutPlan.findUnique({ where: { id: planId } });
-  if (!plan) throw new Error("Plano não encontrado");
-  const ok =
-    plan.trainerId === userId ||
-    (plan.trainerId === null && plan.studentId === userId);
-  if (!ok) throw new Error("Sem permissão");
-  return plan;
-}
+import {
+  requireUserId,
+  assertPlanAccess,
+  assertSessionAccess,
+  assertSessionExerciseAccess,
+} from "@/lib/actions/authz";
 
 export async function createSession(
   planId: string,
@@ -23,10 +18,8 @@ export async function createSession(
     notes?: string;
   },
 ) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
-
-  await assertPlanOwner(userId, planId);
+  const userId = await requireUserId();
+  await assertPlanAccess(userId, planId, "write");
 
   const session = await prisma.workoutSession.create({
     data: { ...data, planId },
@@ -41,10 +34,14 @@ export async function updateSession(
   id: string,
   data: Partial<{ name: string; dayOfWeek: number; order: number; notes: string }>,
 ) {
+  const userId = await requireUserId();
+  await assertSessionAccess(userId, id, "write");
   await prisma.workoutSession.update({ where: { id }, data });
 }
 
 export async function deleteSession(id: string) {
+  const userId = await requireUserId();
+  await assertSessionAccess(userId, id, "write");
   await prisma.workoutSession.delete({ where: { id } });
 }
 
@@ -60,12 +57,16 @@ export async function addExerciseToSession(
     order?: number;
   },
 ) {
+  const userId = await requireUserId();
+  await assertSessionAccess(userId, sessionId, "write");
   return prisma.sessionExercise.create({
     data: { sessionId, exerciseId, ...config },
   });
 }
 
 export async function removeExerciseFromSession(sessionExerciseId: string) {
+  const userId = await requireUserId();
+  await assertSessionExerciseAccess(userId, sessionExerciseId, "write");
   await prisma.sessionExercise.delete({ where: { id: sessionExerciseId } });
 }
 
@@ -73,6 +74,8 @@ export async function reorderExercises(
   sessionId: string,
   orderedIds: string[],
 ) {
+  const userId = await requireUserId();
+  await assertSessionAccess(userId, sessionId, "write");
   await prisma.$transaction(
     orderedIds.map((id, index) =>
       prisma.sessionExercise.update({
@@ -85,6 +88,8 @@ export async function reorderExercises(
 }
 
 export async function getSessionById(id: string) {
+  const userId = await requireUserId();
+  await assertSessionAccess(userId, id, "read");
   return prisma.workoutSession.findUnique({
     where: { id },
     include: {

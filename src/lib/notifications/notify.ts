@@ -81,6 +81,31 @@ export async function notifyUser(params: NotifyParams) {
   return notification;
 }
 
+/**
+ * MULTI-PERSONAL: a student may have more than one active trainer (e.g. one
+ * for the gym, one for running). Fan a student-activity notification out to
+ * EVERY active trainer, not just the first one. `build` receives each
+ * trainerId so the payload (e.g. deep-link) can be tailored if needed.
+ * Returns how many trainers were notified.
+ */
+export async function notifyActiveTrainersOfStudent(
+  studentId: string,
+  build: (trainerId: string) => Omit<NotifyParams, "userId">,
+): Promise<number> {
+  const links = await prisma.trainerStudent.findMany({
+    where: { studentId, status: "ACTIVE" },
+    select: { trainerId: true },
+  });
+  await Promise.all(
+    links.map((l) =>
+      notifyUser({ userId: l.trainerId, ...build(l.trainerId) }).catch(
+        () => null,
+      ),
+    ),
+  );
+  return links.length;
+}
+
 async function sendPushToUser(
   userId: string,
   payload: {

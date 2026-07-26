@@ -17,7 +17,7 @@ export default async function TreinoDetailPage({
 }) {
   await requireRole("ALUNO");
   const { id } = await params;
-  const session = await getSessionById(id);
+  const session = await getSessionById(id).catch(() => null);
   if (!session) return notFound();
 
   return (

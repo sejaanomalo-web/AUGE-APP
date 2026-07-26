@@ -17,7 +17,7 @@ import { listMyPasskeys } from "@/lib/actions/passkeys";
 
 export default async function PerfilAlunoPage() {
   const user = await requireRole("ALUNO");
-  const [{ trainer, nutritionist }, passkeys] = await Promise.all([
+  const [{ trainers, nutritionist }, passkeys] = await Promise.all([
     getMyProfessionals(),
     listMyPasskeys(),
   ]);
@@ -54,10 +54,25 @@ export default async function PerfilAlunoPage() {
           </LinkButton>
         </div>
         <div className="flex flex-col gap-3">
+          {/* MULTI-PERSONAL: a student can link several personals (e.g. one
+              for the gym, one for running). Render one slot per active
+              trainer, plus an always-present slot to link another. */}
+          {trainers.map((t) => (
+            <ProfessionalSlot
+              key={t.id}
+              label="Personal"
+              professional={t}
+              emptyText=""
+            />
+          ))}
           <ProfessionalSlot
             label="Personal"
-            professional={trainer}
-            emptyText="Cole um código de convite para vincular um personal."
+            professional={null}
+            emptyText={
+              trainers.length > 0
+                ? "Vincule outro personal (ex.: um para academia, outro para corrida)."
+                : "Cole um código de convite para vincular um personal."
+            }
           />
           <ProfessionalSlot
             label="Nutricionista"

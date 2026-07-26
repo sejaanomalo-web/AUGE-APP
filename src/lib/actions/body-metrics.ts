@@ -5,8 +5,11 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { notifyUser } from "@/lib/notifications/notify";
+import { notifyActiveTrainersOfStudent } from "@/lib/notifications/notify";
 
+// TODO(privacy): progress photos are health-sensitive. They currently live in
+// the PUBLIC "avatars" bucket (readable by anyone with the URL). Migrate to a
+// PRIVATE bucket + signed URLs (owner-only) — see plano-mestre Bloco C/D.
 const EVALUATION_BUCKET = "avatars"; // reuses the existing public bucket
 const ALLOWED_PHOTO_MIMES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_PHOTO_SIZE = 4 * 1024 * 1024; // 4 MB
@@ -52,20 +55,17 @@ export async function addMetric(data: {
     data: { ...data, studentId: userId },
   });
 
-  const link = await prisma.trainerStudent.findFirst({
-    where: { studentId: userId, status: "ACTIVE" },
-    include: { student: true },
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
   });
-  if (link) {
-    notifyUser({
-      userId: link.trainerId,
-      type: "STUDENT_METRIC_ADDED",
-      title: "Nova medida registrada",
-      body: `${link.student.name} adicionou uma nova medida`,
-      data: { studentId: userId, metricId: metric.id },
-      url: `/alunos/${userId}`,
-    }).catch(() => null);
-  }
+  notifyActiveTrainersOfStudent(userId, () => ({
+    type: "STUDENT_METRIC_ADDED",
+    title: "Nova medida registrada",
+    body: `${me?.name ?? "Seu aluno"} adicionou uma nova medida`,
+    data: { studentId: userId, metricId: metric.id },
+    url: `/alunos/${userId}`,
+  })).catch(() => null);
 
   revalidatePath("/medidas");
   revalidatePath("/evolucao");
@@ -292,22 +292,19 @@ export async function addEvaluation(
       }
     }
 
-    // Notify trainer if linked.
+    // Notify every active trainer (multi-personal).
     try {
-      const link = await prisma.trainerStudent.findFirst({
-        where: { studentId: userId, status: "ACTIVE" },
-        include: { student: true },
+      const me = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true },
       });
-      if (link) {
-        notifyUser({
-          userId: link.trainerId,
-          type: "STUDENT_METRIC_ADDED",
-          title: "Nova avaliação registrada",
-          body: `${link.student.name} adicionou uma nova avaliação física.`,
-          data: { studentId: userId, metricId: metric.id },
-          url: `/alunos/${userId}`,
-        }).catch(() => null);
-      }
+      notifyActiveTrainersOfStudent(userId, () => ({
+        type: "STUDENT_METRIC_ADDED",
+        title: "Nova avaliação registrada",
+        body: `${me?.name ?? "Seu aluno"} adicionou uma nova avaliação física.`,
+        data: { studentId: userId, metricId: metric.id },
+        url: `/alunos/${userId}`,
+      })).catch(() => null);
     } catch (e) {
       console.error("[addEvaluation] notify lookup failed", e);
     }

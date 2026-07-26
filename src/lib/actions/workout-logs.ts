@@ -3,7 +3,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { notifyUser } from "@/lib/notifications/notify";
+import {
+  notifyUser,
+  notifyActiveTrainersOfStudent,
+} from "@/lib/notifications/notify";
+import {
+  requireUserId,
+  assertWorkoutLogAccess,
+  assertSessionAccess,
+  AuthzError,
+} from "@/lib/actions/authz";
 
 import type { WorkoutMode } from "@prisma/client";
 
@@ -14,27 +23,30 @@ async function notifyTrainerOfStudentActivity(
   bodyFn: (name: string) => string,
   data?: Record<string, unknown>,
 ) {
-  const link = await prisma.trainerStudent.findFirst({
-    where: { studentId, status: "ACTIVE" },
-    include: { student: true },
+  // MULTI-PERSONAL: notify every active trainer of this student, not just one.
+  const student = await prisma.user.findUnique({
+    where: { id: studentId },
+    select: { name: true },
   });
-  if (!link) return;
-  await notifyUser({
-    userId: link.trainerId,
+  if (!student) return;
+  await notifyActiveTrainersOfStudent(studentId, () => ({
     type,
     title,
-    body: bodyFn(link.student.name),
+    body: bodyFn(student.name),
     data,
     url: `/alunos/${studentId}`,
-  });
+  }));
 }
 
 export async function startWorkout(
   sessionId: string,
   mode: WorkoutMode = "GUIDED",
 ) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
+  const userId = await requireUserId();
+  // The caller must be the student who owns the session's plan — not merely
+  // an authenticated user, and not a trainer (trainers don't log workouts).
+  const { studentId } = await assertSessionAccess(userId, sessionId, "read");
+  if (studentId !== userId) throw new AuthzError();
 
   const existing = await prisma.workoutLog.findFirst({
     where: { sessionId, studentId: userId, status: "IN_PROGRESS" },
@@ -105,8 +117,8 @@ export async function skipExercise(
   exerciseId: string,
   reason?: string,
 ) {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Não autenticado");
+  const userId = await requireUserId();
+  await assertWorkoutLogAccess(userId, workoutLogId, "write");
 
   await prisma.exerciseLog.create({
     data: {
@@ -179,6 +191,8 @@ export async function finishWorkout(
 }
 
 export async function abandonWorkout(workoutLogId: string) {
+  const userId = await requireUserId();
+  await assertWorkoutLogAccess(userId, workoutLogId, "write");
   await prisma.workoutLog.update({
     where: { id: workoutLogId },
     data: { status: "ABANDONED", finishedAt: new Date() },
